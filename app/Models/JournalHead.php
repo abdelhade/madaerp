@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class JournalHead extends Model
+{
+    protected $table = 'journal_heads';
+    protected $guarded = [];
+    public $timestamps = false;
+
+    // علاقة 1 إلى متعدد مع تفاصيل اليومية
+    public function dets()
+    {
+    return $this->hasMany(JournalDetail::class, 'journal_id')->orderBy('type');
+    }
+
+    public function oper()
+    {
+        return $this->hasOne(OperHead::class, 'id', 'op_id');
+    }
+}

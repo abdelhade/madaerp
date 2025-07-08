@@ -1,0 +1,58 @@
+<div class="topbar">
+    <!-- Navbar -->
+    <nav class="navbar-custom">
+        <ul class="list-unstyled topbar-nav float-end mb-0">
+            <li>
+                <a title="المستخدمين" href="{{ route('settings.index') }}" class="nav-link">
+                    <i data-feather="settings"></i>
+                </a>
+            </li>
+            <li class="dropdown">
+                <a class="nav-link dropdown-toggle waves-effect waves-light nav-user" data-bs-toggle="dropdown"
+                    href="#" role="button" aria-haspopup="false" aria-expanded="false">
+
+                    <img src="{{ asset('assets/images/users/user-5.jpg') }}" alt="profile-user"
+                        class="rounded-circle thumb-xs" />
+                </a>
+
+                <div class="dropdown-menu dropdown-menu-end">
+                    <a class="dropdown-item" href="#"><i data-feather="user"
+                            class="align-self-center icon-xs icon-dual me-1"></i> Profile</a>
+                    <a class="dropdown-item" href="{{ route('settings.profile') }}"><i data-feather="settings"
+                            class="align-self-center icon-xs icon-dual me-1"></i> Settings</a>
+
+                    <a class="dropdown-item" href="#"><i data-feather="user"
+                            class="align-self-center icon-xs icon-dual me-1"></i> Profile</a>
+                    <a class="dropdown-item" href="{{ route('settings.profile') }}"><i data-feather="settings"
+                            class="align-self-center icon-xs icon-dual me-1"></i> Settings</a>
+
+                    <div class="dropdown-divider mb-0"></div>
+                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                        @csrf
+                        <button type="submit" class="dropdown-item">
+                            <i data-feather="power" class="align-self-center icon-xs icon-dual me-1"></i> Logout
+                        </button>
+                    </form>
+                </div>
+            </li>
+
+        </ul><!--end topbar-nav-->
+
+        <ul class="list-unstyled topbar-nav mb-0">
+
+            <li>
+                <button class="nav-link button-menu-mobile">
+                    <i data-feather="menu" class="align-self-center topbar-icon"></i>
+                </button>
+            </li>
+
+            <li>
+                <a title="المستخدمين" href="{{ route('users.index') }}" class="nav-link">
+                    <i data-feather="user"></i>.
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+    <!-- end navbar-->
+</div>
