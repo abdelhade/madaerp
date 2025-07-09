@@ -437,7 +437,13 @@
                 </ul>
             </li>
 
-            <!-- عمليات الاصول -->
+
+
+            <!-- عمليات الاصول  -->
+            <li class="li-main">
+                <a href="javascript: void(0);">
+                    <i data-feather="grid" class="align-self-center menu-icon"></i>
+
             <li class="li-main">
                 <a href="javascript: void(0);">
                     <i data-feather="hard-drive" style="color:#e83e8c" class="align-self-center menu-icon"></i>
@@ -515,7 +521,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link font-family-cairo fw-bold" href="{{ route('inventory-balance.index') }}">
+                        <a class="nav-link" href="{{ route('inventory-balance.create') }}">
                             <i class="ti-control-record"></i>{{ __('تسجيل الارصده الافتتاحيه للمخازن') }}
                         </a>
                     </li>
