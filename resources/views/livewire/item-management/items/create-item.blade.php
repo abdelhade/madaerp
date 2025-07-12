@@ -411,6 +411,7 @@ new class extends Component {
                                                 <input type="number" onclick="this.select()"
                                                     wire:model="unitRows.{{ $index }}.cost"
                                                     class="form-control font-family-cairo fw-bold" placeholder="0"
+                                                    step="0.0001"
                                                     style="min-width: 150px;">
                                                 @error("unitRows.{$index}.cost")
                                                     <span
@@ -422,6 +423,7 @@ new class extends Component {
                                                     <input type="number" onclick="this.select()"
                                                         wire:model="unitRows.{{ $index }}.prices.{{ $price->id }}"
                                                         class="form-control font-family-cairo fw-bold" placeholder="0"
+                                                        step="0.0001"
                                                         style="min-width: 150px;">
                                                     @error("unitRows.{$index}.prices.{$price->id}")
                                                         <span
