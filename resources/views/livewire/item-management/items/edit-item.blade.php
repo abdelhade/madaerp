@@ -194,6 +194,17 @@ new class extends Component {
             session()->flash('error', 'حدث خطأ أثناء تحديث الصنف. يرجى المحاولة مرة أخرى.');
         }
     }
+    public function updateUnitCost($index)
+    {
+        $this->unitRows[$index]['cost'] = $this->unitRows[$index]['u_val'] * $this->unitRows[0]['cost'];
+        // تحديث أسعار الوحدة الحالية بناءً على أسعار أول وحدة
+        foreach ($this->prices as $price) {
+            // تأكد من وجود السعر في أول وحدة قبل التحديث
+            if (isset($this->unitRows[0]['prices'][$price->id])) {
+                $this->unitRows[$index]['prices'][$price->id] = $this->unitRows[$index]['u_val'] * $this->unitRows[0]['prices'][$price->id];
+            }
+        }
+    }
 }; ?>
 
 <div>
@@ -319,7 +330,9 @@ new class extends Component {
                                             <td>
                                                 <input type="number" onclick="this.select()"
                                                     wire:model="unitRows.{{ $index }}.u_val"
+                                                    wire:change="updateUnitCost({{ $index }})"
                                                     class="form-control font-family-cairo fw-bold" min="1"
+                                                    step="0.0001"
                                                     placeholder="1" style="min-width: 150px;">
                                                 @error("unitRows.{$index}.u_val")
                                                     <span
@@ -330,6 +343,7 @@ new class extends Component {
                                                 <input type="number" onclick="this.select()"
                                                     wire:model="unitRows.{{ $index }}.cost"
                                                     class="form-control font-family-cairo fw-bold" placeholder="0"
+                                                    step="0.0001"
                                                     style="min-width: 150px;">
                                                 @error("unitRows.{$index}.cost")
                                                     <span
@@ -341,6 +355,7 @@ new class extends Component {
                                                     <input type="number" onclick="this.select()"
                                                         wire:model="unitRows.{{ $index }}.prices.{{ $price->id }}"
                                                         class="form-control font-family-cairo fw-bold" placeholder="0"
+                                                        step="0.0001"
                                                         style="min-width: 150px;">
                                                     @error("unitRows.{$index}.prices.{$price->id}")
                                                         <span
@@ -382,3 +397,34 @@ new class extends Component {
     </div>
 </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('livewire:init', () => {
+            window.addEventListener('open-modal', event => {
+                let modal = new bootstrap.Modal(document.getElementById(event.detail[0]));
+                modal.show();
+            });
+
+            window.addEventListener('close-modal', event => {
+                let modal = bootstrap.Modal.getInstance(document.getElementById(event.detail[0]));
+                if (modal) {
+                    modal.hide();
+                }
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+            });
+
+        // منع زر الإدخال (Enter) من حفظ النموذج
+        document.querySelectorAll('form').forEach(function(form) {
+            form.addEventListener('keydown', function(e) {
+                // إذا كان الزر Enter وتم التركيز على input وليس textarea أو زر
+                if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit' && e.target.type !== 'button') {
+                    e.preventDefault();
+                }
+            });
+        });
+        });
+    });
+</script>
