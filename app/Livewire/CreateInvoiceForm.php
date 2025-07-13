@@ -111,13 +111,20 @@ class CreateInvoiceForm extends Component
             22 => ['acc1' => 'clientsAccounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'],
         ];
 
-
         $this->acc1List = isset($map[$type]) ? ${$map[$type]['acc1']} : collect();
         $this->acc2List = $stores;
         $this->acc1Role = $map[$type]['acc1_role'] ?? 'مدين';
         $this->acc2Role = $map[$type]['acc2_role'] ?? 'دائن';
         $this->acc2_id = 27;
         $this->cash_box_id = 21;
+
+        if (in_array($this->type, [10, 12, 14, 16, 22])) {
+            $this->acc1_id = 148;
+        } elseif (in_array($this->type, [11, 13, 15, 17])) {
+            $this->acc1_id = 36;
+        } elseif (in_array($this->type, [18, 19, 20, 21])) {
+            $this->acc1_id = 0;
+        }
 
         $this->employees = $employees;
         $this->invoiceItems = [];
@@ -457,6 +464,7 @@ class CreateInvoiceForm extends Component
             // dd($this->all());
             $isJournal = in_array($this->type, [10, 11, 12, 13, 18, 19, 20, 21, 23]) ? 1 : 0;
             $isManager = $isJournal ? 0 : 1;
+
             $isReceipt = in_array($this->type, [10, 22, 13]); // سند قبض
             $isPayment = in_array($this->type, [11, 12]); // سند دفع
 
@@ -620,10 +628,14 @@ class CreateInvoiceForm extends Component
                     $voucherValue = $this->received_from_client ?? $this->total_after_additional;
                     // Ensure cash_box_id is a valid integer, otherwise set to null or a default value (e.g., 0)
                     $cashBoxId = is_numeric($this->cash_box_id) && $this->cash_box_id > 0 ? (int)$this->cash_box_id : null;
-
+                    if ($isReceipt) {
+                        $proType = 1;
+                    } elseif ($isPayment) {
+                        $proType = 2;
+                    }
                     $voucher = OperHead::create([
                         'pro_id'     => $this->pro_id,
-                        'pro_type'   => $this->type,
+                        'pro_type'   => $proType,
                         'acc1'       => $this->acc1_id,
                         'acc2'       => $cashBoxId,
                         'pro_value'  => $voucherValue,
