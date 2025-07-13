@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\{Item, AccHead, OperHead, OperationItems};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Routing\Controller;
 use Modules\Settings\Models\PublicSetting;
 
 class InventoryStartBalanceController extends Controller

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controller;
 use App\Models\AccHead;
 use App\Models\OperHead;
 use Illuminate\Http\Request;
@@ -10,6 +11,12 @@ use App\Http\Requests\CreatDiscountRequest;
 
 class DiscountController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:عرض قائمة الخصومات المكتسبة')->only(['index']);
+        $this->middleware('can:عرض قائمة الخصومات المسموح بها')->only(['noteDetails']);
+    }
+
     public function index(Request $request)
     {
         $type = $request->input('type');

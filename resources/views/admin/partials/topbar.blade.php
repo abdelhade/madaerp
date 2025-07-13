@@ -2,14 +2,16 @@
     <!-- Navbar -->
     <nav class="navbar-custom">
         <ul class="list-unstyled topbar-nav float-end mb-0">
-            <li>
-                <a title="المستخدمين" href="{{ route('settings.index') }}" class="nav-link">
-                    <i data-feather="settings"></i>
-                </a>
-            </li>
+            @can('عرض الاعدادات')
+                <li>
+                    <a title="المستخدمين" href="{{ route('settings.index') }}" class="nav-link">
+                        <i data-feather="settings"></i>
+                    </a>
+                </li>
+            @endcan
             <li class="dropdown">
-                <a class="nav-link dropdown-toggle waves-effect waves-light nav-user" data-bs-toggle="dropdown"
-                    href="#" role="button" aria-haspopup="false" aria-expanded="false">
+                <a class="nav-link dropdown-toggle waves-effect waves-light nav-user" data-bs-toggle="dropdown" href="#"
+                    role="button" aria-haspopup="false" aria-expanded="false">
 
                     <img src="{{ asset('assets/images/users/user-5.jpg') }}" alt="profile-user"
                         class="rounded-circle thumb-xs" />
@@ -45,12 +47,13 @@
                     <i data-feather="menu" class="align-self-center topbar-icon"></i>
                 </button>
             </li>
-
-            <li>
-                <a title="المستخدمين" href="{{ route('users.index') }}" class="nav-link">
-                    <i data-feather="user"></i>.
-                </a>
-            </li>
+            @can('عرض - الأدوار')
+                <li>
+                    <a title="المستخدمين" href="{{ route('users.index') }}" class="nav-link">
+                        <i data-feather="user"></i>.
+                    </a>
+                </li>
+            @endcan
 
         </ul>
     </nav>

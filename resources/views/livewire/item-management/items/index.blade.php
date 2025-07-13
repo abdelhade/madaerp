@@ -139,16 +139,21 @@ new class extends Component {
                 {{ session('error') }}
             </div>
         @endif
-            <div class="card">
+            <div class="card"> 
                 <div class="card-header d-flex justify-content-between align-items-center">
+                    @can('أنشاء - الأصناف')
+                        
                     <a href="{{ route('items.create') }}" class="btn btn-primary font-family-cairo fw-bold">
                         {{ __('Add New') }}
                         <i class="fas fa-plus me-2"></i>
                     </a>
+                    @endcan
+                     @can('بحث - الأصناف ')
                     <div class="w-25">
                         <input type="text" wire:model.live.debounce.300ms="search"
                             class="form-control font-family-cairo" placeholder="بحث بالاسم أو الكود أو الباركود...">
                     </div>
+                    @endcan
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -239,13 +244,17 @@ new class extends Component {
                                             @endforeach
 
                                             <td>
+                                                 @can('تعديل - الأصناف')
                                                 <button type="button" class="btn btn-success btn-sm"
                                                     wire:click="edit({{ $itemId }})"><i class="las la-edit fa-lg"></i></button>
+                                                @endcan
+                                           @can('حذف - الأصناف')
                                                 <button type="button" class="btn btn-danger btn-sm"
                                                     wire:click="delete({{ $itemId }})"
                                                     onclick="confirm('هل أنت متأكد من حذف هذا الصنف؟') || event.stopImmediatePropagation()">
                                                     <i class="las la-trash fa-lg"></i>
                                                 </button>
+                                            @endcan
                                             </td>
                                         </tr>
                                     @endif
