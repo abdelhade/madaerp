@@ -7,14 +7,14 @@
     ])
     <div class="row">
         <div class="col-lg-12">
-            <div class="card">
+            <div class="card ">
 
                 @if (is_null($type))
                     <div class="alert alert-warning text-center">
                         يرجى اختيار نوع الخصم من القائمة.
                     </div>
                 @else
-                    <h4>
+                    <h4 class="mx-4">
                         @if ($type == 30)
                             {{ __('قائمة الخصومات المسموح بها') }}
                         @elseif ($type == 31)

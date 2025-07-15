@@ -78,7 +78,7 @@ new class extends Component {
     }
 }; ?>
 
-<div class="container p-3 bg-white" style="direction: rtl; font-family: 'Cairo', sans-serif;">
+<div class="p-3" style="direction: rtl; font-family: 'Cairo', sans-serif;">
     <div class="d-flex justify-content-between ">
         <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
             <button class="btn btn-primary" wire:click="create">
@@ -102,43 +102,50 @@ new class extends Component {
 
     </div>
 
+    <div class="card">
+        <div class="card-body">
 
-    <table class="table table-striped mb-0" style="min-width: 1200px;">
-        <thead class="table-light text-center align-middle">
 
-            <tr>
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('Name') }}</th>
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('Description') }}</th>
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('Actions') }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($contractTypes as $type)
-                <tr>
-                    <td class="font-family-cairo fw-bold font-14 text-center">{{ $type->name }}</td>
-                    <td class="font-family-cairo fw-bold font-14 text-center">{{ $type->description }}</td>
-                    <td class="font-family-cairo fw-bold font-14 text-center">
-                        <button class="btn btn-success btn-icon-square-sm me-1" wire:click="edit({{ $type->id }})">
-                            <i class="las la-edit"></i>
-                        </button>
-                        <button class="btn btn-danger btn-icon-square-sm"wire:click="delete({{ $type->id }})"
-                            wire:confirm="{{ __('Are you sure you want to delete this contract type?') }}">
-                            <i class="las la-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="3" class="text-center">
-                        <div class="alert alert-info py-3 mb-0" style="font-size: 1.2rem; font-weight: 500;">
-                            <i class="las la-info-circle me-2"></i>
-                            لا توجد بيانات
-                        </div>
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+            <table class="table table-striped mb-0" style="min-width: 1200px;">
+                <thead class="table-light text-center align-middle">
+
+                    <tr>
+                        <th class="font-family-cairo fw-bold font-14 text-center">{{ __('Name') }}</th>
+                        <th class="font-family-cairo fw-bold font-14 text-center">{{ __('Description') }}</th>
+                        <th class="font-family-cairo fw-bold font-14 text-center">{{ __('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($contractTypes as $type)
+                        <tr>
+                            <td class="font-family-cairo fw-bold font-14 text-center">{{ $type->name }}</td>
+                            <td class="font-family-cairo fw-bold font-14 text-center">{{ $type->description }}</td>
+                            <td class="font-family-cairo fw-bold font-14 text-center">
+                                <button class="btn btn-success btn-icon-square-sm me-1"
+                                    wire:click="edit({{ $type->id }})">
+                                    <i class="las la-edit"></i>
+                                </button>
+                                <button
+                                    class="btn btn-danger btn-icon-square-sm"wire:click="delete({{ $type->id }})"
+                                    wire:confirm="{{ __('Are you sure you want to delete this contract type?') }}">
+                                    <i class="las la-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="text-center">
+                                <div class="alert alert-info py-3 mb-0" style="font-size: 1.2rem; font-weight: 500;">
+                                    <i class="las la-info-circle me-2"></i>
+                                    لا توجد بيانات
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="mt-4">
         {{ $contractTypes->links() }}
