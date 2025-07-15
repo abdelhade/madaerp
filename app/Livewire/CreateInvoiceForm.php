@@ -216,6 +216,13 @@ class CreateInvoiceForm extends Component
         $salePrices = $vm->getUnitSalePrices();
         $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
 
+        $unitOptions = $vm->getUnitOptions();
+        $availableUnits = collect($unitOptions)->map(function ($unit) {
+            return (object) [
+                'id' => $unit['value'],
+                'name' => $unit['label'],
+            ];
+        });
         // حساب السعر للوحدة الافتراضية
         $price = 0;
         if ($unitId && $this->selectedPriceType) {
@@ -223,6 +230,7 @@ class CreateInvoiceForm extends Component
             $salePrices = $vm->getUnitSalePrices();
             $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
         }
+
 
         // إضافة الصنف مع البيانات الكاملة
         $this->invoiceItems[] = [
@@ -232,7 +240,7 @@ class CreateInvoiceForm extends Component
             'price' => $price,
             'sub_value' => $price * 1, // quantity * price
             'discount' => 0,
-            // 'available_units' => $availableUnits,
+            'available_units' => $availableUnits,
         ];
         $this->updateSelectedItemData($item, $unitId, $price);
 
@@ -500,7 +508,7 @@ class CreateInvoiceForm extends Component
 
     public function saveForm()
     {
-        dd($this->all());
+        // dd($this->all());
         if (empty($this->invoiceItems)) {
             Alert::toast('لا يمكن حفظ الفاتورة بدون أصناف.', 'error');
             return;
