@@ -142,16 +142,16 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div class="col-sm-10 ">
+                                <button type="submit" class="btn btn-primary">تأكيد</button>
+                                <a href="{{ url()->previous() }}" class="btn btn-danger">إلغاء</a>
+                            </div>
                         </div>
+
                     </div>
 
-                    <div class="row">
-                        <div class="col-sm-10">
-                            <button type="submit" class="btn btn-primary">تأكيد</button>
-                            <a href="{{ url()->previous() }}" class="btn btn-danger">إلغاء</a>
-                        </div>
-                    </div>
-                    <br>
+
+
                 </div>
             </form>
         </section>
