@@ -40,7 +40,7 @@ class AccHeadController extends Controller
                 'revenue' => '32%',
                 'creditor' => '212%',
                 'debtor' => '125%',
-                'partner' => '221%',
+                'partner' => '231%',
                 'asset' => '11%',
                 'employee' => '213%',
                 'rentable' => '112%',
@@ -192,7 +192,7 @@ class AccHeadController extends Controller
                     '032' => 'revenue',
                     '212' => 'creditor',
                     '125' => 'debtor',
-                    '221' => 'partner',
+                    '231' => 'partner',
                     '011' => 'asset',
                     '213' => 'employee',
                     '112' => 'rentable',
@@ -291,8 +291,8 @@ class AccHeadController extends Controller
                     '032' => 'revenue',
                     '212' => 'creditor',
                     '125' => 'debtor',
-                    '221' => 'partner',
-                    '224' => 'partner',
+                    '231' => 'partner',
+                    '234' => 'partner',
                     '011' => 'asset',
                     '213' => 'employee',
                     '112' => 'rentable',
@@ -336,5 +336,10 @@ class AccHeadController extends Controller
     public function accountMovementReport($accountId = null)
     {
         return view('accounts.reports.account-movement', compact('accountId'));
+    }
+
+    public function balanceSheet()
+    {
+        return view('accounts.reports.manage-balance-sheet');
     }
 }

@@ -649,7 +649,7 @@
                             {{-- الرصيد الافتتاحى للحسابات --}}
                             <li class="nav-item">
                                 <a class="nav-link font-family-cairo fw-bold" href="{{ route('accounts.startBalance') }}">
-                                    <i class="ti-control-record"></i>{{ __('الرصيد الافتتاحى للحسابات') }}
+                                    <i class="ti-control-record"></i>{{ __('تسجيل الرصيد الافتتاحى للحسابات') }}
                                 </a>
                             </li>
                             {{-- الرصيد الافتتاحى للحسابات --}}
@@ -660,6 +660,13 @@
                                 </a>
                             </li>
                             {{-- account movement --}}
+                            {{-- balance sheet --}}
+                            <li class="nav-item">
+                                <a class="nav-link font-family-cairo fw-bold" href="{{ route('accounts.balanceSheet') }}">
+                                    <i class="ti-control-record"></i>{{ __('الميزانيه العموميه') }}
+                                </a>
+                            </li>
+                            {{-- balance sheet --}}
                         </ul>
                     </li>
                 @endcanany
