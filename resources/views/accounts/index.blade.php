@@ -85,11 +85,7 @@
                         <input class="form-control form-control-lg frst" type="text" id="itmsearch"
                             placeholder="بحث بالكود | اسم الحساب | ID">
                        
-                            @if (session('success'))
-                                <div class="alert alert-success cake cake-zoomIn ">
-                                    {{ session('success') }}
-                                </div>
-                            @endif
+                     
                             @if (session('error'))
                                 <div class="alert alert-danger cake cake-zoomIn">
                                     {{ session('error') }}
@@ -113,7 +109,7 @@
                         <div class="card">
                             <div class="card-header">
                                 <div class="table-responsive" style="overflow-x: auto;">
-                                    <table class="table table-striped mb-0" style="min-width: 1200px;">
+                                    <table id="myTable" class="table table-striped mb-0" style="min-width: 1200px;">
                                         <thead class="table-light text-center align-middle">
 
                                             <tr>
@@ -197,6 +193,18 @@
     <script>
         $(document).ready(function() {
             $('#myTable').DataTable();
+        });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            //filter at the table by itmsearch
+            $('#itmsearch').on('keyup', function() {
+                var value = $(this).val().toLowerCase();
+                $('tbody tr').filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
         });
     </script>
 @endsection

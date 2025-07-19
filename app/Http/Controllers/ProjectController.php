@@ -49,10 +49,27 @@ class ProjectController extends Controller
 
         $operations = OperHead::where('project_id', $id)->get();
         $equipments = AccHead::where('rent_to', $id)->get();
-        $vouchers = OperHead::where('project_id', $id)->get();
+        
+        // للحصول على عمليات المعدات لكل معدة
+        $equipmentOperations = collect();
+        foreach ($equipments as $equipment) {
+            $operation = OperHead::where('acc3', $equipment->id)->orderBy('start_date')->first();
+            if ($operation) {
+                $equipmentOperations->push([
+                    'equipment' => $equipment,
+                    'operation' => $operation
+                ]);
+            }
+        }
+        
+        $vouchers = OperHead::where('project_id', $id)
+            ->where(function($query) {
+                $query->where('pro_type', 1)
+                      ->orWhere('pro_type', 2);
+            })
+            ->get();
 
-
-        return view('projects.show', compact('project', 'operations', 'equipments', 'vouchers'));
+        return view('projects.show', compact('project', 'operations', 'equipments', 'vouchers', 'equipmentOperations'));
     }
 
     /**

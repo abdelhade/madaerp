@@ -50,14 +50,14 @@ class RentalController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'acc3'  => 'required|exists:acc_head,id',
-            'acc1'   => 'required|exists:acc_head,id',
-            'acc2'   => 'required|exists:acc_head,id',
-            'rental_price'  => 'required|numeric|min:0',
-            'project_id'    => 'required|exists:projects,id',
-            'start_date'    => 'required|date',
-            'end_date'      => 'required|date|after_or_equal:start_date',
-            'details'         => 'nullable|string|max:255',
+            'acc3' => 'required|exists:acc_head,id',
+            'acc1' => 'required|exists:acc_head,id',
+            'acc2' => 'required|exists:acc_head,id',
+            'rental_price' => 'required|numeric|min:0',
+            'project_id' => 'required|exists:projects,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'details' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -68,34 +68,39 @@ class RentalController extends Controller
             $lastProId = OperHead::where('pro_type', $pro_type)->max('pro_id');
             $newProId = $lastProId ? $lastProId + 1 : 1;
 
+            $equipment = AccHead::findOrFail($request->acc3);
+            $equipment->update([
+                'rent_to' => $request->project_id,
+        
+            ]);
             $operhead = OperHead::create([
-                'pro_id'        => $newProId,
-                'is_journal'    => 1,
+                'pro_id' => $newProId,
+                'is_journal' => 1,
                 'acc1' => $request->acc1,
                 'acc2' => $request->acc2,
                 'acc3' => $request->acc3,
-                'details'       => $request->details,
-                'pro_date'      => $request->pro_date,
-                'start_date'   => $request->start_date,
-                'end_date'     => $request->end_date,
-                'emp_id'        => $request->emp_id,
-                'pro_value'     => $request->rental_price,
-                'project_id'    => $request->project_id,
-                'cost_center'   => $request->cost_center,
-                'user'          => Auth::id(),
-                'pro_type'      => $pro_type,
+                'details' => $request->details,
+                'pro_date' => $request->pro_date,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'emp_id' => $request->emp_id,
+                'pro_value' => $request->rental_price,
+                'project_id' => $request->project_id,
+                'cost_center' => $request->cost_center,
+                'user' => Auth::id(),
+                'pro_type' => $pro_type,
             ]);
 
 
             // إنشاء رأس اليومية
             $journalHead = JournalHead::create([
                 'journal_id' => JournalHead::max('journal_id') + 1,
-                'date'       => $request->start_date,
-                'total'      => $request->rental_price,
-                'details'    => 'إيجار معدة #' . $request->equipment_id,
-                'op_id'      => $operhead->id,
-                'pro_type'   => $pro_type,
-                'user'       => Auth::id(),
+                'date' => $request->start_date,
+                'total' => $request->rental_price,
+                'details' => 'إيجار معدة #' . $request->equipment_id,
+                'op_id' => $operhead->id,
+                'pro_type' => $pro_type,
+                'user' => Auth::id(),
             ]);
 
 
@@ -103,22 +108,22 @@ class RentalController extends Controller
             JournalDetail::create([
                 'journal_id' => $journalHead->id,
                 'account_id' => $request->acc1,
-                'debit'      => $request->rental_price,
-                'credit'     => 0,
-                'op_id'      => $operhead->id,
-                'type'       => 0,
-                'info'       => 'إيجار معدة',
+                'debit' => $request->rental_price,
+                'credit' => 0,
+                'op_id' => $operhead->id,
+                'type' => 0,
+                'info' => 'إيجار معدة',
             ]);
 
             // الطرف الدائن: حساب المعدات
             JournalDetail::create([
                 'journal_id' => $journalHead->id,
                 'account_id' => $request->acc2,
-                'debit'      => 0,
-                'credit'     => $request->rental_price,
-                'op_id'      => $operhead->id,
-                'type'       => 1,
-                'info'       => 'إيجار معدة',
+                'debit' => 0,
+                'credit' => $request->rental_price,
+                'op_id' => $operhead->id,
+                'type' => 1,
+                'info' => 'إيجار معدة',
             ]);
 
             DB::commit();
@@ -163,44 +168,50 @@ class RentalController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'acc3'         => 'required|exists:acc_head,id',
-            'acc1'         => 'required|exists:acc_head,id',
-            'acc2'         => 'required|exists:acc_head,id',
+            'acc3' => 'required|exists:acc_head,id|unique:acc_head,rent_to,' . $id,
+
+            'acc1' => 'required|exists:acc_head,id',
+            'acc2' => 'required|exists:acc_head,id',
             'rental_price' => 'required|numeric|min:0',
-            'project_id'   => 'required|exists:projects,id',
-            'start_date'   => 'required|date',
-            'end_date'     => 'required|date|after_or_equal:start_date',
-            'details'      => 'nullable|string|max:255',
+            'project_id' => 'required|exists:projects,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'details' => 'nullable|string|max:255',
         ]);
 
         try {
             DB::beginTransaction();
 
+            $equipment = AccHead::findOrFail($request->acc3);
+            $equipment->update([
+                'rent_to' => $request->project_id,
+        
+            ]);
             $rental = OperHead::findOrFail($id);
 
             // تحديث بيانات التأجير
             $rental->update([
-                'acc1'         => $request->acc1,
-                'acc2'         => $request->acc2,
-                'acc3'         => $request->acc3,
-                'details'      => $request->details,
-                'pro_date'     => $request->pro_date ?? now(),
-                'start_date'   => $request->start_date,
-                'end_date'     => $request->end_date,
-                'emp_id'       => $request->emp_id,
-                'pro_value'    => $request->rental_price,
-                'project_id'   => $request->project_id,
-                'cost_center'  => $request->cost_center_id,
-                'user'         => Auth::id(),
+                'acc1' => $request->acc1,
+                'acc2' => $request->acc2,
+                'acc3' => $request->acc3,
+                'details' => $request->details,
+                'pro_date' => $request->pro_date ?? now(),
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'emp_id' => $request->emp_id,
+                'pro_value' => $request->rental_price,
+                'project_id' => $request->project_id,
+                'cost_center' => $request->cost_center_id,
+                'user' => Auth::id(),
             ]);
 
             // تحديث رأس اليومية
             $journalHead = JournalHead::where('op_id', $rental->id)->firstOrFail();
             $journalHead->update([
-                'date'     => $request->start_date,
-                'total'    => $request->rental_price,
-                'details'  => 'تعديل إيجار معدة #' . $request->acc3,
-                'user'     => Auth::id(),
+                'date' => $request->start_date,
+                'total' => $request->rental_price,
+                'details' => 'تعديل إيجار معدة #' . $request->acc3,
+                'user' => Auth::id(),
             ]);
 
             // حذف التفاصيل القديمة
@@ -210,21 +221,21 @@ class RentalController extends Controller
             JournalDetail::create([
                 'journal_id' => $journalHead->id,
                 'account_id' => $request->acc1,
-                'debit'      => $request->rental_price,
-                'credit'     => 0,
-                'op_id'      => $rental->id,
-                'type'       => 0,
-                'info'       => 'تعديل إيجار معدة',
+                'debit' => $request->rental_price,
+                'credit' => 0,
+                'op_id' => $rental->id,
+                'type' => 0,
+                'info' => 'تعديل إيجار معدة',
             ]);
 
             JournalDetail::create([
                 'journal_id' => $journalHead->id,
                 'account_id' => $request->acc2,
-                'debit'      => 0,
-                'credit'     => $request->rental_price,
-                'op_id'      => $rental->id,
-                'type'       => 1,
-                'info'       => 'تعديل إيجار معدة',
+                'debit' => 0,
+                'credit' => $request->rental_price,
+                'op_id' => $rental->id,
+                'type' => 1,
+                'info' => 'تعديل إيجار معدة',
             ]);
 
             DB::commit();
@@ -233,6 +244,12 @@ class RentalController extends Controller
             DB::rollBack();
             return back()->withErrors(['error' => 'حدث خطأ أثناء التحديث: ' . $e->getMessage()]);
         }
+    }
+    //show rental
+    public function show($id)
+    {
+        $rental = OperHead::findOrFail($id);
+        return view('rentals.show', compact('rental'));
     }
 
     public function destroy($id)

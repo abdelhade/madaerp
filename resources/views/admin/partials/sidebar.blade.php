@@ -715,6 +715,13 @@
                         <i class="ti-control-record"></i>{{ __('المشاريع') }}
                     </a>
                 </li>
+                <!-- rent -->
+                <li class="nav-item">
+                    <a class="nav-link font-family-cairo fw-bold" href="{{ route('rentals.index') }}">
+                        <i class="ti-control-record"></i>{{ __('المستأجرات') }}
+                    </a>
+                </li>
+                <!-- rent -->
             </ul>
         </li>
     @endcan
