@@ -62,7 +62,7 @@
 
                     <div class="col-md-3">
                         @if ($parentCode)
-                        @can('إضافةالعملاء')
+                        @can('إضافة العملاء')
                         <a href="{{ route('accounts.create', ['parent' => $parentCode]) }}" class="btn btn-primary cake cake-fadeIn">
                             {{ __('إضافة حساب جديد') }}
                         </a>

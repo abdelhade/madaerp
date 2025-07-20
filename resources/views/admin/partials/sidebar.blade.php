@@ -248,7 +248,7 @@
 
 
             {{-- التصنيع --}}
-            @can('عرض فاتورة تصنيع')
+            @can('إضافة فاتورة تصنيع')
                 <li class="li-main">
                     <a href="javascript: void(0);">
                         <i data-feather="grid" class="align-self-center menu-icon"></i>

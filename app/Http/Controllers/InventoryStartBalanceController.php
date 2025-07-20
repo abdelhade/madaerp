@@ -10,6 +10,14 @@ use Modules\Settings\Models\PublicSetting;
 
 class InventoryStartBalanceController extends Controller
 {
+    
+    public function __construct()
+    {
+        $this->middleware('can:عرض تسجيل الارصده الافتتاحيه للمخازن')->only(['index', 'show']);
+        $this->middleware('can:إضافة تسجيل الارصده الافتتاحيه للمخازن')->only(['create', 'store']);
+        $this->middleware('can:تعديل تسجيل الارصده الافتتاحيه للمخازن')->only(['edit', 'update']);
+        $this->middleware('can:حذف تسجيل الارصده الافتتاحيه للمخازن')->only(['destroy']);
+    }
     public function index()
     {
         return view('inventory-start-balance.index');
