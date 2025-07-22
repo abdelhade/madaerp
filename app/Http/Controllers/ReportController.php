@@ -429,7 +429,7 @@ class ReportController extends Controller
     // تقرير المبيعات أصناف
     public function generalSalesItemsReport()
     {
-        $categories = Category::all();
+        // $categories = Category::all();
 
         $query = OperationItems::whereHas('operation', function ($q) {
             $q->where('pro_type', 10); // Sales invoices
@@ -462,7 +462,7 @@ class ReportController extends Controller
         $averageSalesPerItem = $totalItems > 0 ? $totalSales / $totalItems : 0;
 
         return view('reports.general-sales-items-report', compact(
-            'categories',
+            // 'categories',
             'salesItems',
             'totalQuantity',
             'totalSales',
@@ -577,7 +577,7 @@ class ReportController extends Controller
     // تقرير المشتريات أصناف
     public function generalPurchasesItemsReport()
     {
-        $categories = Category::all();
+        // $categories = Category::all();
 
         $query = OperationItems::whereHas('operation', function ($q) {
             $q->where('pro_type', 11); // Purchase invoices
@@ -610,7 +610,7 @@ class ReportController extends Controller
         $averagePurchasesPerItem = $totalItems > 0 ? $totalPurchases / $totalItems : 0;
 
         return view('reports.general-purchases-items-report', compact(
-            'categories',
+            // 'categories',
             'purchasesItems',
             'totalQuantity',
             'totalPurchases',
