@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Barcode;
 use Livewire\Component;
 use App\Helpers\ItemViewModel;
 use Illuminate\Support\Collection;
@@ -19,6 +20,11 @@ class CreateInvoiceForm extends Component
     public $accural_date;
     public $pro_id;
     public $serial_number;
+    public $barcodeTerm = '';
+    public $barcodeSearchResults;
+    public $selectedBarcodeResultIndex = -1;
+    public bool $addedFromBarcode = false;
+
 
     public $priceTypes = [];
     public $selectedPriceType = 1;
@@ -27,6 +33,8 @@ class CreateInvoiceForm extends Component
     public $searchTerm = '';
     public $searchResults;
     public $selectedResultIndex = -1;
+    public int $quantityClickCount = 0; // لتتبع عدد الضغطات على Enter
+    public $lastQuantityFieldIndex = null; // لتتبع حقل الكمية الأخير
 
     public $acc1List = [];
     public $acc2List = [];
@@ -130,10 +138,11 @@ class CreateInvoiceForm extends Component
         $this->acc1Role = $map[$type]['acc1_role'] ?? 'مدين';
         $this->acc2Role = $map[$type]['acc2_role'] ?? 'دائن';
         $this->acc2_id = 27;
+        $this->emp_id = 43;
         $this->cash_box_id = 21;
 
         if (in_array($this->type, [10, 12, 14, 16, 22])) {
-            $this->acc1_id = 148;
+            $this->acc1_id = 44;
         } elseif (in_array($this->type, [11, 13, 15, 17])) {
             $this->acc1_id = 36;
         } elseif (in_array($this->type, [18, 19, 20, 21])) {
@@ -144,6 +153,8 @@ class CreateInvoiceForm extends Component
         $this->invoiceItems = [];
         $this->priceTypes = Price::pluck('name', 'id')->toArray();
         $this->searchResults = collect();
+        $this->items = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])->get();
+        $this->barcodeSearchResults = collect();
     }
 
     private function getAccountsByCode(string $code)
@@ -159,7 +170,6 @@ class CreateInvoiceForm extends Component
     {
         $this->currentSelectedItem = $item->id;
 
-        // dd($this->acc2_id);
         $availableQtyInSelectedStore = OperationItems::where('item_id', $item->id)
             ->where('detail_store', $this->acc2_id)
             ->selectRaw('SUM(qty_in - qty_out) as total')
@@ -193,6 +203,66 @@ class CreateInvoiceForm extends Component
         ];
     }
 
+    public function addItemByBarcode()
+    {
+        $barcode = trim($this->barcodeTerm);
+        if (empty($barcode)) {
+            return;
+        }
+
+        $item = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices', 'barcodes'])
+            ->whereHas('barcodes', fn($q) => $q->where('barcode', $barcode))
+            ->first();
+
+        if (! $item) {
+            return $this->dispatch('item-not-found');
+        }
+
+        $this->addedFromBarcode = true;
+
+        $lastIndex = count($this->invoiceItems) - 1;
+        if ($lastIndex >= 0 && $this->invoiceItems[$lastIndex]['item_id'] === $item->id) {
+            $this->invoiceItems[$lastIndex]['quantity']++;
+            $this->recalculateSubValues();
+            $this->calculateTotals();
+            $this->barcodeTerm = '';
+            return;
+        }
+
+        $this->addItemFromSearch($item->id);
+        $this->barcodeTerm = '';
+        $this->barcodeSearchResults = collect();
+        $this->selectedBarcodeResultIndex = -1;
+        $this->lastQuantityFieldIndex = count($this->invoiceItems) - 1;
+    }
+    public function updatedBarcodeTerm($value)
+    {
+        $this->selectedBarcodeResultIndex = -1;
+        $this->barcodeSearchResults = collect(); // إعادة تعيين إلى مجموعة فارغة
+    }
+
+    public function handleQuantityEnter($index)
+    {
+        if (!isset($this->invoiceItems[$index])) {
+            return;
+        }
+
+        $this->quantityClickCount++;
+        $this->lastQuantityFieldIndex = $index;
+
+        // تحديث الكمية بناءً على عدد الضغطات
+        $this->invoiceItems[$index]['quantity'] = $this->quantityClickCount;
+
+        // إعادة حساب القيم الفرعية والإجماليات
+        $this->recalculateSubValues();
+        $this->calculateTotals();
+
+        // إذا ضغط مرة واحدة، عد إلى حقل الباركود
+        if ($this->quantityClickCount === 1) {
+            $this->js('window.focusBarcodeField()');
+        }
+    }
+
     public function removeRow($index)
     {
         unset($this->invoiceItems[$index]);
@@ -215,6 +285,8 @@ class CreateInvoiceForm extends Component
     {
         $item = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])->find($itemId);
         if (! $item) return;
+
+        // $this->addedFromBarcode = false;
 
         $firstUnit = $item->units->first();
         $unitId = $firstUnit?->id;
@@ -239,8 +311,6 @@ class CreateInvoiceForm extends Component
             $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
         }
 
-
-        // إضافة الصنف مع البيانات الكاملة
         $this->invoiceItems[] = [
             'item_id' => $item->id,
             'unit_id' => $unitId,
@@ -252,16 +322,22 @@ class CreateInvoiceForm extends Component
         ];
         $this->updateSelectedItemData($item, $unitId, $price);
 
-        // تنظيف البحث
+        $this->barcodeTerm = '';
+        $this->barcodeSearchResults = collect();
+        $this->selectedBarcodeResultIndex = -1;
+        $this->lastQuantityFieldIndex = count($this->invoiceItems) - 1;
+
+        if ($this->addedFromBarcode) {
+            $this->js('window.focusBarcodeSearch()'); // ركز على الباركود
+        } else {
+            $this->js('window.focusLastQuantityField()'); // ركز على الكمية
+        }
+
         $this->searchTerm = '';
         $this->searchResults = collect();
         $this->selectedResultIndex = -1;
 
-        // حساب الإجماليات
         $this->calculateTotals();
-
-        // التركيز على حقل الكمية
-        $this->js('window.focusLastQuantityField()');
     }
 
     public function updatedAcc2Id()
@@ -362,6 +438,22 @@ class CreateInvoiceForm extends Component
         $rowIndex = (int) $parts[0];
         $field = $parts[1];
 
+        if ($field === 'quantity') {
+            $this->quantityClickCount = 0; // إعادة تعيين عداد الضغطات
+            $this->recalculateSubValues();
+            $this->calculateTotals();
+        } elseif ($field === 'item_id') {
+            $this->updateUnits($rowIndex);
+            $itemId = $this->invoiceItems[$rowIndex]['item_id'];
+            if ($itemId) {
+                $item = Item::with(['units', 'prices'])->find($itemId);
+                if ($item) {
+                    $unitId = $this->invoiceItems[$rowIndex]['unit_id'];
+                    $price = $this->invoiceItems[$rowIndex]['price'];
+                    $this->updateSelectedItemData($item, $unitId, $price);
+                }
+            }
+        }
         if ($field === 'item_id') {
             // عند تغيير الصنف، قم بتحديث الوحدات
             $this->updateUnits($rowIndex);
@@ -516,7 +608,6 @@ class CreateInvoiceForm extends Component
 
     public function saveForm()
     {
-        // dd($this->all());
         if (empty($this->invoiceItems)) {
             Alert::toast('لا يمكن حفظ الفاتورة بدون أصناف.', 'error');
             return;
@@ -539,11 +630,12 @@ class CreateInvoiceForm extends Component
         ]);
 
         foreach ($this->invoiceItems as $index => $item) {
+
+            // حساب الكميه المتوفره للصنف
             $availableQty = OperationItems::where('item_id', $item['item_id'])
                 ->where('detail_store', $this->acc2_id)
                 ->selectRaw('SUM(qty_in - qty_out) as total')
                 ->value('total') ?? 0;
-
             if (in_array($this->type, [10, 12, 18, 19])) { // عمليات صرف
                 if ($availableQty < $item['quantity']) {
                     $itemName = Item::find($item['item_id'])->name;
@@ -554,7 +646,7 @@ class CreateInvoiceForm extends Component
         }
 
         try {
-            // dd($this->all());
+
             $isJournal = in_array($this->type, [10, 11, 12, 13, 18, 19, 20, 21, 23]) ? 1 : 0;
             $isManager = $isJournal ? 0 : 1;
 
@@ -599,6 +691,7 @@ class CreateInvoiceForm extends Component
                 $qty_in = $qty_out = 0;
                 if (in_array($this->type, [11, 12, 20])) $qty_in = $quantity;
                 if (in_array($this->type, [10, 13, 18, 19])) $qty_out = $quantity;
+
 
                 if (in_array($this->type, [11, 12, 20])) {
                     $oldQty = OperationItems::where('item_id', $itemId)
@@ -655,7 +748,7 @@ class CreateInvoiceForm extends Component
                 switch ($this->type) {
                     case 10:
                         $debit = $this->acc1_id;
-                        $credit = 93; // حساب المبيعات
+                        $credit = 37; // حساب المبيعات
                         break;
                     case 11:
                         $debit = 4111; // حساب  المشتريات
@@ -724,6 +817,7 @@ class CreateInvoiceForm extends Component
                     'user'       => Auth::id(),
                 ]);
             }
+
             if ($this->received_from_client > 0) {
                 // إنشاء سند قبض أو دفع
                 if ($isReceipt || $isPayment) {
@@ -783,12 +877,29 @@ class CreateInvoiceForm extends Component
                     ]);
                 }
             }
-            Alert::toast('تم حفظ الفاتورة بنجاح', 'success');
-            return redirect()->route('invoices.index');
+            $this->dispatch('swal', [
+                'title' => 'تم الحفظ!',
+                'text' => 'تم حفظ البيانات بنجاح.',
+                'icon' => 'success',
+            ]);
+            // Alert::toast('تم حفظ الفاتورة بنجاح', 'success');
+            return $operation->id;
         } catch (\Exception $e) {
             logger()->error('خطأ أثناء حفظ الفاتورة: ' . $e->getMessage());
             Alert::toast('حدث خطأ أثناء حفظ الفاتورة: ', 'error');
             return back()->withInput();
+        }
+    }
+
+    public function saveAndPrint()
+    {
+        // استدعاء دالة الحفظ وتخزين معرف الفاتورة
+        $operationId = $this->saveForm();
+        // dd($operationId);
+        if ($operationId) {
+            // إعادة التوجيه إلى صفحة الطباعة مع تمرير معرف الفاتورة فقط
+            $printUrl = route('invoice.print', ['operation_id' => $operationId]);
+            $this->dispatch('open-print-window', ['url' => $printUrl]);
         }
     }
 
