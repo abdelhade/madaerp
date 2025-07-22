@@ -608,6 +608,7 @@ class CreateInvoiceForm extends Component
 
     public function saveForm()
     {
+        dd($this->all());
         if (empty($this->invoiceItems)) {
             Alert::toast('لا يمكن حفظ الفاتورة بدون أصناف.', 'error');
             return;
