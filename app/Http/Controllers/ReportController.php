@@ -1534,6 +1534,7 @@ class ReportController extends Controller
     public function generalCashboxMovementReport()
     {
         return view('reports.general-cashbox-movement-report');
+    }
 
     protected function getQuantityStatus($item)
     {
