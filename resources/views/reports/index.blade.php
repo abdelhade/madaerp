@@ -153,8 +153,11 @@
 
                     <div class="col-md-4">
                         <h2>تقارير الاصناف </h2>
+                        <a href="{{ route('prices.compare.report') }}">
+                            <p>تقرير مقارنه اسعار </p>
+                        </a>
                         <a href="{{ route('reports.get-items-max-min-quantity') }}">
-                            <p>مراقبة كميات الأصناف </p>
+                            <p>تقرير حد الطلب </p>
                         </a>
 
                     </div>
