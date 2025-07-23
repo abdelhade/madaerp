@@ -10,7 +10,10 @@ class ItemController extends Controller
 {
     public function __construct()
     {
-        // $this->middleware('can:عرض - إدارة الحسابات')->only(['index']);
+        $this->middleware('can:عرض الأصناف')->only(['index', 'show']);
+        $this->middleware('can:إضافة الأصناف')->only(['create', 'store']);
+        $this->middleware('can:تعديل الأصناف')->only(['edit', 'update']);
+        $this->middleware('can:حذف الأصناف')->only(['destroy']);
     }
     public function index()
     {
@@ -64,8 +67,11 @@ class ItemController extends Controller
     public function itemPurchaseReport()
     {
         return view('reports.purchase.manage-item-purchase-report');
+
+        // Get item as JSON for AJAX requests
     }
-    // Get item as JSON for AJAX requests
+
+
     public function getItemJson($id)
     {
         $item = Item::with(['units', 'prices'])->findOrFail($id);
