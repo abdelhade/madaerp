@@ -658,7 +658,7 @@ class CreateInvoiceForm extends Component
             if (in_array($this->type, [10, 12, 18, 19])) { // عمليات صرف
                 if ($availableQty < $item['quantity']) {
                     $itemName = Item::find($item['item_id'])->name;
-                    $this->dispatch('no-quantity', title: 'خطا!', text: 'الكمية غير متوفرة للصنف.', icon: 'error');
+                    $this->dispatch('no-quantity', title: 'خطا!', text: 'الكمية غير متوفرة للصنف.' . $itemName, icon: 'error');
                     return;
                 }
             }
