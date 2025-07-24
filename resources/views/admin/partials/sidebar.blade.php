@@ -3,7 +3,8 @@
     <div class="menu-content h-100" data-simplebar>
         <ul class="metismenu left-sidenav-menu">
 
-            {{-- <li class="menu-label my-2"><a href="{{ route('home') }}">{{ __('MASAR FOR TECNOLOGY') }}</a></li> --}}
+            <li class="menu-label my-2"><a href="{{ route('home') }}">{{ __('MASAR FOR TECNOLOGY') }}</a></li>
+
 
             <li class="nav-item border-bottom pb-1 mb-2">
                 <a href="{{ route('home.index') }}"
@@ -228,6 +229,7 @@
                                 </a>
                             </li>
                         @endcan
+
                     </ul>
                 </li>
             @endcanany
@@ -275,52 +277,53 @@
                 </li>
             @endcanany
 
-            {{-- @canany(['عرض العملاء', 'عرض مصدر الفرص', 'عرض جهات اتصال الشركات', 'عرض حالات الفرص', 'عرض الفرص']) --}}
-            <li class="li-main">
-                <a href="javascript: void(0);">
-                    <i data-feather="grid" class="align-self-center menu-icon"></i>
-                    <span>{{ __('CRM') }}</span>
-                    <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
-                </a>
-                <ul class="sub-menu mm-collapse" aria-expanded="false">
-                    {{-- @can('عرض العملاء') --}}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('clients.index') }}">
-                            <i class="ti-control-record"></i>{{ __('العملاء') }}
-                        </a>
-                    </li>
-                    {{-- @endcan
-                        @can('عرض مصدر الفرص') --}}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('chance-sources.index') }}">
-                            <i class="ti-control-record"></i>{{ __('مصدر الفرص') }}
-                        </a>
-                    </li>
-                    {{-- @endcan
-                        @can('عرض جهات اتصال الشركات') --}}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('client-contacts.index') }}">
-                            <i class="ti-control-record"></i>{{ __('جهات اتصال الشركات') }}
-                        </a>
-                    </li>
-                    {{-- @endcan
-                        @can('عرض حالات الفرص') --}}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('lead-status.index') }}">
-                            <i class="ti-control-record"></i>{{ __('حالات الفرص') }}
-                        </a>
-                    </li>
-                    {{-- @endcan
-                        @can('عرض الفرص') --}}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('leads.board') }}">
-                            <i class="ti-control-record"></i>{{ __('الفرص') }}
-                        </a>
-                    </li>
-                    {{-- @endcan --}}
-                </ul>
-            </li>
-            {{-- @endcanany --}}
+            @canany(['عرض العملاء', 'عرض مصدر الفرص', 'عرض جهات اتصال الشركات', 'عرض حالات الفرص', 'عرض الفرص'])
+                <li class="li-main">
+                    <a href="javascript: void(0);">
+                        <i data-feather="grid" class="align-self-center menu-icon"></i>
+                        <span>{{ __('CRM') }}</span>
+                        <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
+                    </a>
+                    <ul class="sub-menu mm-collapse" aria-expanded="false">
+                        @can('عرض العملااء')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('clients.index') }}">
+                                    <i class="ti-control-record"></i>{{ __('العملاء') }}
+                                </a>
+                            </li>
+                        @endcan
+                        @can('عرض مصدر الفرص')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('chance-sources.index') }}">
+                                    <i class="ti-control-record"></i>{{ __('مصدر الفرص') }}
+                                </a>
+                            </li>
+                        @endcan
+                        @can('عرض جهات اتصال الشركات')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('client-contacts.index') }}">
+                                    <i class="ti-control-record"></i>{{ __('جهات اتصال الشركات') }}
+                                </a>
+                            </li>
+                        @endcan
+                        @can('عرض حالات الفرص')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('lead-status.index') }}">
+                                    <i class="ti-control-record"></i>{{ __('حالات الفرص') }}
+                                </a>
+                            </li>
+                        @endcan
+                        @can('عرض الفرص')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('leads.board') }}">
+                                    <i class="ti-control-record"></i>{{ __('الفرص') }}
+
+                                </a>
+                            </li>
+                        @endcan
+                    </ul>
+                </li>
+            @endcanany
 
             @php
                 $sections = [
@@ -348,13 +351,14 @@
 
             @foreach ($sections as $sectionTitle => $items)
                 @php
-                    $permissions = [];
+                    $viewPermissions = [];
                     foreach ($items as $type => $label) {
-                        $permissions[] = 'عرض ' . $label;
+                        $viewPermissions[] = 'عرض ' . $label;
                     }
                 @endphp
 
-                @canany($permissions)
+                @canany($viewPermissions)
+
                     <li class="li-main">
                         <a href="javascript:void(0);">
                             <i data-feather="shopping-cart" style="color:#e74a3b"
@@ -362,14 +366,15 @@
                             <span>{{ __($sectionTitle) }}</span>
                             <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
                         </a>
+
                         <ul class="sub-menu mm-collapse" aria-expanded="false">
                             @foreach ($items as $type => $label)
                                 @can('عرض ' . $label)
                                     <li class="nav-item">
                                         <a class="nav-link"
                                             href="{{ url('/invoices/create?type=' . $type . '&q=' . md5($type)) }}">
-                                            <i class="ti-control-record"></i>
-                                            {{ __($label) }}
+                                            <i class="ti-control-record"></i> {{ __($label) }}
+
                                         </a>
                                     </li>
                                 @endcan
@@ -377,7 +382,7 @@
                         </ul>
                     </li>
                 @endcanany
-            @endforeach
+            @endforeac
 
             @can('عرض السندات')
                 <li class="li-main">
@@ -650,6 +655,7 @@
                                 </a>
                             </li>
                         @endcan
+
                         @can('عرض قيد يوميه متعدد')
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('multi-journals.create') }}">
@@ -678,6 +684,7 @@
                                 </a>
                             </li>
                         @endcan
+
                         @can('عرض تسجيل الارصده الافتتاحيه للمخازن')
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('inventory-balance.create') }}">
@@ -726,82 +733,6 @@
                     </ul>
                 </li>
             @endcan
-
-                @canany(['عرض قيد يومية', 'عرض قيد يوميه متعدد', 'عرض قيود يومية عمليات', 'عرض قيود يوميه عمليات متعدده',
-                    'عرض قيود يوميه حسابات', 'عرض تسجيل الارصده الافتتاحيه للمخازن'])
-                    <li class="li-main">
-                        <a href="javascript: void(0);">
-                            <i data-feather="bar-chart-2" style="color:#007bff" class="align-self-center menu-icon"></i>
-                            <span>{{ __('ادارة الحسابات') }}</span>
-                            <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
-                        </a>
-                        <ul class="sub-menu mm-collapse" aria-expanded="false">
-                            @can('عرض قيد يومية')
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('journals.create', ['type' => 'basic_journal']) }}">
-                                        <i class="ti-control-record"></i>{{ __('قيد يومية') }}
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('عرض قيد يوميه متعدد')
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('multi-journals.create') }}">
-                                        <i class="ti-control-record"></i>{{ __('قيد يومية متعدد') }}
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('عرض قيود يومية عمليات')
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('journals.index') }}">
-                                        <i class="ti-control-record"></i>{{ __('قيود اليومية _عمليات_') }}
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('عرض قيود يوميه عمليات متعدده')
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('multi-journals.index') }}">
-                                        <i class="ti-control-record"></i>{{ __('قيود اليومية المتعددة _عمليات_') }}
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('عرض قيود يوميه حسابات')
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('journal-summery') }}">
-                                        <i class="ti-control-record"></i>{{ __('قيود اليومية - حسابات') }}
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('عرض تسجيل الارصده الافتتاحيه للمخازن')
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('inventory-balance.create') }}">
-                                        <i class="ti-control-record"></i>{{ __('تسجيل الارصده الافتتاحيه للمخازن') }}
-                                    </a>
-                                </li>
-                            @endcan
-                            {{-- الرصيد الافتتاحى للحسابات --}}
-                            <li class="nav-item">
-                                <a class="nav-link font-family-cairo fw-bold" href="{{ route('accounts.startBalance') }}">
-                                    <i class="ti-control-record"></i>{{ __('الرصيد الافتتاحى للحسابات') }}
-                                </a>
-                            </li>
-                            {{-- الرصيد الافتتاحى للحسابات --}}
-                            {{-- account movement --}}
-                            <li class="nav-item">
-                                <a class="nav-link font-family-cairo fw-bold" href="{{ route('account-movement') }}">
-                                    <i class="ti-control-record"></i>{{ __('تقرير حركه حساب') }}
-                                </a>
-                            </li>
-                            {{-- account movement --}}
-                            {{-- balance sheet --}}
-                            <li class="nav-item">
-                                <a class="nav-link font-family-cairo fw-bold" href="{{ route('accounts.balanceSheet') }}">
-                                    <i class="ti-control-record"></i>{{ __('الميزان العام') }}
-                                </a>
-                            </li>
-                            {{-- balance sheet --}}
-                        </ul>
-                    </li>
-                @endcanany
 
             @canany([
                 'عرض الادارات و الاقسام',
@@ -907,7 +838,8 @@
                                             </a>
                                         </li>
                                     @endcan
-                                    @can('عرض تقييم الموظفين')
+                                    @can(abilities: 'عرض معدلات اداء الموظفين')
+
                                         <li class="nav-item">
                                             <a class="nav-link" href="{{ route('kpis.employeeEvaluation') }}">
                                                 <i class="ti-control-record"></i>{{ __('معدلات أداء الموظفين') }}
@@ -955,7 +887,8 @@
                                             </a>
                                         </li>
                                     @endcan
-                                    @can('عرض معالجه الحضور والانصراف')
+                                    @can('عرض معالجه الحضور والانصرف')
+
                                         <li class="nav-item">
                                             <a class="nav-link" href="{{ route('attendance-processing.index') }}">
                                                 <i class="ti-control-record"></i>{{ __('معالجة الحضور والانصراف') }}
