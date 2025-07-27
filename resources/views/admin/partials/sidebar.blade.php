@@ -6,6 +6,7 @@
             <li class="menu-label my-2"><a href="{{ route('home') }}">{{ config('public_settings.campany_name') }}</a>
             </li>
 
+
             <li class="nav-item border-bottom pb-1 mb-2">
                 <a href="{{ route('home.index') }}"
                     class="nav-link d-flex align-items-center gap-2 font-family-cairo fw-bold">
@@ -232,6 +233,7 @@
                                 </a>
                             </li>
                         @endcan
+
                     </ul>
                 </li>
             @endcanany
@@ -319,6 +321,7 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('leads.board') }}">
                                     <i class="ti-control-record"></i>{{ __('الفرص') }}
+
                                 </a>
                             </li>
                         @endcan
@@ -359,6 +362,7 @@
                 @endphp
 
                 @canany($viewPermissions)
+
                     <li class="li-main">
                         <a href="javascript:void(0);">
                             <i data-feather="shopping-cart" style="color:#e74a3b"
@@ -374,6 +378,7 @@
                                         <a class="nav-link"
                                             href="{{ url('/invoices/create?type=' . $type . '&q=' . md5($type)) }}">
                                             <i class="ti-control-record"></i> {{ __($label) }}
+
                                         </a>
                                     </li>
                                 @endcan
@@ -382,7 +387,6 @@
                     </li>
                 @endcanany
             @endforeach
-
 
             @can('عرض السندات')
                 <li class="li-main">
@@ -684,6 +688,7 @@
                                 </a>
                             </li>
                         @endcan
+
                         @can('عرض تسجيل الارصده الافتتاحيه للمخازن')
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('inventory-balance.create') }}">
@@ -838,6 +843,7 @@
                                         </li>
                                     @endcan
                                     @can(abilities: 'عرض معدلات اداء الموظفين')
+
                                         <li class="nav-item">
                                             <a class="nav-link" href="{{ route('kpis.employeeEvaluation') }}">
                                                 <i class="ti-control-record"></i>{{ __('معدلات أداء الموظفين') }}
@@ -886,6 +892,7 @@
                                         </li>
                                     @endcan
                                     @can('عرض معالجه الحضور والانصرف')
+
                                         <li class="nav-item">
                                             <a class="nav-link" href="{{ route('attendance-processing.index') }}">
                                                 <i class="ti-control-record"></i>{{ __('معالجة الحضور والانصراف') }}
@@ -898,7 +905,6 @@
                     </ul>
                 </li>
             @endcanany
-
         </ul>
     </div>
 </div>

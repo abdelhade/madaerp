@@ -142,12 +142,28 @@ class CreateInvoiceForm extends Component
         $this->cash_box_id = 21;
 
         if (in_array($this->type, [10, 12, 14, 16, 22])) {
-            $this->acc1_id = 44;
+            $this->acc1_id = 148;
         } elseif (in_array($this->type, [11, 13, 15, 17])) {
             $this->acc1_id = 36;
         } elseif (in_array($this->type, [18, 19, 20, 21])) {
             $this->acc1_id = 0;
         }
+
+        //         public $titles = [
+        //     10 => 'فاتوره مبيعات',
+        //     11 => 'فاتورة مشتريات',
+        //     12 => 'مردود مبيعات',
+        //     13 => 'مردود مشتريات',
+        //     14 => 'امر بيع',
+        //     15 => 'امر شراء',
+        //     16 => 'عرض سعر لعميل',
+        //     17 => 'عرض سعر من مورد',
+        //     18 => 'فاتورة توالف',
+        //     19 => 'امر صرف',
+        //     20 => 'امر اضافة',
+        //     21 => 'تحويل من مخزن لمخزن',
+        //     22 => 'امر حجز',
+        // ];
 
         $this->employees = $employees;
         $this->invoiceItems = [];
@@ -610,7 +626,9 @@ class CreateInvoiceForm extends Component
     {
         // dd($this->all());
         if (empty($this->invoiceItems)) {
-            Alert::toast('لا يمكن حفظ الفاتورة بدون أصناف.', 'error');
+            $this->dispatch('no-items', title: 'خطا!', text: 'لا يمكن حفظ الفاتورة بدون أصناف.', icon: 'error');
+
+            // Alert::toast('لا يمكن حفظ الفاتورة بدون أصناف.', 'error');
             return;
         }
 
@@ -640,12 +658,11 @@ class CreateInvoiceForm extends Component
             if (in_array($this->type, [10, 12, 18, 19])) { // عمليات صرف
                 if ($availableQty < $item['quantity']) {
                     $itemName = Item::find($item['item_id'])->name;
-                    Alert::toast("الكمية غير متوفرة للصنف: $itemName. المتاح: $availableQty", 'error');
+                    $this->dispatch('no-quantity', title: 'خطا!', text: 'الكمية غير متوفرة للصنف.' . $itemName, icon: 'error');
                     return;
                 }
             }
         }
-
         try {
 
             $isJournal = in_array($this->type, [10, 11, 12, 13, 18, 19, 20, 21, 23]) ? 1 : 0;
@@ -693,7 +710,6 @@ class CreateInvoiceForm extends Component
                 if (in_array($this->type, [11, 12, 20])) $qty_in = $quantity;
                 if (in_array($this->type, [10, 13, 18, 19])) $qty_out = $quantity;
 
-
                 if (in_array($this->type, [11, 12, 20])) {
                     $oldQty = OperationItems::where('item_id', $itemId)
                         ->where('is_stock', 1)
@@ -707,7 +723,6 @@ class CreateInvoiceForm extends Component
                     } else {
                         $newCost = $newQty > 0 ? (($oldQty * $oldCost) + $subValue) / $newQty : $oldCost;
                     }
-
                     Item::where('id', $itemId)->update(['average_cost' => $newCost]);
                 }
 
@@ -878,15 +893,10 @@ class CreateInvoiceForm extends Component
                     ]);
                 }
             }
-            $this->dispatch('swal', [
-                'title' => 'تم الحفظ!',
-                'text' => 'تم حفظ البيانات بنجاح.',
-                'icon' => 'success',
-            ]);
-            // Alert::toast('تم حفظ الفاتورة بنجاح', 'success');
+            $this->dispatch('swal', title: 'تم الحفظ!', text: 'تم حفظ الفاتوره بنجاح.', icon: 'success');
             return $operation->id;
         } catch (\Exception $e) {
-            logger()->error('خطأ أثناء حفظ الفاتورة: ' . $e->getMessage());
+            logger()->error('خطأ أثناء حفظ الفاتورة: ');
             Alert::toast('حدث خطأ أثناء حفظ الفاتورة: ', 'error');
             return back()->withInput();
         }
@@ -894,13 +904,10 @@ class CreateInvoiceForm extends Component
 
     public function saveAndPrint()
     {
-        // استدعاء دالة الحفظ وتخزين معرف الفاتورة
         $operationId = $this->saveForm();
-        // dd($operationId);
         if ($operationId) {
-            // إعادة التوجيه إلى صفحة الطباعة مع تمرير معرف الفاتورة فقط
             $printUrl = route('invoice.print', ['operation_id' => $operationId]);
-            $this->dispatch('open-print-window', ['url' => $printUrl]);
+            $this->dispatch('open-print-window', url: $printUrl);
         }
     }
 

@@ -1658,4 +1658,9 @@ class ReportController extends Controller
 
         return view('reports.items.prices-compare-report', compact('items', 'suppliers'));
     }
+
+    public function inventoryDiscrepancyReport()
+    {
+        return view('reports.items.inventory-discrepancy-report');
+    }
 }
