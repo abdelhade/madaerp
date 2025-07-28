@@ -77,7 +77,7 @@ class ReportController extends Controller
         $asOfDate = request('as_of_date', now()->format('Y-m-d'));
 
         // Get assets (accounts starting with 1)
-        $assets = AccHead::where('code', 'like', '1%')
+        $assets = AccHead::where('code', 'like', '1101%')
             ->where('isdeleted', 0)
             ->paginate(50)
             ->through(function ($account) use ($asOfDate) {
@@ -87,7 +87,7 @@ class ReportController extends Controller
             });
 
         // Get liabilities (accounts starting with 2)
-        $liabilities = AccHead::where('code', 'like', '2%')
+        $liabilities = AccHead::where('code', 'like', '2101%')
             ->where('isdeleted', 0)
             ->paginate(50)
             ->through(function ($account) use ($asOfDate) {
@@ -97,7 +97,7 @@ class ReportController extends Controller
             });
 
         // Get equity (accounts starting with 3)
-        $equity = AccHead::where('code', 'like', '3%')
+        $equity = AccHead::where('code', 'like', '2102%')
             ->where('isdeleted', 0)
             ->paginate(50)
             ->through(function ($account) use ($asOfDate) {
@@ -331,7 +331,7 @@ class ReportController extends Controller
     // تقرير المبيعات اليومية
     public function generalSalesDailyReport()
     {
-        $customers = AccHead::where('code', 'like', '122%')->where('isdeleted', 0)->get();
+        $customers = AccHead::where('code', 'like', '1103%')->where('isdeleted', 0)->get();
 
         $sales = OperHead::where('pro_type', 10) // Sales invoices
             ->with('acc1Head')
@@ -479,7 +479,7 @@ class ReportController extends Controller
     // تقرير المشتريات اليومية
     public function generalPurchasesDailyReport()
     {
-        $suppliers = AccHead::where('code', 'like', '211%')->where('isdeleted', 0)->get();
+        $suppliers = AccHead::where('code', 'like', '2101%')->where('isdeleted', 0)->get();
 
         $purchases = OperHead::where('pro_type', 11) // Purchase invoices
             ->with('acc1Head')
@@ -627,10 +627,10 @@ class ReportController extends Controller
     // تقرير العملاء اليومية
     public function generalCustomersDailyReport()
     {
-        $customers = AccHead::where('code', 'like', '122%')->where('isdeleted', 0)->get();
+        $customers = AccHead::where('code', 'like', '1103%')->where('isdeleted', 0)->get();
 
         $query = JournalDetail::whereHas('account', function ($q) {
-            $q->where('code', 'like', '122%'); // Customer accounts
+            $q->where('code', 'like', '1103%'); // Customer accounts
         })->with(['account', 'journalHead']);
 
         if (request('from_date')) {
@@ -670,7 +670,7 @@ class ReportController extends Controller
         $toDate = request('to_date');
 
         $query = JournalDetail::whereHas('account', function ($q) {
-            $q->where('code', 'like', '122%'); // Customer accounts
+            $q->where('code', 'like', '1103%'); // Customer accounts
         })->with('account');
 
         if ($fromDate) {
@@ -722,7 +722,7 @@ class ReportController extends Controller
     // تقرير العملاء أصناف
     public function generalCustomersItemsReport()
     {
-        $customers = AccHead::where('code', 'like', '122%')->where('isdeleted', 0)->get();
+        $customers = AccHead::where('code', 'like', '1103%')->where('isdeleted', 0)->get();
 
         $query = OperationItems::whereHas('operation', function ($q) {
             $q->where('pro_type', 10); // Sales invoices
@@ -776,10 +776,10 @@ class ReportController extends Controller
     // تقرير الموردين اليومية
     public function generalSuppliersDailyReport()
     {
-        $suppliers = AccHead::where('code', 'like', '211%')->where('isdeleted', 0)->get();
+        $suppliers = AccHead::where('code', 'like', '2101%')->where('isdeleted', 0)->get();
 
         $query = JournalDetail::whereHas('account', function ($q) {
-            $q->where('code', 'like', '211%'); // Supplier accounts
+            $q->where('code', 'like', '2101%'); // Supplier accounts
         })->with(['account', 'journalHead']);
 
         if (request('from_date')) {
@@ -819,7 +819,7 @@ class ReportController extends Controller
         $toDate = request('to_date');
 
         $query = JournalDetail::whereHas('account', function ($q) {
-            $q->where('code', 'like', '211%'); // Supplier accounts
+            $q->where('code', 'like', '2101%'); // Supplier accounts
         })->with('account');
 
         if ($fromDate) {
@@ -871,7 +871,7 @@ class ReportController extends Controller
     // تقرير الموردين أصناف
     public function generalSuppliersItemsReport()
     {
-        $suppliers = AccHead::where('code', 'like', '211%')->where('isdeleted', 0)->get();
+        $suppliers = AccHead::where('code', 'like', '2101%')->where('isdeleted', 0)->get();
 
         $query = OperationItems::whereHas('operation', function ($q) {
             $q->where('pro_type', 11); // Purchase invoices
@@ -932,7 +932,7 @@ class ReportController extends Controller
         $expenseCategories = collect(); // This would be populated with expense categories
         $costCenters = CostCenter::all();
 
-        $expenseBalances = AccHead::where('code', 'like', '5%') // Expense accounts
+        $expenseBalances = AccHead::where('code', 'like', '57%') // Expense accounts
             ->where('isdeleted', 0)
             ->paginate(50)
             ->through(function ($account) use ($asOfDate) {
@@ -969,7 +969,7 @@ class ReportController extends Controller
     // كشف حساب مصروف
     public function generalExpensesDailyReport()
     {
-        $expenseAccounts = AccHead::where('code', 'like', '5%')->where('isdeleted', 0)->get();
+        $expenseAccounts = AccHead::where('code', 'like', '57%')->where('isdeleted', 0)->get();
         $selectedAccount = null;
         $expenseTransactions = collect();
         $openingBalance = 0;
@@ -1196,7 +1196,7 @@ class ReportController extends Controller
     {
         $query = JournalDetail::where('cost_center_id', $costCenterId)
             ->whereHas('account', function ($q) {
-                $q->where('code', 'like', '5%'); // Expense accounts
+                $q->where('code', 'like', '57%'); // Expense accounts
             });
 
         if ($asOfDate) {
@@ -1210,7 +1210,7 @@ class ReportController extends Controller
     {
         $query = JournalDetail::where('cost_center_id', $costCenterId)
             ->whereHas('account', function ($q) {
-                $q->where('code', 'like', '4%'); // Revenue accounts
+                $q->where('code', 'like', '47%'); // Revenue accounts
             });
 
         if ($asOfDate) {
@@ -1237,7 +1237,7 @@ class ReportController extends Controller
     // قائمة الحسابات مع الارصدة
     public function generalAccountBalancesByStore()
     {
-        $warehouses = AccHead::where('code', 'like', '%123')->where('isdeleted', 0)->get();
+        $warehouses = AccHead::where('code', 'like', '1104%')->where('isdeleted', 0)->get();
         $asOfDate = request('as_of_date', now()->format('Y-m-d'));
         $selectedWarehouse = null;
         $accountBalances = collect();
@@ -1275,7 +1275,7 @@ class ReportController extends Controller
     // تقارير المبيعات
     public function generalSalesReport()
     {
-        $customers = AccHead::where('code', 'like', '122%')->where('isdeleted', 0)->get();
+        $customers = AccHead::where('code', 'like', '1103%')->where('isdeleted', 0)->get();
 
         $sales = OperHead::where('pro_type', 10) // Sales invoices
             ->with('acc1Head')
@@ -1313,7 +1313,7 @@ class ReportController extends Controller
     // تقارير المشتريات
     public function generalPurchasesReport()
     {
-        $suppliers = AccHead::where('code', 'like', '211%')->where('isdeleted', 0)->get();
+        $suppliers = AccHead::where('code', 'like', '2101%')->where('isdeleted', 0)->get();
 
         $purchases = OperHead::where('pro_type', 11) // Purchase invoices
             ->with('acc1Head')
@@ -1351,7 +1351,7 @@ class ReportController extends Controller
     // تقارير العملاء
     public function generalCustomersReport()
     {
-        $customers = AccHead::where('code', 'like', '122%')->where('isdeleted', 0)->get();
+        $customers = AccHead::where('code', 'like', '1103%')->where('isdeleted', 0)->get();
 
         $customerTransactions = JournalDetail::whereHas('account', function ($q) {
             $q->where('code', 'like', '122%'); // Customer accounts
@@ -1388,7 +1388,7 @@ class ReportController extends Controller
     // تقارير الموردين
     public function generalSuppliersReport()
     {
-        $suppliers = AccHead::where('code', 'like', '211%')->where('isdeleted', 0)->get();
+        $suppliers = AccHead::where('code', 'like', '2101%')->where('isdeleted', 0)->get();
 
         $supplierTransactions = JournalDetail::whereHas('account', function ($q) {
             $q->where('code', 'like', '211%'); // Supplier accounts
@@ -1425,10 +1425,10 @@ class ReportController extends Controller
     // تقارير المصروفات
     public function generalExpensesReport()
     {
-        $expenseAccounts = AccHead::where('code', 'like', '5%')->where('isdeleted', 0)->get();
+        $expenseAccounts = AccHead::where('code', 'like', '57%')->where('isdeleted', 0)->get();
 
         $expenseTransactions = JournalDetail::whereHas('account', function ($q) {
-            $q->where('code', 'like', '5%'); // Expense accounts
+            $q->where('code', 'like', '57%'); // Expense accounts
         })->with(['account', 'journalHead', 'costCenter'])
             ->when(request('from_date'), function ($q) {
                 $q->whereDate('crtime', '>=', request('from_date'));

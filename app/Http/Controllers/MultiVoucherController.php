@@ -45,7 +45,7 @@ class MultiVoucherController extends Controller
         }
         $employees = \App\Models\AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
-            ->where('code', 'like', '213%')
+            ->where('code', 'like', '2102%')
             ->get();
 
         $lastProId = OperHead::where('pro_type', $type)->max('pro_id') ?? 0;
@@ -77,56 +77,56 @@ class MultiVoucherController extends Controller
             case 40:
                 return [
                     $query()->where('employees_expensses', 1)->get(),
-                    $query()->where('code', 'like', '213%')->get(),
+                    $query()->where('code', 'like', '2022%')->get(),
                 ];
 
             case 41:
                 return [
                     $query()->where('employees_expensses', 1)->get(),
-                    $query()->where('code', 'like', '213%')->get(),
+                    $query()->where('code', 'like', '2022%')->get(),
                 ];
 
             case 42:
             case 43:
             case 44:
                 return [
-                    $query()->where('code', 'like', '213%')->get(),
+                    $query()->where('code', 'like', '2022%')->get(),
                     $query()->where('employees_expensses', 1)->get(),
                 ];
 
             case 45:
                 return [
-                    $query()->where('code', 'like', '122%')->get(),
-                    $query()->where('code', 'like', '321%')->get()
+                    $query()->where('code', 'like', '1103%')->get(),
+                    $query()->where('code', 'like', '2101%')->get()
                 ];
 
             case 46:
                 return [
-                    $query()->where('code', 'like', '44%')->get(),
+                    $query()->where('code', 'like', '47%')->get(),
                     $query()->get()
                 ];
 
             case 47:
                 return [
-                    $query()->where('code', 'like', '321%')->get(),
+                    $query()->where('code', 'like', '2101%')->get(),
                     $query()->get()
                 ];
 
             case 48:
                 return [
-                    $query()->where('code', 'like', '124%')->get(),
-                    $query()->where('code', 'like', '44%')->get(),
+                    $query()->where('code', 'like', '1101%')->get(),
+                    $query()->where('code', 'like', '47%')->get(),
                 ];
 
             case 49:
                 return [
-                    $query()->where('code', 'like', '122%')->get(),
-                    $query()->where('code', 'like', '321%')->get()
+                    $query()->where('code', 'like', '1103%')->get(),
+                    $query()->where('code', 'like', '2101%')->get()
                 ];
 
             case 50:
                 return [
-                    $query()->where('code', 'like', '11%')->get(),
+                    $query()->where('code', 'like', '1101%')->get(),
                     $query()->get()
                 ];
 
@@ -135,19 +135,19 @@ class MultiVoucherController extends Controller
             case 53:
                 return [
                     $query()->get(),
-                    $query()->where('code', 'like', '11%')->get()
+                    $query()->where('code', 'like', '1101%')->get()
                 ];
 
             case 54:
                 return [
-                    $query()->where('code', 'like', '11%')->get(),
+                    $query()->where('code', 'like', '1101%')->get(),
                     $query()->get()
                 ];
 
             case 55:
                 return [
-                    $query()->where('code', '223')->get(),
-                    $query()->where('code', 'like', '224%')->get()
+                    $query()->where('code', 'like', '1101%')->get(),
+                    $query()->where('code', 'like', '2101%')->get()
                 ];
 
             default:
@@ -307,7 +307,7 @@ class MultiVoucherController extends Controller
     // الموظفين
     $employees = \App\Models\AccHead::where('isdeleted', 0)
         ->where('is_basic', 0)
-        ->where('code', 'like', '213%')
+        ->where('code', 'like', '2022%')
         ->get();
 
     // الحسابات حسب نوع العملية

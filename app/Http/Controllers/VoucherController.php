@@ -60,14 +60,14 @@ class VoucherController extends Controller
         // حسابات الصندوق
         $cashAccounts = AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
-            ->where('code', 'like', '121%')
+            ->where('code', 'like', '1101%')
             ->select('id', 'aname')
             ->get();
 
         // حسابات الموظفين
         $employeeAccounts = AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
-            ->where('code', 'like', '213%') // غيّر الكود حسب النظام عندك
+            ->where('code', 'like', '2102%') // غيّر الكود حسب النظام عندك
             ->select('id', 'aname')
             ->get();
 
@@ -203,14 +203,14 @@ class VoucherController extends Controller
         // حسابات الصندوق
         $cashAccounts = AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
-            ->where('code', 'like', '121%')
+            ->where('code', 'like', '1101%')
             ->select('id', 'aname', 'code')
             ->get();
 
         // حسابات الموظفين
         $employeeAccounts = AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
-            ->where('code', 'like', '213%')
+            ->where('code', 'like', '2102%')
             ->select('id', 'aname', 'code')
             ->get();
 

@@ -57,27 +57,7 @@
                             @endisset
                         </h3>
                     </div>
-                    @php
-                        $parentCodes = [
-                            'client' => '122',
-                            'supplier' => '211',
-                            'bank' => '124',
-                            'fund' => '121',
-                            'store' => '123',
-                            'expense' => '44',
-                            'revenue' => '32',
-                            'creditor' => '212',
-                            'depitor' => '125',
-                            'partner' => '231',
-                            'current-partner' => '234',
-                            'asset' => '11',
-                            'employee' => '213',
-                            'rentable' => '112',
-                        ];
-
-                        $type = request()->get('type');
-                        $parentCode = $parentCodes[$type] ?? null;
-                    @endphp
+    
 
 
                 </div>
@@ -92,7 +72,7 @@
                         'revenue' => '42',      // الإيرادات
                         'creditor' => '2104',   // دائنين اخرين
                         'depitor' => '1106',   // مدينين آخرين
-                        'partner' => '3101',   // الشريك الرئيسي
+                        'partner' => '31',   // الشريك الرئيسي
                         'current-partner' => '3201',   // جاري الشريك
                         'asset' => '12',      // الأصول
                         'employee' => '2102',   // الموظفين

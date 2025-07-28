@@ -42,6 +42,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @php $x = 1; @endphp
                         @forelse ($vouchers as $index => $voucher)
                             <tr>
                                 <td x-show="columns[0]">{{ $x++ }}</td>
