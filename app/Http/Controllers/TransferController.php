@@ -34,11 +34,14 @@ class TransferController extends Controller
     public function create(Request $request)
     {
 
-
         $type = $request->get('type');
         $proTypeMap = [
             'receipt' => 1,
             'payment' => 2,
+            'cash_to_cash' => 3,
+            'cash_to_bank' => 4,
+            'bank_to_cash' => 5,
+            'bank_to_bank' => 6,
         ];
 
         $pro_type = $proTypeMap[$type] ?? null;
@@ -49,21 +52,21 @@ class TransferController extends Controller
         // حسابات الصندوق
         $cashAccounts = AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
-            ->where('code', 'like', '121%')
+            ->where('code', 'like', '1101%')
             ->select('id', 'aname')
             ->get();
 
         // حسابات البنك
         $bankAccounts = AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
-            ->where('code', 'like', '124%')
+            ->where('code', 'like', '1102%')
             ->select('id', 'aname')
             ->get();
 
         // حسابات الموظفين
         $employeeAccounts = AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
-            ->where('code', 'like', '213%')
+            ->where('code', 'like', '2102%')
             ->select('id', 'aname')
             ->get();
 
@@ -76,15 +79,8 @@ class TransferController extends Controller
             })
             ->select('id', 'aname', 'code')
             ->get();
-        return view('transfers.create', compact(
-            'type',
-            'pro_type',
-            'newProId',
-            'cashAccounts',
-            'bankAccounts',
-            'employeeAccounts',
-            'otherAccounts'
-        ));
+
+        return view('transfers.create', get_defined_vars());
     }
 
 
@@ -92,18 +88,18 @@ class TransferController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'pro_type'   => 'required|integer',
-            'pro_date'   => 'required|date',
-            'pro_num'    => 'nullable|string',
-            'emp_id'     => 'required|integer',
-            'emp2_id'    => 'nullable|integer',
-            'acc1'       => 'required|integer',
-            'acc2'       => 'required|integer',
-            'pro_value'  => 'required|numeric', // نفس قيمة المدين والدائن
-            'details'    => 'nullable|string',
-            'info'       => 'nullable|string',
-            'info2'      => 'nullable|string',
-            'info3'      => 'nullable|string',
+            'pro_type' => 'required|integer',
+            'pro_date' => 'required|date',
+            'pro_num' => 'nullable|string',
+            'emp_id' => 'required|integer',
+            'emp2_id' => 'nullable|integer',
+            'acc1' => 'required|integer',
+            'acc2' => 'required|integer',
+            'pro_value' => 'required|numeric', // نفس قيمة المدين والدائن
+            'details' => 'nullable|string',
+            'info' => 'nullable|string',
+            'info2' => 'nullable|string',
+            'info3' => 'nullable|string',
             'cost_center' => 'nullable|integer',
         ]);
 
@@ -115,32 +111,32 @@ class TransferController extends Controller
             $newProId = $lastProId ? $lastProId + 1 : 1;
 
             $oper = Operhead::create([
-                'pro_id'        => $newProId,
-                'pro_date'      => $validated['pro_date'],
-                'pro_type'      => $validated['pro_type'],
-                'pro_num'       => $validated['pro_num'] ?? null,
-                'pro_serial'    => $request['pro_serial'] ?? null,
-                'acc1'          => $validated['acc1'],
-                'acc2'          => $validated['acc2'],
-                'pro_value'     => $validated['pro_value'],
-                'details'       => $validated['details'] ?? null,
-                'isdeleted'     => 0,
-                'tenant'        => 0,
-                'branch'        => 1,
-                'is_finance'    => 1,
-                'is_journal'    => 1,
-                'journal_type'  => 2,
-                'emp_id'        => $validated['emp_id'],
-                'emp2_id'       => $validated['emp2_id'] ?? null,
-                'acc1_before'   => 0,
-                'acc1_after'    => 0,
-                'acc2_before'   => 0,
-                'acc2_after'    => 0,
-                'cost_center'   => $validated['cost_center'] ?? null,
-                'user'          => Auth::id(),
-                'info'          => $validated['info'] ?? null,
-                'info2'         => $validated['info2'] ?? null,
-                'info3'         => $validated['info3'] ?? null,
+                'pro_id' => $newProId,
+                'pro_date' => $validated['pro_date'],
+                'pro_type' => $validated['pro_type'],
+                'pro_num' => $validated['pro_num'] ?? null,
+                'pro_serial' => $request['pro_serial'] ?? null,
+                'acc1' => $validated['acc1'],
+                'acc2' => $validated['acc2'],
+                'pro_value' => $validated['pro_value'],
+                'details' => $validated['details'] ?? null,
+                'isdeleted' => 0,
+                'tenant' => 0,
+                'branch' => 1,
+                'is_finance' => 1,
+                'is_journal' => 1,
+                'journal_type' => 2,
+                'emp_id' => $validated['emp_id'],
+                'emp2_id' => $validated['emp2_id'] ?? null,
+                'acc1_before' => 0,
+                'acc1_after' => 0,
+                'acc2_before' => 0,
+                'acc2_after' => 0,
+                'cost_center' => $validated['cost_center'] ?? null,
+                'user' => Auth::id(),
+                'info' => $validated['info'] ?? null,
+                'info2' => $validated['info2'] ?? null,
+                'info3' => $validated['info3'] ?? null,
             ]);
 
             // إنشاء journal_head
@@ -149,36 +145,36 @@ class TransferController extends Controller
 
             $journalHead = JournalHead::create([
                 'journal_id' => $newJournalId,
-                'total'      => $validated['pro_value'],
-                'date'       => $validated['pro_date'],
-                'op_id'      => $oper->id,
-                'pro_type'   => $validated['pro_type'],
-                'details'    => $validated['details'] ?? null,
-                'user'       => Auth::id(),
+                'total' => $validated['pro_value'],
+                'date' => $validated['pro_date'],
+                'op_id' => $oper->id,
+                'pro_type' => $validated['pro_type'],
+                'details' => $validated['details'] ?? null,
+                'user' => Auth::id(),
             ]);
 
             // تفاصيل اليومية: مدين
             JournalDetail::create([
                 'journal_id' => $newJournalId,
                 'account_id' => $validated['acc1'],
-                'debit'      => $validated['pro_value'],
-                'credit'     => 0,
-                'type'       => 0,
-                'info'       => $validated['info'] ?? null,
-                'op_id'      => $oper->id,
-                'isdeleted'  => 0,
+                'debit' => $validated['pro_value'],
+                'credit' => 0,
+                'type' => 0,
+                'info' => $validated['info'] ?? null,
+                'op_id' => $oper->id,
+                'isdeleted' => 0,
             ]);
 
             // تفاصيل اليومية: دائن
             JournalDetail::create([
                 'journal_id' => $newJournalId,
                 'account_id' => $validated['acc2'],
-                'debit'      => 0,
-                'credit'     => $validated['pro_value'],
-                'type'       => 1,
-                'info'       => $validated['info'] ?? null,
-                'op_id'      => $oper->id,
-                'isdeleted'  => 0,
+                'debit' => 0,
+                'credit' => $validated['pro_value'],
+                'type' => 1,
+                'info' => $validated['info'] ?? null,
+                'op_id' => $oper->id,
+                'isdeleted' => 0,
             ]);
 
             DB::commit();
@@ -207,7 +203,7 @@ class TransferController extends Controller
         // حسابات الصندوق
         $cashAccounts = AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
-            ->where('code', 'like', '121%')
+            ->where('code', 'like', '1101%')
             ->select('id', 'aname')
             ->get();
 
@@ -251,18 +247,18 @@ class TransferController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'pro_type'    => 'required|integer',
-            'pro_date'    => 'required|date',
-            'pro_num'     => 'nullable|string',
-            'emp_id'      => 'required|integer',
-            'emp2_id'     => 'nullable|integer',
-            'acc1'        => 'required|integer',
-            'acc2'        => 'required|integer',
-            'pro_value'   => 'required|numeric',
-            'details'     => 'nullable|string',
-            'info'        => 'nullable|string',
-            'info2'       => 'nullable|string',
-            'info3'       => 'nullable|string',
+            'pro_type' => 'required|integer',
+            'pro_date' => 'required|date',
+            'pro_num' => 'nullable|string',
+            'emp_id' => 'required|integer',
+            'emp2_id' => 'nullable|integer',
+            'acc1' => 'required|integer',
+            'acc2' => 'required|integer',
+            'pro_value' => 'required|numeric',
+            'details' => 'nullable|string',
+            'info' => 'nullable|string',
+            'info2' => 'nullable|string',
+            'info3' => 'nullable|string',
             'cost_center' => 'nullable|integer',
         ]);
 
@@ -272,35 +268,35 @@ class TransferController extends Controller
             // تحديث operhead
             $oper = Operhead::findOrFail($id);
             $oper->update([
-                'pro_date'     => $validated['pro_date'],
-                'pro_num'      => $validated['pro_num'] ?? null,
-                'pro_serial'   => $request['pro_serial'] ?? null,
-                'acc1'         => $validated['acc1'],
-                'acc2'         => $validated['acc2'],
-                'pro_value'    => $validated['pro_value'],
-                'details'      => $validated['details'] ?? null,
-                'emp_id'       => $validated['emp_id'],
-                'emp2_id'      => $validated['emp2_id'] ?? null,
-                'acc1_before'  => 0,
-                'acc1_after'   => 0,
-                'acc2_before'  => 0,
-                'acc2_after'   => 0,
-                'cost_center'  => $validated['cost_center'] ?? null,
-                'user'         => Auth::id(),
-                'info'         => $validated['info'] ?? null,
-                'info2'        => $validated['info2'] ?? null,
-                'info3'        => $validated['info3'] ?? null,
+                'pro_date' => $validated['pro_date'],
+                'pro_num' => $validated['pro_num'] ?? null,
+                'pro_serial' => $request['pro_serial'] ?? null,
+                'acc1' => $validated['acc1'],
+                'acc2' => $validated['acc2'],
+                'pro_value' => $validated['pro_value'],
+                'details' => $validated['details'] ?? null,
+                'emp_id' => $validated['emp_id'],
+                'emp2_id' => $validated['emp2_id'] ?? null,
+                'acc1_before' => 0,
+                'acc1_after' => 0,
+                'acc2_before' => 0,
+                'acc2_after' => 0,
+                'cost_center' => $validated['cost_center'] ?? null,
+                'user' => Auth::id(),
+                'info' => $validated['info'] ?? null,
+                'info2' => $validated['info2'] ?? null,
+                'info3' => $validated['info3'] ?? null,
             ]);
 
             // تحديث journal_head
             $journalHead = JournalHead::where('op_id', $oper->id)->first();
             if ($journalHead) {
                 $journalHead->update([
-                    'total'     => $validated['pro_value'],
-                    'date'      => $validated['pro_date'],
-                    'pro_type'  => $validated['pro_type'],
-                    'details'   => $validated['details'] ?? null,
-                    'user'      => Auth::id(),
+                    'total' => $validated['pro_value'],
+                    'date' => $validated['pro_date'],
+                    'pro_type' => $validated['pro_type'],
+                    'details' => $validated['details'] ?? null,
+                    'user' => Auth::id(),
                 ]);
 
                 $journalId = $journalHead->journal_id;
@@ -312,24 +308,24 @@ class TransferController extends Controller
                 JournalDetail::create([
                     'journal_id' => $journalId,
                     'account_id' => $validated['acc1'],
-                    'debit'      => $validated['pro_value'],
-                    'credit'     => 0,
-                    'type'       => 0,
-                    'info'       => $validated['info'] ?? null,
-                    'op_id'      => $oper->id,
-                    'isdeleted'  => 0,
+                    'debit' => $validated['pro_value'],
+                    'credit' => 0,
+                    'type' => 0,
+                    'info' => $validated['info'] ?? null,
+                    'op_id' => $oper->id,
+                    'isdeleted' => 0,
                 ]);
 
                 // إنشاء تفاصيل جديدة (دائن)
                 JournalDetail::create([
                     'journal_id' => $journalId,
                     'account_id' => $validated['acc2'],
-                    'debit'      => 0,
-                    'credit'     => $validated['pro_value'],
-                    'type'       => 1,
-                    'info'       => $validated['info'] ?? null,
-                    'op_id'      => $oper->id,
-                    'isdeleted'  => 0,
+                    'debit' => 0,
+                    'credit' => $validated['pro_value'],
+                    'type' => 1,
+                    'info' => $validated['info'] ?? null,
+                    'op_id' => $oper->id,
+                    'isdeleted' => 0,
                 ]);
             }
 
@@ -342,7 +338,9 @@ class TransferController extends Controller
     }
 
 
-    public function show(string $request) {}
+    public function show(string $request)
+    {
+    }
 
 
     public function destroy(string $id)

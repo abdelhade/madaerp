@@ -347,23 +347,23 @@ public function __construct()
         if ($request->parent_id) {
             $parentAcc = AccHead::find($request->parent_id);
             if ($parentAcc) {
-                $parentCode = substr($parentAcc->code, 0, 3);
+                $parentCode = substr($parentAcc->code, 0, 4);
 
                 $map = [
-                    '122' => 'client',
-                    '211' => 'supplier',
-                    '121' => 'fund',
-                    '124' => 'bank',
-                    '044' => 'expense',
-                    '032' => 'revenue',
-                    '212' => 'creditor',
-                    '125' => 'debtor',
-                    '231' => 'partner',
-                    '234' => 'partner',
-                    '011' => 'asset',
-                    '213' => 'employee',
-                    '112' => 'rentable',
-                    '123' => 'store',
+                    '1103' => 'client',
+                    '2101' => 'supplier',
+                    '1101' => 'fund',
+                    '1102' => 'bank',
+                    '57' => 'expense',
+                    '42' => 'revenue',
+                    '2104' => 'creditor',
+                    '1106' => 'debtor',
+                    '31' => 'partner',
+                    '3201' => 'current-partner',
+                    '12' => 'asset',
+                    '2102' => 'employee',
+                    '1202' => 'rentable',
+                    '1104' => 'store',
                 ];
 
                 $parent = $map[$parentCode] ?? null;

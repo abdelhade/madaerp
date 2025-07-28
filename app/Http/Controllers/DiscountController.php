@@ -102,7 +102,7 @@ class DiscountController extends Controller
             $acc2Fixed = AccHead::findOrFail(91);
             $clientsAccounts = AccHead::where('isdeleted', 0)
                 ->where('is_basic', 0)
-                ->where('code', 'like', '122%')
+                ->where('code', 'like', '1103%')
                 ->select('id', 'aname', 'balance')->get()->map(function ($account) {
                     $account->balance = $this->getAccountBalance($account->id);
                     return $account;
@@ -118,7 +118,7 @@ class DiscountController extends Controller
             $acc1Fixed = AccHead::findOrFail(97);
             $suppliers = AccHead::where('isdeleted', 0)
                 ->where('is_basic', 0)
-                ->where('code', 'like', '211%')
+                ->where('code', 'like', '2101%')
                 ->select('id', 'aname', 'balance')
                 ->get()->map(function ($account) {
                     $account->balance = $this->getAccountBalance($account->id);
@@ -262,7 +262,7 @@ class DiscountController extends Controller
             $acc2Fixed = AccHead::findOrFail(91);
             $clientsAccounts = AccHead::where('isdeleted', 0)
                 ->where('is_basic', 0)
-                ->where('code', 'like', '122%')
+                ->where('code', 'like', '1103%')
                 ->select('id', 'aname')
                 ->get();
 
@@ -271,7 +271,7 @@ class DiscountController extends Controller
             $acc1Fixed = AccHead::findOrFail(97);
             $suppliers = AccHead::where('isdeleted', 0)
                 ->where('is_basic', 0)
-                ->where('code', 'like', '211%')
+                ->where('code', 'like', '2101%')
                 ->select('id', 'aname')
                 ->get();
 

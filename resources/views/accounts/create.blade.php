@@ -5,7 +5,6 @@
         'title' => __('انشاء حساب'),
         'items' => [
             ['label' => __('الرئيسيه'), 'url' => route('admin.dashboard')],
-            ['label' => __('العملاء'), 'url' => route('clients.index')],
             ['label' => __('انشاء')],
         ],
     ])
@@ -18,7 +17,7 @@
 
                 <section class="content">
 
-                        @if (in_array($parent, ['1103', '2101', '1101', '1102', '57', '42', '2104', '1106', '3101', '12', '2102', '1202', '1104']))
+                        @if (in_array($parent, ['1103', '2101', '1101', '1102', '57', '42', '2104', '1106', '31','32', '12', '2102', '1202', '1104']))
 
 
                         <form id="myForm" action="{{ route('accounts.store') }}" method="post">
