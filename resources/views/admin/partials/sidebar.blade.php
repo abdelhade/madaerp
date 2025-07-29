@@ -174,8 +174,15 @@
                                 </a>
                             </li>
                         @endcan
-                        @canany(['عرض المقاسات', 'عرض الطباعه', 'عرض الاماكن', 'عرض المواقع', 'عرض التصنيفات', 'عرض
-                            المجموعات'])
+                        @canany([
+                            'عرض المقاسات',
+                            'عرض الطباعه',
+                            'عرض الاماكن',
+                            'عرض المواقع',
+                            'عرض التصنيفات',
+                            'عرض
+                            المجموعات',
+                            ])
                             <livewire:item-management.notes.notesNames />
                         @endcan
                         {{-- item movement --}}
@@ -396,7 +403,7 @@
                 @endcanany
             @endforeach
 
-            @can('عرض السندات')
+            @canany(['عرض احتساب الثابت للموظفين', 'عرض السندات', 'عرض سند دفع', 'عرض سند دفع متعدد', 'عرض سند قبض'])
                 <li class="li-main">
                     <a href="javascript: void(0);">
                         <i data-feather="file-text" style="color:#fd7e14" class="align-self-center menu-icon"></i>
@@ -404,35 +411,46 @@
                         <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
                     </a>
                     <ul class="sub-menu mm-collapse" aria-expanded="false">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('vouchers.create', ['type' => 'receipt']) }}">
-                                <i class="ti-control-record"></i>{{ __('سند قبض') }}
-                            </a>
-                        </li>
+                        @can('عرض سند قبض')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('vouchers.create', ['type' => 'receipt']) }}">
+                                    <i class="ti-control-record"></i>{{ __('سند قبض') }}
+                                </a>
+                            </li>
+                        @endcan
+                        @can('عرض سند دفع')
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('vouchers.create', ['type' => 'payment']) }}">
                                 <i class="ti-control-record"></i>{{ __('سند دفع') }}
                             </a>
-                        </li>
+                        </li>                            
+                        @endcan
+                        @can('عرض السندات')
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('vouchers.index') }}">
                                 <i class="ti-control-record"></i>{{ __('السندات') }}
                             </a>
-                        </li>
+                        </li>                            
+                        @endcan
+                        @can('عرض سند دفع متعدد')
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('multi-vouchers.create', ['type' => 'multi_payment']) }}">
                                 <i class="ti-control-record"></i>{{ __('سند دفع متعدد') }}
                             </a>
-                        </li>
+                        </li>                            
+                        @endcan
+                        @can('عرض احتساب الثابت للموظفين')
                         <li class="nav-item">
                             <a class="nav-link"
                                 href="{{ route('multi-vouchers.create', ['type' => 'salary_calculation']) }}">
                                 <i class="ti-control-record"></i>{{ __('احتساب الثابت للموظفين') }}
                             </a>
-                        </li>
+                        </li>                            
+                        @endcan
+
                     </ul>
                 </li>
-            @endcan
+            @endcanany
 
             @can('عرض التحويلات النقدية')
                 <li class="li-main">

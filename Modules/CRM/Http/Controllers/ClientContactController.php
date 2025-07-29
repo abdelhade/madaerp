@@ -14,6 +14,9 @@ class ClientContactController extends Controller
     public function __construct()
     {
         $this->middleware('can:عرض جهات اتصال الشركات')->only(['index']);
+        $this->middleware('can:إضافة جهات اتصال الشركات')->only(['store' , 'create']);
+        $this->middleware('can:تعديل جهات اتصال الشركات')->only(['edit' , 'update']);
+        $this->middleware('can:حذف جهات اتصال الشركات')->only(['destory']);
     }
 
     public function index()

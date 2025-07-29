@@ -11,11 +11,12 @@ use Illuminate\Routing\Controller;
 class ClientController extends Controller
 {
 
-    public function __construct()
+      public function __construct()
     {
         $this->middleware('can:عرض العملااء')->only(['index']);
-        $this->middleware('can:إضافة العملااء')->only(['store', 'create']);
-        $this->middleware('can:تحديد العملااء')->only(['edit', 'update']);
+        $this->middleware('can:عرض تفاصيل عميل')->only(['show']);
+        $this->middleware('can:إضافة العملااء')->only(['create', 'store']);
+        $this->middleware('can:تعديل العملااء')->only(['edit', 'update']);
         $this->middleware('can:حذف العملااء')->only(['destroy']);
     }
 
