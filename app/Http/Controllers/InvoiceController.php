@@ -15,58 +15,81 @@ use App\Models\Item;
 class InvoiceController extends Controller
 {
 
-    public function __construct()
-    {
-        // فاتورة المبيعات
-        $this->middleware('can:عرض فاتورة مبيعات')->only(['index', 'show' , 'create']);
-        // $this->middleware('can:إضافة فاتورة مبيعات')->only(['create', 'store']);
-        // $this->middleware('can:تعديل فاتورة مبيعات')->only(['edit', 'update']);
-        // $this->middleware('can:حذف فاتورة مبيعات')->only(['destroy']);
-        // $this->middleware('can:طباعة فاتورة مبيعات')->only(['print', 'pdf', 'export']);
 
-        // مردود المبيعات
-        $this->middleware('can:عرض مردود مبيعات')->only(['index', 'show' , 'create']);
-        // $this->middleware('can:إضافة مردود مبيعات')->only(['returnsCreate', 'returnsStore']);
-        // $this->middleware('can:تعديل مردود مبيعات')->only(['returnsEdit', 'returnsUpdate']);
-        // $this->middleware('can:حذف مردود مبيعات')->only(['returnsDestroy']);
-        // $this->middleware('can:طباعة مردود مبيعات')->only(['returnsPrint', 'returnsPdf']);
+public function index(Request $request)
+{
+    $type = (int) $request->get('type');
 
-        // أمر بيع
-        $this->middleware('can:عرض أمر بيع')->only(['index', 'show' , 'create']);
-        // $this->middleware('can:إضافة أمر بيع')->only(['orderCreate', 'orderStore']);
-        // $this->middleware('can:تعديل أمر بيع')->only(['orderEdit', 'orderUpdate']);
-        // $this->middleware('can:حذف أمر بيع')->only(['orderDestroy']);
-        // $this->middleware('can:طباعة أمر بيع')->only(['orderPrint']);
+    $permissions = [
+        10 => 'عرض فاتورة مبيعات',
+        11 => 'عرض فاتورة مشتريات',
+        12 => 'عرض مردود مبيعات',
+        13 => 'عرض مردود مشتريات',
+        14 => 'عرض أمر بيع',
+        15 => 'عرض أمر شراء',
+        16 => 'عرض عرض سعر لعميل',
+        17 => 'عرض عرض سعر من مورد',
+        18 => 'عرض فاتورة تالف',
+        19 => 'عرض أمر صرف',
+        20 => 'عرض أمر إضافة',
+        21 => 'عرض تحويل من مخزن لمخزن',
+        22 => 'عرض أمر حجز',
+    ];
 
-        // عرض سعر لعميل
-        $this->middleware('can:عرض عرض سعر لعميل')->only(['index', 'show' , 'create']);
-        // $this->middleware('can:إضافة عرض سعر لعميل')->only(['quotationCreate', 'quotationStore']);
-        // $this->middleware('can:تعديل عرض سعر لعميل')->only(['quotationEdit', 'quotationUpdate']);
-        // $this->middleware('can:حذف عرض سعر لعميل')->only(['quotationDestroy']);
-        // $this->middleware('can:طباعة عرض سعر لعميل')->only(['quotationPrint']);
-
-        // أمر حجز
-        $this->middleware('can:عرض أمر حجز')->only(['index', 'show' , 'create']);
-    //     $this->middleware('can:إضافة أمر حجز')->only(['reservationCreate', 'reservationStore']);
-    //     $this->middleware('can:تعديل أمر حجز')->only(['reservationEdit', 'reservationUpdate']);
-    //     $this->middleware('can:حذف أمر حجز')->only(['reservationDestroy']);
-    //     $this->middleware('can:طباعة أمر حجز')->only(['reservationPrint']);
+    if (!isset($permissions[$type])) {
+        abort(404, 'نوع العملية غير معروف');
     }
 
-    public function index()
-    {
-        $invoices = OperHead::with(['acc1Headuser', 'store', 'employee', 'acc1Head', 'acc2Head', 'type'])->get();
-
-        return view('invoices.index', compact('invoices'));
+    if (!auth()->user()->can($permissions[$type])) {
+        abort(403, 'ليس لديك صلاحية لعرض هذا النوع.');
     }
+
+    $invoices = OperHead::with(['acc1Headuser', 'store', 'employee', 'acc1Head', 'acc2Head', 'type'])
+        ->where('pro_type', $type)
+        ->get();
+
+    return view('invoices.index', compact('invoices', 'type'));
+}
+
+
 
 
     public function create(Request $request)
     {
-        return view('invoices.create', [
-            'type' => $request->get('type'),
-            'hash' => $request->get('q'),
-        ]);
+     $type = (int) $request->get('type');
+
+    $permissions = [
+        10 => 'إضافة فاتورة مبيعات',
+        11 => 'إضافة فاتورة مشتريات',
+        12 => 'إضافة مردود مبيعات',
+        13 => 'إضافة مردود مشتريات',
+        14 => 'إضافة أمر بيع',
+        15 => 'إضافة أمر شراء',
+        16 => 'إضافة عرض سعر لعميل',
+        17 => 'إضافة عرض سعر من مورد',
+        18 => 'إضافة فاتورة تالف',
+        19 => 'إضافة أمر صرف',
+        20 => 'إضافة أمر إضافة',
+        21 => 'إضافة تحويل من مخزن لمخزن',
+        22 => 'إضافة أمر حجز',
+    ];
+
+    if (!isset($permissions[$type])) {
+        abort(404, 'نوع العملية غير معروف');
+    }
+
+    if (!auth()->user()->can($permissions[$type])) {
+        abort(403, 'ليس لديك صلاحية لإضافة هذا النوع.');
+    }
+
+    if ($request->get('q') !== md5($type)) {
+        abort(403, 'الطلب غير موثوق.');
+    }
+
+    return view('invoices.create', [
+        'type' => $type,
+        'hash' => $request->get('q'),
+    ]);
 
         // $type = (int) $request->get('type');
         // $hash = $request->get('q');
