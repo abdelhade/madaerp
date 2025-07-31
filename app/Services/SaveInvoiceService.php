@@ -47,7 +47,7 @@ class SaveInvoiceService
         }
 
         try {
-            DB::beginTransaction();
+            // DB::beginTransaction();
             $isJournal = in_array($component->type, [10, 11, 12, 13, 18, 19, 20, 21, 23]) ? 1 : 0;
             $isManager = $isJournal ? 0 : 1;
 
@@ -340,13 +340,13 @@ class SaveInvoiceService
                         'isdeleted'  => 0,
                     ]);
 
-                    DB::commit();
+                    // DB::commit();
                 }
             }
             $component->dispatch('swal', title: 'تم الحفظ!', text: 'تم حفظ الفاتوره بنجاح.', icon: 'success');
             return $operation->id;
         } catch (\Exception $e) {
-            DB::rollBack();
+            // DB::rollBack();
             logger()->error('خطأ أثناء حفظ الفاتورة: ');
             return back()->withInput();
         }
