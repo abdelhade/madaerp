@@ -262,7 +262,12 @@ new class extends Component {
         <div class="col-12">
             <form wire:submit="updateStartBalance" wire:target="updateStartBalance" wire:loading.attr="disabled">
                 @csrf
-                <table class="table table-bordered table-sm table-striped table-hover">
+                <style>
+                    .custom-table-hover tbody tr:hover {
+                        background-color: #f5e9d7 !important; /* لون مختلف عند المرور */
+                    }
+                </style>
+                <table class="table table-bordered table-sm table-striped custom-table-hover">
                     <thead class="table-light">
                         <tr class="text-center">
                             <th style="width: 10%" class="font-family-cairo fw-bold font-14">الكود</th>
