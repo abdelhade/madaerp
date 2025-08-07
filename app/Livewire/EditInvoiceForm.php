@@ -50,6 +50,9 @@ class EditInvoiceForm extends Component
     public $searchTerm = '';
     public $searchResults;
     public $selectedResultIndex = -1;
+    
+    public $barcodeTerm = '';
+    public $barcodeSearchResults;
 
     public int $quantityClickCount = 0;
     public $lastQuantityFieldIndex = null;
@@ -145,11 +148,11 @@ class EditInvoiceForm extends Component
             ->select('id', 'aname')
             ->get();
 
-        $clientsAccounts   = $this->getAccountsByCode('122%');
-        $suppliersAccounts = $this->getAccountsByCode('211%');
-        $stores            = $this->getAccountsByCode('123%');
-        $employees         = $this->getAccountsByCode('213%');
-        $wasted         = $this->getAccountsByCode('44001%');
+        $clientsAccounts   = $this->getAccountsByCode('1103%');
+        $suppliersAccounts = $this->getAccountsByCode('2101%');
+        $stores            = $this->getAccountsByCode('1104%');
+        $employees         = $this->getAccountsByCode('2102%');
+        $wasted         = $this->getAccountsByCode('55%');
         $accounts = $this->getAccountsByCode('%');
         $map = [
             10 => ['acc1' => 'clientsAccounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'],
@@ -173,6 +176,7 @@ class EditInvoiceForm extends Component
         $this->employees = $employees;
         $this->priceTypes = Price::pluck('name', 'id')->toArray();
         $this->searchResults = collect();
+        $this->barcodeSearchResults = collect();
         $this->loadInvoiceItems();
 
         $this->showBalance = in_array($this->type, [10, 11, 12, 13]);
@@ -461,6 +465,37 @@ class EditInvoiceForm extends Component
             : Item::with(['units', 'prices'])
             ->where('name', 'like', "%{$value}%")
             ->take(5)->get();
+    }
+
+    public function updatedBarcodeTerm($value)
+    {
+        $this->barcodeSearchResults = strlen($value) < 1
+            ? collect()
+            : Item::with(['units', 'prices'])
+            ->where('code', 'like', "%{$value}%")
+            ->take(5)->get();
+    }
+
+    public function addItemByBarcode()
+    {
+        if (empty($this->barcodeTerm)) {
+            return;
+        }
+
+        $item = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])
+            ->where('code', $this->barcodeTerm)
+            ->first();
+
+        if (!$item) {
+            $this->dispatch('item-not-found');
+            $this->barcodeTerm = '';
+            $this->barcodeSearchResults = collect();
+            return;
+        }
+
+        $this->addItemFromSearch($item->id);
+        $this->barcodeTerm = '';
+        $this->barcodeSearchResults = collect();
     }
 
     public function addItemFromSearch($itemId)
