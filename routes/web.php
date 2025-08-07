@@ -154,7 +154,9 @@ Route::middleware(['auth'])->group(function () {
     require __DIR__ . '/reports.php';
     require __DIR__ . '/modules/magicals.php';
     require __DIR__ . '/modules/cheques.php';
-    require __DIR__.'/modules/attendance.php';
 
+    require __DIR__.'/modules/attendance.php';
+    require __DIR__ . '/modules/invoice-reports.php';
+    require __DIR__ . '/attendance.php';
 });
 require __DIR__ . '/auth.php';
