@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\AccHead;
 use App\Models\ProType;
+use App\Enums\OperationTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\OperationItems;
@@ -56,7 +57,7 @@ class OperHead extends Model
     {
         return $this->belongsTo(AccHead::class, 'user');
     }
-    // في App\Models\OperHead
+
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class, 'user');
@@ -67,9 +68,8 @@ class OperHead extends Model
     }
     public function operationItems()
     {
-        return $this->hasMany(OperationItems::class, 'pro_id');
+        return $this->hasMany(OperationItems::class, 'pro_id', 'id');
     }
-    // app/Models/OperHead.php
 
     public function journalHead()
     {
@@ -86,5 +86,66 @@ class OperHead extends Model
             'id', // Local key on OperHead table
             'id' // Local key on JournalHead table
         );
+    }
+
+    /**
+     * Get the operation type enum
+     */
+    public function getOperationTypeEnum(): ?OperationTypeEnum
+    {
+        return OperationTypeEnum::fromValue($this->pro_type);
+    }
+
+    /**
+     * Get the edit route for this operation
+     */
+    public function getEditRoute(): string
+    {
+        $operationType = $this->getOperationTypeEnum();
+        return $operationType?->getEditRoute() ?? 'journals.edit';
+    }
+
+    /**
+     * Get the edit URL for this operation
+     */
+    public function getEditUrl(): string
+    {
+        return route($this->getEditRoute(), $this->id);
+    }
+
+    /**
+     * Check if this operation is an invoice
+     */
+    public function isInvoice(): bool
+    {
+        $operationType = $this->getOperationTypeEnum();
+        return $operationType?->isInvoice() ?? false;
+    }
+
+    /**
+     * Check if this operation is a voucher
+     */
+    public function isVoucher(): bool
+    {
+        $operationType = $this->getOperationTypeEnum();
+        return $operationType?->isVoucher() ?? false;
+    }
+
+    /**
+     * Check if this operation is a journal entry
+     */
+    public function isJournal(): bool
+    {
+        $operationType = $this->getOperationTypeEnum();
+        return $operationType?->isJournal() ?? false;
+    }
+
+    /**
+     * Check if this operation is a transfer
+     */
+    public function isTransfer(): bool
+    {
+        $operationType = $this->getOperationTypeEnum();
+        return $operationType?->isTransfer() ?? false;
     }
 }

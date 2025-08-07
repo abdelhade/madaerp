@@ -113,10 +113,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('cost_centers', CostCenterController::class)->names('cost_centers');
     Route::resource('users', UserController::class)->names('users');
-    Route::resource('invoices', InvoiceController::class);
+    Route::resource('invoices', InvoiceController::class)->names('invoices');
 
     Route::get('/invoice/print/{operation_id}', [InvoiceController::class, 'print'])->name('invoice.print');
-    Route::resource('invoices', InvoiceController::class)->names('invoices');
     Route::resource('transfers', TransferController::class)->names('transfers');
     Route::resource('discounts', DiscountController::class)->names('discounts');
 
@@ -152,10 +151,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('pos-vouchers/get-items-by-note-detail', [PosVouchersController::class, 'getItemsByNoteDetail'])->name('pos-vouchers.get-items-by-note-detail');
     Route::get('pos-shifts/{shift}/close', [PosShiftController::class, 'close'])->name('pos-shifts.close');
     Route::post('pos-shifts/{shift}/close', [PosShiftController::class, 'closeConfirm'])->name('pos-shifts.close.confirm');
-    require __DIR__ . '/reports.php';
     require __DIR__ . '/modules/magicals.php';
     require __DIR__ . '/modules/cheques.php';
-    require __DIR__.'/attendance.php';
+    require __DIR__ . '/modules/invoice-reports.php';
+    require __DIR__ . '/modules/attendance.php';
+    require __DIR__ . '/modules/reports.php';
+    // l;qjetgjrqg;jwergjew'rj'ejoj    
 
 });
 require __DIR__ . '/auth.php';

@@ -2,11 +2,12 @@
 
 namespace App\Livewire;
 
+use App\Models\Barcode;
 use Livewire\Component;
 use App\Helpers\ItemViewModel;
 use Illuminate\Support\Collection;
-use App\Models\{OperHead, OperationItems, AccHead, Price, Item};
 use App\Services\SaveInvoiceService;
+use App\Models\{OperHead, OperationItems, AccHead, Price, Item};
 
 class CreateInvoiceForm extends Component
 {
@@ -22,7 +23,13 @@ class CreateInvoiceForm extends Component
     public $barcodeSearchResults;
     public $selectedBarcodeResultIndex = -1;
     public bool $addedFromBarcode = false;
+    public $searchedTerm = '';
 
+    public $isCreateNewItemSelected = false;
+
+    public $currentBalance = 0;
+    public $balanceAfterInvoice = 0;
+    public $showBalance = false;
 
     public $priceTypes = [];
     public $selectedPriceType = 1;
@@ -31,8 +38,8 @@ class CreateInvoiceForm extends Component
     public $searchTerm = '';
     public $searchResults;
     public $selectedResultIndex = -1;
-    public int $quantityClickCount = 0; // لتتبع عدد الضغطات على Enter
-    public $lastQuantityFieldIndex = null; // لتتبع حقل الكمية الأخير
+    public int $quantityClickCount = 0;
+    public $lastQuantityFieldIndex = null;
 
     public $acc1List = [];
     public $acc2List = [];
@@ -96,10 +103,9 @@ class CreateInvoiceForm extends Component
     public function mount($type, $hash)
     {
         $this->type = (int) $type;
-        // إذا لم يكن الهاش مطابقًا لنوع الفاتورة، أوقف التنفيذ
         if ($hash !== md5($this->type)) abort(403, 'نوع الفاتورة غير صحيح');
 
-        // $this->items = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])->get();
+        $convertData = session()->get('convert_invoice_data');
 
         $this->nextProId = OperHead::max('pro_id') + 1 ?? 1;
         $this->pro_id = $this->nextProId;
@@ -148,24 +154,45 @@ class CreateInvoiceForm extends Component
             $this->acc1_id = 0;
         }
 
-        //         public $titles = [
-        //     10 => 'فاتوره مبيعات',
-        //     11 => 'فاتورة مشتريات',
-        //     12 => 'مردود مبيعات',
-        //     13 => 'مردود مشتريات',
-        //     14 => 'امر بيع',
-        //     15 => 'امر شراء',
-        //     16 => 'عرض سعر لعميل',
-        //     17 => 'عرض سعر من مورد',
-        //     18 => 'فاتورة توالف',
-        //     19 => 'امر صرف',
-        //     20 => 'امر اضافة',
-        //     21 => 'تحويل من مخزن لمخزن',
-        //     22 => 'امر حجز',
-        // ];
+        if ($convertData && isset($convertData['invoice_data'])) {
+            $invoiceData = $convertData['invoice_data'];
+
+            $this->acc1_id = $invoiceData['client_id'] ?? $this->acc1_id;
+            $this->acc2_id = $invoiceData['store_id'] ?? $this->acc2_id;
+            $this->emp_id = $invoiceData['employee_id'] ?? $this->emp_id;
+            $this->notes = $invoiceData['notes'] ?? '';
+            $this->pro_date = $invoiceData['invoice_date'] ?? $this->pro_date;
+
+            // تعبئة بيانات الخصم والإضافي
+            $this->discount_percentage = $convertData['discount_percentage'] ?? 0;
+            $this->additional_percentage = $convertData['additional_percentage'] ?? 0;
+            $this->discount_value = $convertData['discount_value'] ?? 0;
+            $this->additional_value = $convertData['additional_value'] ?? 0;
+            $this->total_after_additional = $convertData['total_after_additional'] ?? 0;
+            $this->subtotal = $convertData['subtotal'] ?? 0;
+
+            if (isset($convertData['items_data']) && !empty($convertData['items_data'])) {
+                $this->invoiceItems = $convertData['items_data'];
+            }
+            session()->forget('convert_invoice_data');
+
+            $this->dispatch('alert', [
+                'type' => 'success',
+                'message' => 'تم تحميل بيانات الفاتورة الأصلية بنجاح. يمكنك التعديل عليها الآن.'
+            ]);
+        } else {
+            $this->invoiceItems = [];
+        }
+
+        $this->showBalance = in_array($this->type, [10, 11, 12, 13]);
+
+        if ($this->showBalance) {
+            $this->currentBalance = $this->getAccountBalance($this->acc1_id);
+            $this->calculateBalanceAfterInvoice();
+        }
 
         $this->employees = $employees;
-        $this->invoiceItems = [];
+        // $this->invoiceItems = [];
         $this->priceTypes = Price::pluck('name', 'id')->toArray();
         $this->searchResults = collect();
         $this->items = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])->get();
@@ -179,6 +206,55 @@ class CreateInvoiceForm extends Component
             ->where('code', 'like', $code)
             ->select('id', 'aname')
             ->get();
+    }
+
+    protected function getAccountBalance($accountId)
+    {
+        $totalDebit = \App\Models\JournalDetail::where('account_id', $accountId)
+            ->where('isdeleted', 0)
+            ->sum('debit');
+
+        $totalCredit = \App\Models\JournalDetail::where('account_id', $accountId)
+            ->where('isdeleted', 0)
+            ->sum('credit');
+
+        return $totalDebit - $totalCredit;
+    }
+
+    public function updatedAcc1Id($value)
+    {
+        if ($this->showBalance) {
+            $this->currentBalance = $this->getAccountBalance($value);
+            $this->calculateBalanceAfterInvoice();
+        }
+    }
+
+    public function calculateBalanceAfterInvoice()
+    {
+        $subtotal = 0;
+        foreach ($this->invoiceItems as $item) {
+            $quantity = $item['quantity'] ?? 0;
+            $price = $item['price'] ?? 0;
+            $subtotal += $quantity * $price;
+        }
+
+        $discountValue = $this->discount_value;
+        $additionalValue = $this->additional_value;
+        $netTotal = $subtotal - $discountValue + $additionalValue;
+
+        $effect = 0;
+
+        if ($this->type == 10) { // فاتورة مبيعات
+            $effect = $netTotal;
+        } elseif ($this->type == 11) { // فاتورة مشتريات
+            $effect = -$netTotal;
+        } elseif ($this->type == 12) { // مردود مبيعات
+            $effect = -$netTotal;
+        } elseif ($this->type == 13) { // مردود مشتريات
+            $effect = $netTotal;
+        }
+
+        $this->balanceAfterInvoice = $this->currentBalance + $effect;
     }
 
     public function updateSelectedItemData($item, $unitId, $price)
@@ -198,6 +274,13 @@ class CreateInvoiceForm extends Component
 
         $selectedStoreName = AccHead::where('id', $this->acc2_id)->value('aname') ?? '';
 
+        $lastPurchasePrice = OperationItems::where('item_id', $item->id)
+            ->where('is_stock', 1)
+            ->whereIn('pro_tybe', [11, 20]) // عمليات الشراء والإضافة للمخزن
+            ->where('qty_in', '>', 0)
+            ->orderBy('created_at', 'desc')
+            ->value('item_price') ?? 0;
+
         // $lastCost = OperationItems::where('item_id', $item->id)
         //     ->whereIn('pro_tybe', [11, 20])
         //     ->where('is_stock', 1)
@@ -214,8 +297,15 @@ class CreateInvoiceForm extends Component
             'unit_name' => $unitName,
             'price' => $price,
             'average_cost' => $item->average_cost ?? 0,
+            'last_purchase_price' => $lastPurchasePrice, // إضافة السعر الأخير هنا
             'description' => $item->description ?? ''
         ];
+    }
+
+    public function createItemFromPrompt($name, $barcode)
+    {
+        // استدعاء الدالة الرئيسية التي أنشأناها في البداية
+        $this->createNewItem($name, $barcode);
     }
 
     public function addItemByBarcode()
@@ -225,12 +315,16 @@ class CreateInvoiceForm extends Component
             return;
         }
 
-        $item = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices', 'barcodes'])
-            ->whereHas('barcodes', fn($q) => $q->where('barcode', $barcode))
+        // 💡 هنا التعديل الرئيسي: نستخدم whereHas للبحث في الجدول المرتبط
+        $item = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])
+            ->whereHas('barcodes', function ($query) use ($barcode) {
+                $query->where('barcode', $barcode);
+            })
             ->first();
 
-        if (! $item) {
-            return $this->dispatch('item-not-found');
+        if (!$item) {
+            // هذا الجزء يبقى كما هو لإظهار نافذة إنشاء صنف جديد
+            return $this->dispatch('prompt-create-item-from-barcode', barcode: $barcode);
         }
 
         $this->addedFromBarcode = true;
@@ -249,7 +343,12 @@ class CreateInvoiceForm extends Component
         $this->barcodeSearchResults = collect();
         $this->selectedBarcodeResultIndex = -1;
         $this->lastQuantityFieldIndex = count($this->invoiceItems) - 1;
+        $newRowIndex = count($this->invoiceItems) - 1;
+
+        $this->dispatch('alert', ['type' => 'success', 'message' => 'تم إضافة الصنف بنجاح.']);
+        $this->dispatch('focus-quantity', ['index' => $newRowIndex]);
     }
+
     public function updatedBarcodeTerm($value)
     {
         $this->selectedBarcodeResultIndex = -1;
@@ -337,7 +436,10 @@ class CreateInvoiceForm extends Component
             } else {
                 $this->js('window.focusLastQuantityField()'); // ركز على الكمية
             }
+            $newRowIndex = count($this->invoiceItems) - 1;
 
+            $this->dispatch('alert', ['type' => 'success', 'message' => 'تم إضافة الصنف بنجاح.']);
+            $this->dispatch('focus-quantity', ['index' => $newRowIndex]);
             return; // الخروج من الدالة
         }
 
@@ -366,6 +468,7 @@ class CreateInvoiceForm extends Component
         $this->invoiceItems[] = [
             'item_id' => $item->id,
             'unit_id' => $unitId,
+            'name' => $item->name, // 💡 أضف هذا السطر
             'quantity' => 1,
             'price' => $price,
             'sub_value' => $price * 1, // quantity * price
@@ -542,6 +645,7 @@ class CreateInvoiceForm extends Component
             $this->recalculateSubValues();
             $this->calculateTotals();
         }
+        $this->calculateBalanceAfterInvoice();
     }
 
     public function updatedSelectedPriceType()
@@ -607,11 +711,68 @@ class CreateInvoiceForm extends Component
         $this->total_after_additional = round($this->subtotal - $this->discount_value + $this->additional_value, 2);
     }
 
+    public function calculateSubtotal()
+    {
+        $this->subtotal = 0;
+        foreach ($this->invoiceItems as $index => $item) {
+            $quantity = $item['quantity'] ?? 0;
+            $price = $item['price'] ?? 0;
+            $this->invoiceItems[$index]['total'] = $quantity * $price;
+            $this->subtotal += $quantity * $price;
+        }
+        $this->calculateTotalAfterDiscount();
+        $this->calculateTotalAfterAdditional();
+
+        if ($this->showBalance) {
+            $this->calculateBalanceAfterInvoice();
+        }
+    }
+
+    public function createNewItem($name, $barcode = null)
+    {
+        // التحقق من عدم وجود الاسم مسبقاً
+        $existingItem = Item::where('name', $name)->first();
+        if ($existingItem) {
+            // يمكن إظهار رسالة خطأ هنا
+            return;
+        }
+
+        // في حالة وجود باركود، تأكد أنه غير مستخدم
+        if ($barcode) {
+            $existingBarcode = Barcode::where('barcode', $barcode)->exists();
+            if ($existingBarcode) {
+                // أظهر رسالة أن الباركود مستخدم بالفعل
+                $this->dispatch('alert', ['type' => 'error', 'message' => 'هذا الباركود مستخدم بالفعل لصنف آخر.']);
+                return;
+            }
+        }
+        $code = Item::max('code') + 1 ?? 1;
+        $newItem = Item::create([
+            'name' => $name,
+            'code' => $code,
+        ]);
+
+        // 💡 هنا التعديل: إذا كان هناك باركود، قم بإنشائه في الجدول المنفصل
+        if ($barcode) {
+            // يمكنك تحديد unit_id هنا إذا أردت، أو تركه null
+            $newItem->barcodes()->create([
+                'barcode' => $barcode,
+                'unit_id' => 1 // على سبيل المثال، يمكنك ربطه بوحدة افتراضية
+            ]);
+        }
+        $this->updateSelectedItemData($newItem, 1, 0); // تحديث بيانات الصنف المختار
+        $this->addItemFromSearch($newItem->id);
+
+        $this->searchTerm = '';
+        $this->barcodeTerm = '';
+    }
+
     public function updatedDiscountPercentage()
     {
         $discountPercentage = (float) ($this->discount_percentage ?? 0);
         $this->discount_value = ($this->subtotal * $discountPercentage) / 100;
         $this->calculateTotals();
+        $this->calculateBalanceAfterInvoice();
     }
 
     public function updatedDiscountValue()
@@ -619,6 +780,7 @@ class CreateInvoiceForm extends Component
         if ($this->discount_value >= 0 && $this->subtotal > 0) {
             $this->discount_percentage = ($this->discount_value * 100) / $this->subtotal;
             $this->calculateTotals();
+            $this->calculateBalanceAfterInvoice();
         }
     }
 
@@ -627,6 +789,7 @@ class CreateInvoiceForm extends Component
         $additionalPercentage = (float) ($this->additional_percentage ?? 0);
         $this->additional_value = ($this->subtotal * $additionalPercentage) / 100;
         $this->calculateTotals();
+        $this->calculateBalanceAfterInvoice();
     }
 
     public function updatedAdditionalValue()
@@ -635,20 +798,35 @@ class CreateInvoiceForm extends Component
         if ($this->additional_value >= 0 && $afterDiscount > 0) {
             $this->additional_percentage = ($this->additional_value * 100) / $afterDiscount;
             $this->calculateTotals();
+            $this->calculateBalanceAfterInvoice();
         }
     }
 
     public function handleKeyDown()
     {
-        $this->selectedResultIndex = min(
-            $this->selectedResultIndex + 1,
-            $this->searchResults->count() - 1
-        );
+        if ($this->searchResults->count() > 0) {
+            $this->isCreateNewItemSelected = false;
+            $this->selectedResultIndex = min(
+                $this->selectedResultIndex + 1,
+                $this->searchResults->count() - 1
+            );
+        }
+        // لو مفيش نتائج، حدد زر إنشاء صنف جديد
+        elseif (strlen($this->searchTerm) > 0) {
+            $this->isCreateNewItemSelected = true;
+        }
     }
 
     public function handleKeyUp()
     {
-        $this->selectedResultIndex = max($this->selectedResultIndex - 1, -1);
+        if ($this->searchResults->count() > 0) {
+            $this->isCreateNewItemSelected = false;
+            $this->selectedResultIndex = max($this->selectedResultIndex - 1, -1);
+        }
+        // لو مفيش نتائج، لغي تحديد زر إنشاء صنف جديد
+        elseif (strlen($this->searchTerm) > 0) {
+            $this->isCreateNewItemSelected = false;
+        }
     }
 
     public function handleEnter()
@@ -656,6 +834,20 @@ class CreateInvoiceForm extends Component
         if ($this->selectedResultIndex >= 0) {
             $item = $this->searchResults->get($this->selectedResultIndex);
             $this->addItemFromSearch($item->id);
+        }
+        // لو تم تحديد زر "إنشاء صنف جديد"
+        elseif ($this->isCreateNewItemSelected && strlen($this->searchTerm) > 0) {
+            $this->createNewItem($this->searchTerm);
+            $this->isCreateNewItemSelected = false; // إعادة تعيين الحالة
+        }
+    }
+
+    public function checkSearchResults()
+    {
+        $searchTerm = trim($this->searchTerm);
+        if (!empty($searchTerm) && $this->searchResults->isEmpty()) {
+            $this->searchedTerm = $searchTerm;
+            return $this->dispatch('item-not-found', ['term' => $searchTerm, 'type' => 'search']);
         }
     }
 

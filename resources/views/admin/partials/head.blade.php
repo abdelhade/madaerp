@@ -24,6 +24,14 @@
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
 
     <style>
+        .table{
+            border: 1px solid rgb(114, 114, 255);
+            border-radius: 0px;
+            background-color: #fff;
+            color: black;
+            overflow: scroll;
+          
+        }
         .table-responsive {
             width: 100%;
         }
@@ -88,6 +96,10 @@
         h1 {
             font-size: 40px;
         }
+        h2 {
+            font-size: 30px;
+        }
+
 
         .li-main {
             border: 1px solid rgb(201, 201, 255);

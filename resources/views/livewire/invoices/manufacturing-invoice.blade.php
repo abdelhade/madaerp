@@ -17,20 +17,161 @@
                             </div>
 
                             <div class="flex items-center">
-                                <button wire:click="distributeCosts"
-                                    class="btn btn-primary px-5 py-3 text-lg font-bold">
-                                    توزيع التكاليف <i class="fas fa-balance-scale"></i>
+
+                                <button wire:click="openSaveTemplateModal"
+                                    class="btn btn-info px-5 py-3 text-lg font-bold">
+                                    حفظ كنموذج <i class="fas fa-save"></i>
                                 </button>
+
+                                <!-- زر اختيار نموذج -->
+                                <button wire:click="openLoadTemplateModal"
+                                    class="btn btn-warning px-5 py-3 text-lg font-bold">
+                                    اختيار نموذج <i class="fas fa-folder-open"></i>
+                                </button>
+
+                                <button wire:click="adjustCostsByPercentage"
+                                    class="btn btn-primary px-5 py-3 text-lg font-bold"
+                                    @if (empty($selectedProducts)) disabled @endif>
+                                    <i class="fas fa-calculator me-2"></i>
+                                    توزيع التكاليف حسب النسبة المئوية
+                                </button>
+
+                                @if (!empty($selectedProducts))
+                                    <small class="d-block text-muted mt-1">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        سيتم توزيع إجمالي تكلفة المواد الخام والمصروفات
+                                        (   {{ number_format(collect($additionalExpenses)->map(fn($item) => (float) $item['amount'])->sum()) }} جنيه)
+                                     
+
+                                        على المنتجات حسب النسب المحددة
+                                    </small>
+                                @endif
+
                                 <button wire:click="saveInvoice" class="btn btn-success px-5 py-3 text-lg font-bold">
                                     حفظ الفاتورة <i class="fas fa-save"></i>
                                 </button>
 
-                                <button wire:click="cancelInvoice" type="button"
+                                {{-- <button wire:click="cancelInvoice" type="button"
                                     class="btn btn-danger px-5 py-3 text-lg font-bold">
                                     إلغاء <i class="fas fa-times-circle"></i>
-                                </button>
+                                </button> --}}
                             </div>
                         </div>
+
+                        <!-- مودال حفظ النموذج -->
+                        @if ($showSaveTemplateModal)
+                            <div class="modal fade show" style="display: block;">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">حفظ كنموذج تصنيع</h5>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="form-group">
+                                                <label>اسم النموذج</label>
+                                                <input type="text" wire:model="templateName" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button wire:click="saveAsTemplate" class="btn btn-primary">حفظ</button>
+                                            <button wire:click="closeSaveTemplateModal"
+                                                class="btn btn-secondary">إلغاء</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- مودال تحميل النموذج -->
+                        @if ($showLoadTemplateModal)
+                            <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-primary text-white">
+                                            <h5 class="modal-title">
+                                                <i class="fas fa-folder-open me-2"></i>
+                                                اختيار نموذج تصنيع
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white"
+                                                wire:click="closeLoadTemplateModal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            @if (count($templates) > 0)
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">اختر النموذج:</label>
+                                                    <select wire:model.live="selectedTemplate"
+                                                        class="form-select form-select-lg">
+                                                        <option value=""> اختر نموذج --</option>
+                                                        @foreach ($templates as $template)
+                                                            <option value="{{ $template['id'] }}">
+                                                                {{ $template['display_name'] }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                                @if ($selectedTemplate)
+                                                    <div class="alert alert-info">
+                                                        <i class="fas fa-info-circle me-2"></i>
+                                                        <strong>ملاحظة:</strong> سيتم تحميل جميع المنتجات والخامات
+                                                        المحفوظة في هذا النموذج.
+                                                    </div>
+                                                @endif
+
+                                                {{-- معاينة سريعة للنموذج المختار --}}
+                                                @if ($selectedTemplate)
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <h6 class="mb-0">معاينة النموذج</h6>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            @php
+                                                                $currentTemplate = collect($templates)->firstWhere(
+                                                                    'id',
+                                                                    $selectedTemplate,
+                                                                );
+                                                            @endphp
+                                                            @if ($currentTemplate)
+                                                                {{-- <p class="mb-1"><strong>الاسم:</strong>
+                                                                    {{ $currentTemplate['name'] ?: 'غير محدد' }}</p> --}}
+                                                                <p class="mb-1"><strong>التاريخ:</strong>
+                                                                    {{ $currentTemplate['pro_date'] }}</p>
+                                                                <p class="mb-0"><strong>القيمة:</strong>
+                                                                    {{ number_format($currentTemplate['pro_value'], 2) }}
+                                                                    ج.م</p>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @else
+                                                <div class="text-center py-4">
+                                                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                                                    <h5 class="text-muted">لا توجد نماذج محفوظة</h5>
+                                                    <p class="text-muted">قم بحفظ نموذج أولاً لتتمكن من تحميله لاحقاً
+                                                    </p>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <div class="modal-footer">
+                                            @if (count($templates) > 0)
+                                                <button wire:click="loadTemplate" class="btn btn-primary px-4"
+                                                    {{ !$selectedTemplate ? 'disabled' : '' }}>
+                                                    <i class="fas fa-download me-2"></i>
+                                                    تحميل النموذج
+                                                    {{-- @if (!$selectedTemplate)
+                                                        <small class="d-block">(اختر نموذج أولاً)</small>
+                                                    @endif --}}
+                                                </button>
+                                            @endif
+                                            <button wire:click="closeLoadTemplateModal" class="btn btn-secondary px-4">
+                                                <i class="fas fa-times me-2"></i>
+                                                إلغاء
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="row">
                             <div class="card-body">
@@ -110,7 +251,7 @@
                         <div class="mb-9 card" style="max-height: 200px; overflow-y: auto; overflow-x: hidden;">
                             <!-- حقل البحث للمنتجات المصنعة -->
                             <div class="row">
-                                <div class="col-lg-3 mb-0" style="position: relative;">
+                                <div class="col-lg-3 mb-0" style="position: relative; z-index: 999;">
                                     <input type="text" wire:model.live="productSearchTerm" id="product_search"
                                         class="form-control form-control-sm frst" placeholder="ابحث عن منتج..."
                                         autocomplete="off" style="font-size: 1em;"
@@ -189,16 +330,27 @@
                                                                 style="padding:2px;height:30px;font-size: 0.9em;"
                                                                 placeholder="الكمية">
                                                         </td>
+
                                                         <td>
                                                             <input type="number"
                                                                 id="product_unit_cost_{{ $index }}"
-                                                                wire:model.lazy="selectedProducts.{{ $index }}.unit_cost"
-                                                                wire:blur="updateProductTotal('selectedProducts.{{ $index }}.unit_cost')"
+                                                                wire:model.lazy="selectedProducts.{{ $index }}.average_cost"
                                                                 min="0" step="0.01"
                                                                 class="form-control form-control-sm"
                                                                 style="padding:2px;height:30px;font-size: 0.9em;"
-                                                                placeholder="تكلفة الوحدة">
+                                                                placeholder="تكلفة الوحدة"
+                                                                title="سيتم تعديل سعر الشراء المتوسط للصنف">
+
+                                                            @if (isset($product['old_unit_cost']) && $product['unit_cost'] != $product['old_unit_cost'])
+                                                                <small class="text-warning d-block">
+                                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                                    سيتم تحديث المتوسط من
+                                                                    {{ number_format($product['old_unit_cost'], 2) }}
+                                                                    إلى {{ number_format($product['unit_cost'], 2) }}
+                                                                </small>
+                                                            @endif
                                                         </td>
+
                                                         <td>
                                                             <input type="number"
                                                                 id="product_cost_percentage_{{ $index }}"
@@ -357,7 +509,7 @@
                                                                                             <th style="width: 15%">
                                                                                                 الكمية</th>
                                                                                             <th style="width: 15%">
-                                                                                                سعر الوحدة
+                                                                                                سعر التكلفه
                                                                                             </th>
                                                                                             <th style="width: 15%">
                                                                                                 الإجمالي
@@ -385,11 +537,6 @@
                                                                                                         class="form-control form-control-sm unit-select"
                                                                                                         style="padding:2px;height:30px;font-size: 0.9em;"
                                                                                                         data-item-id="{{ $material['id'] ?? '' }}">
-                                                                                                        <option
-                                                                                                            value="">
-                                                                                                            اختر
-                                                                                                            وحدة
-                                                                                                        </option>
                                                                                                         @foreach ($material['unitsList'] ?? [] as $unit)
                                                                                                             <option
                                                                                                                 value="{{ $unit['id'] }}">
@@ -404,8 +551,7 @@
                                                                                                     <input
                                                                                                         type="number"
                                                                                                         id="raw_quantity_{{ $index }}"
-                                                                                                        wire:model.lazy="selectedRawMaterials.{{ $index }}.quantity"
-                                                                                                        wire:blur="updateRawMaterialTotal('selectedRawMaterials.{{ $index }}.quantity')"
+                                                                                                        wire:model.live.debounce.300="selectedRawMaterials.{{ $index }}.quantity"
                                                                                                         min="0.01"
                                                                                                         step="0.01"
                                                                                                         class="form-control form-control-sm"
@@ -416,18 +562,19 @@
                                                                                                     <input
                                                                                                         type="number"
                                                                                                         id="raw_unit_cost_{{ $index }}"
-                                                                                                        wire:model.lazy="selectedRawMaterials.{{ $index }}.unit_cost"
-                                                                                                        wire:blur="updateRawMaterialTotal('selectedRawMaterials.{{ $index }}.unit_cost')"
+                                                                                                        wire:model.live.debounce.300="selectedRawMaterials.{{ $index }}.average_cost"
+                                                                                                        {{-- wire:blur="updateRawMaterialTotal('selectedRawMaterials.{{ $index }}.unit_cost')" --}}
                                                                                                         min="0"
                                                                                                         step="0.01"
                                                                                                         class="form-control form-control-sm cost-input"
                                                                                                         style="padding:2px;height:30px;font-size: 0.9em;"
-                                                                                                        placeholder="سعر الوحدة">
+                                                                                                        placeholder="سعر التكلفه"
+                                                                                                        disabled>
                                                                                                 </td>
                                                                                                 <td>
                                                                                                     <input
                                                                                                         type="text"
-                                                                                                        value="{{ number_format($material['total_cost'] ?? 0, 2) }} "
+                                                                                                        value="{{ number_format($material['total_cost'] ?? 0, 2) }} ج"
                                                                                                         class="form-control form-control-sm  bg-opacity-10  fw-bold"
                                                                                                         style="padding:2px;height:30px;font-size: 0.9em;"
                                                                                                         readonly>
@@ -572,7 +719,8 @@
                                                                                                 الإضافية</h6>
                                                                                             <p
                                                                                                 class="fs-5 text-success">
-                                                                                                {{ number_format(collect($additionalExpenses)->sum('amount')) }}
+                                                                                                {{ number_format(collect($additionalExpenses)->map(fn($item) => (float) $item['amount'])->sum()) }}
+
                                                                                                 جنيه
                                                                                             </p>
                                                                                         </div>
@@ -605,13 +753,14 @@
                                         style="font-size: 0.75rem;"
                                         value="{{ number_format($totalRawMaterialsCost) }} ج" readonly>
                                 </div>
-
+  
                                 <div class="col-4">
                                     <label class="form-label small text-gray-600">المصاريف</label>
                                     <input type="text"
                                         class="form-control form-control-sm text-purple-600 fw-bold py-1 px-2"
                                         style="font-size: 0.75rem;"
-                                        value="{{ number_format($totalAdditionalExpenses) }} ج" readonly>
+                                        value=" {{ number_format(collect($additionalExpenses)->sum(fn($item) => (float) $item['amount'])) }} ج"
+                                        readonly>
                                 </div>
 
                                 <div class="col-4">
@@ -633,7 +782,8 @@
                                     <label class="form-label small text-gray-600">الانتاج التام</label>
                                     <input type="text"
                                         class="form-control form-control-sm text-blue-600 fw-bold py-1 px-2"
-                                        style="font-size: 0.75rem;" {{-- value="{{ number_format($totalRawMaterialsCost) }} ج" readonly --}}>
+                                        style="font-size: 0.75rem;" value="{{ number_format($totalProductsCost) }} ج"
+                                        readonly>
                                 </div>
 
                                 <div class="col-4">
@@ -653,106 +803,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- <div class="col-2">
-
-                <div class="mb-4 card">
-                    <div class="card-body p-3">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="h2"> المصاريف الإضافية</h3>
-                            <button wire:click="addExpense" class="btn btn-primary btn-sm py-1 px-2 text-sm">
-                                + إضافة
-                            </button>
-                        </div>
-
-                        <div class="bg-gray-50 rounded p-2">
-                            @if (count($additionalExpenses) === 0)
-                                <div class="text-center py-4 text-xs">
-                                    <p class="text-gray-500">لا توجد مصاريف إضافية</p>
-                                </div>
-                            @else
-                                <div class="space-y-2" style="max-height: 200px; overflow-y: auto;">
-                                    @foreach ($additionalExpenses as $index => $expense)
-                                        <div class="bg-white p-2 rounded shadow-xs border border-gray-200 text-xs">
-                                            <div class="flex items-end gap-1">
-                                                <div class="flex-1">
-                                                    <label class="block text-gray-600 mb-1">الوصف</label>
-                                                    <input type="text"
-                                                        wire:model="additionalExpenses.{{ $index }}.description"
-                                                        placeholder="وصف المصروف"
-                                                        class="form-control form-control-xs w-full p-1 text-xs @error('additionalExpenses.' . $index . '.description') border-red-500 @enderror">
-                                                    @error('additionalExpenses.' . $index . '.description')
-                                                        <span class="text-red-500 text-xs">{{ $message }}</span>
-                                                    @enderror
-                                                </div>
-
-                                                <div class="w-20">
-                                                    <label class="block text-gray-600 mb-1">المبلغ</label>
-                                                    <input type="number"
-                                                        wire:model.live="additionalExpenses.{{ $index }}.amount"
-                                                        min="0" step="0.01" placeholder="0.00"
-                                                        class="form-control form-control-xs w-full p-1 text-xs @error('additionalExpenses.' . $index . '.amount') border-red-500 @enderror">
-                                                    @error('additionalExpenses.' . $index . '.amount')
-                                                        <span class="text-red-500 text-xs">{{ $message }}</span>
-                                                    @enderror
-                                                </div>
-
-                                                <div class="flex items-end pb-1">
-                                                    <button wire:click="removeExpense({{ $index }})"
-                                                        class="btn btn-danger btn-icon-square-sm p-1 text-xs">
-                                                        <i class="fa fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ملخص التكاليف -->
-                <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded p-3 mb-4 overflow-hidden">
-                    <h3 class="h2"> التكاليف</h3>
-                    <div class="space-y-2">
-
-                        <div class="bg-white p-2 rounded shadow-xs">
-                            <div class="text-xs text-gray-600">المواد الخام</div>
-                            <div class="text-sm font-bold text-blue-600">
-                                {{ number_format($totalRawMaterialsCost) }} ج
-                            </div>
-                        </div>
-                        <div class="bg-white p-2 rounded shadow-xs">
-                            <div class="text-xs text-gray-600">المصاريف</div>
-                            <div class="text-sm font-bold text-purple-600">
-                                {{ number_format($totalAdditionalExpenses) }} ج
-                            </div>
-                        </div>
-                        <div class="bg-white p-2 rounded shadow-xs">
-                            <div class="text-xs text-gray-600">الإجمالي</div>
-                            <div class="text-sm font-bold text-green-600">
-                                {{ number_format($totalManufacturingCost) }} ج
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="text-center my-5 d-flex flex-column align-items-center gap-3">
-                    <button wire:click="saveInvoice"
-                        class="btn btn-primary btn-lg px-2 py2 mb-2 flex items-center gap-2"
-                        style="font-size: 1.5em;">
-                        حفظ الفاتورة
-                    </button>
-
-                    <button wire:click="cancelInvoice" type="button"
-                        class="btn btn-secondary btn-lg px-2 py-2 flex items-center gap-2" style="font-size: 1.5em;">
-                        إلغاء
-                    </button>
-                </div>
-
-            </div> --}}
         </div>
     @endif
 </div>
@@ -773,22 +823,23 @@
                         }
                     });
                 });
+
                 // حقل الكمية - الانتقال لحقل السعر
-                document.querySelectorAll('input[id^="raw_quantity_"]').forEach(function(field) {
-                    field.addEventListener('keydown', function(e) {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const index = this.id.split('_')[2];
-                            const nextField = document.getElementById('raw_unit_cost_' + index);
-                            if (nextField) {
-                                nextField.focus();
-                                nextField.select();
-                            }
-                        }
-                    });
-                });
+                // document.querySelectorAll('input[id^="raw_quantity_"]').forEach(function(field) {
+                //     field.addEventListener('keydown', function(e) {
+                //         if (e.key === 'Enter') {
+                //             e.preventDefault();
+                //             const index = this.id.split('_')[2];
+                //             const nextField = document.getElementById('raw_unit_cost_' + index);
+                //             if (nextField) {
+                //                 nextField.focus();
+                //                 nextField.select();
+                //             }
+                //         }
+                //     });
+                // });
                 // حقل السعر - الانتقال لحقل البحث
-                document.querySelectorAll('input[id^="raw_unit_cost_"]').forEach(function(field) {
+                document.querySelectorAll('input[id^="raw_quantity_"]').forEach(function(field) {
                     field.addEventListener('keydown', function(e) {
                         if (e.key === 'Enter') {
                             e.preventDefault();
@@ -802,6 +853,17 @@
                     });
                 });
             }
+
+            document.addEventListener('livewire:init', () => {
+                Livewire.on('show-alert', (data) => {
+                    Swal.fire({
+                        title: data.title,
+                        text: data.text,
+                        icon: data.icon,
+                    })
+                });
+            })
+
             // Initialize on page load
             setupKeyboardNavigation();
             document.addEventListener('livewire:init', () => {
@@ -869,24 +931,48 @@
             })
 
             document.addEventListener('livewire:init', () => {
-                Livewire.on('error-swal', (data) => {
+                Livewire.on('success', (data) => {
                     Swal.fire({
                         title: data.title,
                         text: data.text,
                         icon: data.icon,
-                    });
+                    })
                 });
             })
 
+            document.addEventListener('livewire:init', () => {
+                console.log('Livewire initialized');
+                Livewire.on('error-swal', (data) => {
+                    console.log('Received error-swal event:', data);
+                    // استخراج الكائن الأول من المصفوفة
+                    const swalData = Array.isArray(data) ? data[0] : data;
+                    if (swalData && swalData.title && swalData.text) {
+                        Swal.fire({
+                            title: swalData.title,
+                            text: swalData.text,
+                            icon: swalData.icon || 'error',
+                        });
+                    } else {
+                        console.error('Invalid data received for error-swal:', data);
+                        Swal.fire({
+                            title: 'خطأ غير معروف',
+                            text: 'حدث خطأ أثناء معالجة البيانات',
+                            icon: 'error',
+                        });
+                    }
+                });
+            });
 
-            // Livewire.on('form-validation-error', errors => {
-            //     let messages = errors.join('\n');
-            //     Swal.fire({
-            //         icon: 'error',
-            //         title: 'خطأ في البيانات',
-            //         text: messages,
-            //     });
-            // });
+            document.addEventListener('DOMContentLoaded', function() {
+                // تتبع تغيير القيم
+                Livewire.on('template-selected', (templateId) => {
+                    console.log('Template selected:', templateId);
+                });
+
+                Livewire.on('templates-loaded', (count) => {
+                    console.log('Templates loaded:', count);
+                });
+            });
         });
     </script>
 @endpush
