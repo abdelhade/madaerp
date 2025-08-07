@@ -69,7 +69,7 @@
                 <div class="row form-control">
                     @include('components.invoices.invoice-item-table')
                 </div>
-  
+
                 {{-- قسم الإجماليات والمدفوعات --}}
                 @include('components.invoices.invoice-footer')
 
@@ -100,17 +100,17 @@
             document.body.classList.add('enlarge-menu');
         });
 
-        // document.addEventListener('livewire:init', () => {
-        //     Livewire.on('swal', (data) => {
-        //         Swal.fire({
-        //             title: data.title,
-        //             text: data.text,
-        //             icon: data.icon,
-        //         }).then((result) => {
-        //             location.reload();
-        //         });
-        //     });
-        // })
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('swal', (data) => {
+                Swal.fire({
+                    title: data.title,
+                    text: data.text,
+                    icon: data.icon,
+                }).then((result) => {
+                    location.reload();
+                });
+            });
+        })
 
 
         document.addEventListener('livewire:initialized', () => {
