@@ -123,6 +123,7 @@ class CreateInvoiceForm extends Component
         // $accounts  = $this->getAccountsByCode('1104%');
         $employees         = $this->getAccountsByCode('2102%');
         $wasted         = $this->getAccountsByCode('55%');
+        $accounts         = $this->getAccountsByCode('1108%');
         $map = [
             10 => ['acc1' => 'clientsAccounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'], // فاتورة مبيعات
             11 => ['acc1' => 'suppliersAccounts', 'acc1_role' => 'دائن', 'acc2_role' => 'مدين'], // فاتورة مشتريات

@@ -29,6 +29,7 @@ class VoucherController extends Controller
             ->get();
         return view('vouchers.index', compact('vouchers'));
     }
+
     public function create(Request $request)
     {
         $type = $request->get('type');
@@ -93,6 +94,7 @@ class VoucherController extends Controller
 
         );
     }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -100,7 +102,7 @@ class VoucherController extends Controller
             'pro_date' => 'required|date',
             'acc1' => 'required|integer|exists:acc_head,id',
             'acc2' => 'required|integer|exists:acc_head,id',
-            'emp_id' => 'required|integer|exists:acc_head,id',
+            'emp_id' => 'nullable|integer|exists:acc_head,id',
             'emp2_id' => 'nullable|integer|exists:acc_head,id',
             'pro_value' => 'required|numeric',
             'project_id' => 'nullable|integer|exists:projects,id',
@@ -193,6 +195,7 @@ class VoucherController extends Controller
         }
     }
     public function show($id) {}
+
     public function edit($id)
     {
         $voucher = Voucher::findOrFail($id);
@@ -238,13 +241,15 @@ class VoucherController extends Controller
             'costCenters'
         ));
     }
+
+
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'pro_type'    => 'required|integer',
             'pro_date'    => 'required|date',
             'pro_num'     => 'nullable|string',
-            'emp_id'      => 'required|integer',
+            'emp_id'      => 'nullable|integer',
             'emp2_id'     => 'nullable|integer',
             'acc1'        => 'required|integer',
             'acc2'        => 'required|integer',
