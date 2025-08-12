@@ -94,6 +94,8 @@ Route::middleware(['auth'])->group(function () {
     // 📁 Items & Units & Prices & Notes
     Route::resource('items', ItemController::class)->names('items')->only('index', 'create', 'edit');
     Route::get('items/{id}/json', [ItemController::class, 'getItemJson'])->name('items.json');
+    Route::get('items/print', [ItemController::class, 'printItems'])->name('items.print');
+    Route::get('item-movement/print', [ItemController::class, 'printItemMovement'])->name('item-movement.print');
     Route::resource('units', UnitController::class)->names('units')->only('index');
     Route::resource('prices', PriceController::class)->names('prices')->only('index');
     Route::resource('notes', NoteController::class)->names('notes')->only('index');

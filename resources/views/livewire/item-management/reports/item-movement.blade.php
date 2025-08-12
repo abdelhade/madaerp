@@ -211,6 +211,24 @@ new class extends Component {
         </div>
     </div>
 
+    @if ($itemId)
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-end">
+                    <a href="{{ route('item-movement.print', [
+                        'itemId' => $itemId,
+                        'warehouseId' => $warehouseId,
+                        'fromDate' => $fromDate,
+                        'toDate' => $toDate
+                    ]) }}" target="_blank" class="btn btn-primary font-family-cairo fw-bold" style="text-decoration: none;">
+                        <i class="fas fa-print"></i>
+                        طباعة التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="font-family-cairo fw-bold">فلاتر البحث</h4>
