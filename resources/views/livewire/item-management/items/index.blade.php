@@ -369,12 +369,40 @@ new class extends Component {
         // redirect to item movement page
         return redirect()->route('item-movement', ['itemId' => $itemId, 'warehouseId' => $warehouseId]);
     }
+
+    public function printItems()
+    {
+        // This method will be used to trigger print functionality
+        $this->dispatch('print-items');
+    }
 }; ?>
 
 <div>
     @php
         include_once app_path('Helpers/FormatHelper.php');
     @endphp
+    
+    <style>
+        .print-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .print-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+
     <div class="row">
         <div class="col-lg-12">
             @if (session()->has('success'))
@@ -396,6 +424,9 @@ new class extends Component {
                         {{ __('قائمه الأصناف مع الأرصده') }}
                     </h5>
                 </div>
+                
+
+                
                 <div class="card-header">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                         {{-- Primary Action Button --}}
@@ -407,6 +438,18 @@ new class extends Component {
                                 <span class="w-100 text-center">{{ __('إضافه صنف') }}</span>
                             </a>
                         @endcan
+
+                        {{-- Print Button --}}
+                        <a href="{{ route('items.print', [
+                            'search' => $search,
+                            'warehouse' => $selectedWarehouse,
+                            'group' => $selectedGroup,
+                            'category' => $selectedCategory,
+                            'priceType' => $selectedPriceType
+                        ]) }}" target="_blank" class="print-btn font-family-cairo fw-bold" style="text-decoration: none;">
+                            <i class="fas fa-print"></i>
+                            طباعة القائمة
+                        </a>
 
                         {{-- Search and Filter Group --}}
                         <div class="d-flex flex-grow-1 flex-wrap align-items-center justify-content-end gap-2"
@@ -468,6 +511,9 @@ new class extends Component {
                         </div>
                     </div>
                 </div>
+                
+
+                
                 <div class="card-body">
                     {{-- Active Filters Display --}}
                     @if ($search || $selectedWarehouse || $selectedGroup || $selectedCategory)
@@ -696,32 +742,20 @@ new class extends Component {
                                         </div>
                                         @if ($selectedPriceType)
                                             <div class="col-md-3">
-                                                {{-- <div class="card bg-light" style="max-width: 180px; margin: 0 auto;"> --}}
-                                                {{-- <div class="card-body text-center p-2"> --}}
                                                 <h6 class="font-family-cairo fw-bold text-primary mb-1"
                                                     style="font-size: 0.95rem;">إجمالي الكمية</h6>
                                                 <h4 class="font-family-cairo fw-bold text-success mb-0"
                                                     style="font-size: 1.2rem;">{{ $this->totalQuantity }}</h4>
-                                                {{-- </div> --}}
-                                                {{-- </div> --}}
                                             </div>
                                             <div class="col-md-3">
-                                                {{-- <div class="card bg-light style="max-width: 180px; margin: 0 auto;"> --}}
-                                                {{-- <div class="card-body text-center"> --}}
                                                 <h6 class="font-family-cairo fw-bold text-primary">إجمالي القيمة</h6>
                                                 <h4 class="font-family-cairo fw-bold text-success">
                                                     {{ formatCurrency($this->totalAmount) }}</h4>
-                                                {{-- </div> --}}
-                                                {{-- </div> --}}
                                             </div>
                                             <div class="col-md-2">
-                                                {{-- <div class="card bg-light style="max-width: 180px; margin: 0 auto;"> --}}
-                                                {{-- <div class="card-body text-center"> --}}
                                                 <h6 class="font-family-cairo fw-bold text-primary">عدد الأصناف</h6>
                                                 <h4 class="font-family-cairo fw-bold text-success">
                                                     {{ $this->totalItems }}</h4>
-                                                {{-- </div> --}}
-                                                {{-- </div> --}}
                                             </div>
                                         @endif
                                     </div>
@@ -731,6 +765,9 @@ new class extends Component {
                             </div>
                         </div>
                     </div>
+                    
+
+                    
                     <div class="mt-3 d-flex justify-content-center">
                         {{ $this->items->links() }}
                     </div>
