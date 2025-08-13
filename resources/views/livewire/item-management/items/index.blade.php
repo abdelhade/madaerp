@@ -278,8 +278,9 @@ new class extends Component {
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive" style="overflow-x: auto;">
+                <div class="card-body" wire:ignore>
+                    <button id="printbtn" data-target="itemtable">طباعه</button>
+                    <div class="table-responsive" id="itemtable" style="overflow-x: auto;">
                         <table class="table table-striped mb-0" style="min-width: 1200px;">
                             <thead class="table-light text-center align-middle">
 
