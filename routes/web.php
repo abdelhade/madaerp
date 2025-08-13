@@ -94,6 +94,8 @@ Route::middleware(['auth'])->group(function () {
     // 📁 Items & Units & Prices & Notes
     Route::resource('items', ItemController::class)->names('items')->only('index', 'create', 'edit');
     Route::get('items/{id}/json', [ItemController::class, 'getItemJson'])->name('items.json');
+    Route::get('items/print', [ItemController::class, 'printItems'])->name('items.print');
+    Route::get('item-movement/print', [ItemController::class, 'printItemMovement'])->name('item-movement.print');
     Route::resource('units', UnitController::class)->names('units')->only('index');
     Route::resource('prices', PriceController::class)->names('prices')->only('index');
     Route::resource('notes', NoteController::class)->names('notes')->only('index');
@@ -113,9 +115,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('cost_centers', CostCenterController::class)->names('cost_centers');
     Route::resource('users', UserController::class)->names('users');
+    // 📁 Invoice Route
     Route::resource('invoices', InvoiceController::class)->names('invoices');
-
+    // 📁 Invoice Print Route
     Route::get('/invoice/print/{operation_id}', [InvoiceController::class, 'print'])->name('invoice.print');
+    // 📁 Invoice View Route
+    Route::get('invoice/view/{operationId}', [InvoiceController::class, 'view'])->name('invoice.view');
+    // 📁 Transfer Route
     Route::resource('transfers', TransferController::class)->names('transfers');
     Route::resource('discounts', DiscountController::class)->names('discounts');
 
