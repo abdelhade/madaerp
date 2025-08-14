@@ -117,37 +117,23 @@ class CreateInvoiceForm extends Component
         $this->nextProId = OperHead::max('pro_id') + 1 ?? 1;
         $this->pro_id = $this->nextProId;
         $this->pro_date = now()->format('Y-m-d');
+        $this->cashAccounts = AccHead::where('isdeleted', 0)
+            ->where('is_basic', 0)
+            ->where('is_fund', 1)
+            ->select('id', 'aname')
+            ->get();
 
-        $this->cashAccounts = Cache::remember('cash_accounts', 3600, function () {
-            return AccHead::where('isdeleted', 0)
-                ->where('is_basic', 0)
-                ->where('is_fund', 1)
-                ->select('id', 'aname')
-                ->get();
-        });
-
-        $this->settings = Cache::remember('public_settings', 3600, function () {
-            return PublicSetting::pluck('value', 'key')->toArray();
-        });
+        $this->settings = PublicSetting::pluck('value', 'key')->toArray();
 
         // dd($this->settings);
 
-        // $clientsAccounts   = $this->getAccountsByCode('1103%');
-        // $suppliersAccounts = $this->getAccountsByCode('2101%');
-        // $stores            = $this->getAccountsByCode('1104%');
-        // // $accounts  = $this->getAccountsByCode('1104%');
-        // $employees         = $this->getAccountsByCode('2102%');
-        // $wasted         = $this->getAccountsByCode('55%');
-        // $accounts         = $this->getAccountsByCode('1108%');
-
-        $codes = ['1103%', '2101%', '1104%', '2102%', '55%', '1108%'];
-        $accounts = $this->getAccountsByCode($codes);
-        $clientsAccounts = $accounts->filter(fn($account) => str_starts_with($account->code, '1103'));
-        $suppliersAccounts = $accounts->filter(fn($account) => str_starts_with($account->code, '2101'));
-        $stores = $accounts->filter(fn($account) => str_starts_with($account->code, '1104'));
-        $employees = $accounts->filter(fn($account) => str_starts_with($account->code, '2102'));
-        $wasted = $accounts->filter(fn($account) => str_starts_with($account->code, '55'));
-        $accountsBy1108 = $accounts->filter(fn($account) => str_starts_with($account->code, '1108'));
+        $clientsAccounts   = $this->getAccountsByCode('1103%');
+        $suppliersAccounts = $this->getAccountsByCode('2101%');
+        $stores            = $this->getAccountsByCode('1104%');
+        // $accounts  = $this->getAccountsByCode('1104%');
+        $employees         = $this->getAccountsByCode('2102%');
+        $wasted         = $this->getAccountsByCode('55%');
+        $accounts         = $this->getAccountsByCode('1108%');
         $map = [
             10 => ['acc1' => 'clientsAccounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'], // فاتورة مبيعات
             11 => ['acc1' => 'suppliersAccounts', 'acc1_role' => 'دائن', 'acc2_role' => 'مدين'], // فاتورة مشتريات
@@ -221,13 +207,9 @@ class CreateInvoiceForm extends Component
 
         $this->employees = $employees;
         // $this->invoiceItems = [];
-        $this->priceTypes = Cache::remember('price_types', 3600, function () {
-            return Price::pluck('name', 'id')->toArray();
-        });
+        $this->priceTypes = Price::pluck('name', 'id')->toArray();
         $this->searchResults = collect();
-        $this->items = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])
-            ->take(100) // جلب أول 100 صنف بس
-            ->get();
+        $this->items = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])->get();
         $this->barcodeSearchResults = collect();
 
         if ($this->type == 10 && $this->acc1_id) {
@@ -235,27 +217,22 @@ class CreateInvoiceForm extends Component
         }
     }
 
-    private function getAccountsByCode(array $codes)
+    private function getAccountsByCode(string $code)
     {
         return AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
-            ->where(function ($query) use ($codes) {
-                foreach ($codes as $code) {
-                    $query->orWhere('code', 'like', $code);
-                }
-            })
+            ->where('code', 'like', $code)
             ->select('id', 'aname')
             ->get();
     }
 
     protected function getAccountBalance($accountId)
     {
-        $result = JournalDetail::where('account_id', $accountId)
+        $balance = JournalDetail::where('account_id', $accountId)
             ->where('isdeleted', 0)
-            ->selectRaw('SUM(debit) as total_debit, SUM(credit) as total_credit')
-            ->first();
+            ->selectRaw('SUM(debit) - SUM(credit) as balance')
+            ->value('balance') ?? 0;
 
-        $balance = $result->total_debit - $result->total_credit;
         if (($this->settings['allow_zero_opening_balance'] ?? '0') != '1' && $balance == 0 && $accountId) {
             $this->dispatch(
                 'error',
@@ -264,19 +241,20 @@ class CreateInvoiceForm extends Component
                 icon: 'error'
             );
         }
+        return $balance;
     }
 
-    private function getFilteredItems()
-    {
-        $query = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices']);
-        if (($this->settings['allow_hide_items_by_company'] ?? '0') == '1' && $this->acc1_id) {
-            $companyId = AccHead::where('id', $this->acc1_id)->value('company_id');
-            if ($companyId) {
-                $query->where('company_id', $companyId);
-            }
-        }
-        return $query->get();
-    }
+    // private function getFilteredItems()
+    // {
+    //     $query = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices']);
+    //     if (($this->settings['allow_hide_items_by_company'] ?? '0') == '1' && $this->acc1_id) {
+    //         $companyId = AccHead::where('id', $this->acc1_id)->value('company_id');
+    //         if ($companyId) {
+    //             $query->where('company_id', $companyId);
+    //         }
+    //     }
+    //     return $query->get();
+    // }
 
     public function updatedAcc1Id($value)
     {
@@ -503,12 +481,11 @@ class CreateInvoiceForm extends Component
     {
         $this->selectedResultIndex = -1;
         $this->items = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])->get();
-
-        $this->searchResults = Item::with(['units', 'prices'])
-            ->where('name', 'like', '%' . $value . '%')
-            ->orWhere('code', 'like', '%' . $value . '%')
-            ->take(10)
-            ->get();
+        $this->searchResults = strlen($value) < 1
+            ? collect()
+            : Item::with(['units', 'prices'])
+            ->where('name', 'like', "%{$value}%")
+            ->take(5)->get();
     }
 
     public function addItemFromSearch($itemId)
