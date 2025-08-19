@@ -3,9 +3,6 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Database\Seeders\AccHeadSeeder;
-use Database\Seeders\ProTypesSeeder;
-use Database\Seeders\CostCentersSeeder;
 use Modules\Authorization\database\seeders\RoleAndPermissionSeeder;
 use Modules\CRM\database\seeders\LeadStatusSeeder;
 use Modules\Settings\database\seeders\SettingSeeder;
@@ -42,6 +39,7 @@ class DatabaseSeeder extends Seeder
             ContractTypeSeeder::class,
             AttendanceSeeder::class,
             CvSeeder::class,
+            LeaveTypeSeeder::class,
         ]);
     }
 }
