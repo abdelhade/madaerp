@@ -2,10 +2,10 @@
 
 @section('content')
     @include('components.breadcrumb', [
-        'title' => __('تقرير فواتير المشتريات'),
+        'title' => __('تقرير فواتير المبيعات'),
         'items' => [
             ['label' => __('الرئيسيه'), 'url' => route('admin.dashboard')],
-            ['label' => __('فواتير المشتريات')],
+            ['label' => __('فواتير المبيعات')],
         ],
     ])
 
@@ -15,7 +15,11 @@
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive" style="overflow-x: auto;">
-                        <table class="table table-bordered table-striped text-center" style="min-width: 1200px;">
+
+                        <x-table-export-actions table-id="sales-invoice-report-table" filename="sales-invoice-report-table"
+                            excel-label="تصدير Excel" pdf-label="تصدير PDF" print-label="طباعة" />
+                        <table id="sales-invoice-report-table" class="table table-bordered table-striped text-center"
+                            style="min-width: 1200px;">
                             <thead class="table-light">
                                 <tr>
                                     <th>#</th>
