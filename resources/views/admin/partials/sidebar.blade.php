@@ -443,9 +443,9 @@
                         </li>
                         @can('عرض السندات')
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('vouchers.index') }}">
-                                    <i
-                                        class="ti-control-record"></i>{{ __('navigation.general_payment_voucher_for_expenses') }}
+
+                                <a class="nav-link" href="{{ route('vouchers.create', ['type' => 'exp-payment']) }}">
+                                    <i class="ti-control-record"></i>{{ __('navigation.general_payment_voucher_for_expenses') }}
                                 </a>
                             </li>
                         @endcan
