@@ -31,6 +31,8 @@
                                     <th>{{ __('البند') }}</th>
                                     <th>{{ __('رقم البند') }}</th>
                                     <th>{{ __('نوع الصيانة') }}</th>
+                                    <th>{{ __('التاريخ') }}</th>
+                                    <th>{{ __('تاريخ الاستحقاق') }}</th>
                                     <th>{{ __('الحالة') }}</th>
                                     <th>{{ __('العمليات') }}</th>
                                 </tr>
@@ -44,6 +46,14 @@
                                         <td>{{ $maintenance->item_name }}</td>
                                         <td>{{ $maintenance->item_number }}</td>
                                         <td>{{ $maintenance->type->name }}</td>
+                                        <td>
+                                            {{ $maintenance->date ? $maintenance->date->format('Y-m-d') : '-' }}
+                                        </td>
+
+                                        {{-- تاريخ الاستحقاق --}}
+                                        <td>
+                                            {{ $maintenance->accural_date ? $maintenance->accural_date->format('Y-m-d') : '-' }}
+                                        </td>
                                         <td>
                                             @if ($maintenance->status)
                                                 <span class="{{ $maintenance->status->color() }}">

@@ -53,6 +53,27 @@
                                 @enderror
                             </div>
 
+                            {{-- التاريخ --}}
+                            <div class="mb-3 col-lg-4">
+                                <label class="form-label" for="date">{{ __('التاريخ') }}</label>
+                                <input type="date" class="form-control" id="date" name="date"
+                                    value="{{ old('date', $maintenance->date?->format('Y-m-d')) }}">
+                                @error('date')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+                            {{-- تاريخ الاستحقاق --}}
+                            <div class="mb-3 col-lg-4">
+                                <label class="form-label" for="due_date">{{ __('تاريخ الاستحقاق') }}</label>
+                                <input type="date" class="form-control" id="due_date" name="due_date"
+                                    value="{{ old('due_date', $maintenance->due_date?->format('Y-m-d')) }}">
+                                @error('due_date')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+
                             {{-- رقم البند --}}
                             <div class="mb-3 col-lg-4">
                                 <label class="form-label" for="item_number">{{ __('رقم البند') }}</label>

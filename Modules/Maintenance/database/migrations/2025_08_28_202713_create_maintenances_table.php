@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('item_number');
             $table->foreignId('service_type_id')->constrained('service_types')->cascadeOnDelete();
             $table->unsignedTinyInteger('status')->default(1);
+            $table->date('date')->nullable();
+            $table->date('accural_date')->nullable();
             $table->timestamps();
         });
     }

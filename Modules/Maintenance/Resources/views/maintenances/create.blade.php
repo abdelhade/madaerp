@@ -50,6 +50,26 @@
                                 @enderror
                             </div>
 
+                            {{-- التاريخ --}}
+                            <div class="mb-3 col-lg-4">
+                                <label class="form-label" for="date">{{ __('تاريخ الصيانة') }}</label>
+                                <input type="date" class="form-control" id="date" name="date"
+                                    value="{{ old('date') }}">
+                                @error('date')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+                            {{-- تاريخ الاستحقاق --}}
+                            <div class="mb-3 col-lg-4">
+                                <label class="form-label" for="accural_date">{{ __('تاريخ الاستحقاق') }}</label>
+                                <input type="date" class="form-control" id="accural_date" name="accural_date"
+                                    value="{{ old('accural_date') }}">
+                                @error('accural_date')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
                             {{-- رقم البند --}}
                             <div class="mb-3 col-lg-4">
                                 <label class="form-label" for="item_number">{{ __('رقم البند') }}</label>
