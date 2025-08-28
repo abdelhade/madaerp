@@ -20,6 +20,8 @@ class MaintenanceRequest extends FormRequest
             'item_number' => 'nullable|string|max:50',
             'service_type_id' => 'required|exists:service_types,id',
             'status' => 'required|integer',
+            'date' => 'nullable|date',
+            'accural_date' => 'nullable|date',
         ];
     }
 

@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AccHeadSeeder::class,
-            UpdateAccHeadSeeder::class,
+            // UpdateAccHeadSeeder::class,
             ProTypesSeeder::class,
             CostCentersSeeder::class,
             NoteSeeder::class,
