@@ -349,4 +349,140 @@ return [
     'archive_audit_trail_cancelled' => 'Archivage de la piste d\'audit annulé',
     'delete_audit_trail_scheduled' => 'Suppression de la piste d\'audit programmée',
     'delete_audit_trail_cancelled' => 'Suppression de la piste d\'audit annulée',
+
+    // Messages de validation personnalisés
+    'validation' => [
+        'custom' => [
+            // AccHeadController
+            'code' => [
+                'required' => 'Le code du compte est requis.',
+                'max' => 'Le code du compte ne doit pas dépasser 9 caractères.',
+            ],
+            'aname' => [
+                'required' => 'Le nom du compte est requis.',
+                'max' => 'Le nom du compte ne doit pas dépasser 100 caractères.',
+            ],
+            'phone' => [
+                'max' => 'Le numéro de téléphone ne doit pas dépasser 15 caractères.',
+            ],
+            'address' => [
+                'max' => 'L\'adresse ne doit pas dépasser 250 caractères.',
+            ],
+            'e_mail' => [
+                'email' => 'L\'e-mail doit être valide.',
+                'max' => 'L\'e-mail ne doit pas dépasser 100 caractères.',
+            ],
+            'constant' => [
+                'max' => 'Le champ constant ne doit pas dépasser 50 caractères.',
+            ],
+            'parent_id' => [
+                'integer' => 'Le compte parent doit être un nombre.',
+            ],
+            'nature' => [
+                'max' => 'La nature ne doit pas dépasser 50 caractères.',
+            ],
+            'kind' => [
+                'max' => 'Le type ne doit pas dépasser 50 caractères.',
+            ],
+            'start_balance' => [
+                'numeric' => 'Le solde initial doit être un nombre.',
+            ],
+            'credit' => [
+                'numeric' => 'Le crédit doit être un nombre.',
+            ],
+            'debit' => [
+                'numeric' => 'Le débit doit être un nombre.',
+            ],
+            'balance' => [
+                'numeric' => 'Le solde doit être un nombre.',
+            ],
+            'info' => [
+                'max' => 'Les informations ne doivent pas dépasser 500 caractères.',
+            ],
+            'tenant' => [
+                'integer' => 'Le locataire doit être un nombre.',
+            ],
+            'branch' => [
+                'integer' => 'La succursale doit être un nombre.',
+            ],
+            'zatca_name' => [
+                'max' => 'Le nom commercial ne doit pas dépasser 100 caractères.',
+            ],
+            'vat_number' => [
+                'max' => 'Le numéro de TVA ne doit pas dépasser 50 caractères.',
+            ],
+            'national_id' => [
+                'max' => 'Le numéro d\'identité ne doit pas dépasser 50 caractères.',
+            ],
+            'zatca_address' => [
+                'max' => 'L\'adresse nationale ne doit pas dépasser 250 caractères.',
+            ],
+            'company_type' => [
+                'max' => 'Le type d\'entreprise ne doit pas dépasser 50 caractères.',
+            ],
+            'nationality' => [
+                'max' => 'La nationalité ne doit pas dépasser 50 caractères.',
+            ],
+            // MagicalController
+            'magic_name' => [
+                'required' => 'Le nom magique est requis.',
+                'max' => 'Le nom magique ne doit pas dépasser 255 caractères.',
+            ],
+            'magic_link' => [
+                'required' => 'Le lien magique est requis.',
+                'max' => 'Le lien magique ne doit pas dépasser 255 caractères.',
+                'unique' => 'Le lien magique est déjà utilisé.',
+            ],
+            'info' => [
+                'max' => 'Les informations ne doivent pas dépasser 255 caractères.',
+            ],
+            'type' => [
+                'required' => 'Le type de champ est requis.',
+            ],
+            'name' => [
+                'required' => 'Le nom du champ est requis.',
+            ],
+            'value' => [
+                'required' => 'La valeur du champ est requise.',
+            ],
+            'placeholder' => [
+                'required' => 'Le placeholder est requis.',
+            ],
+            // SettingController
+            'company_name' => [
+                'max' => 'Le nom de la société ne doit pas dépasser 200 caractères.',
+            ],
+            'company_add' => [
+                'max' => 'L\'adresse de la société ne doit pas dépasser 200 caractères.',
+            ],
+            'company_email' => [
+                'email' => 'Format d\'e-mail invalide.',
+                'max' => 'L\'e-mail ne doit pas dépasser 50 caractères.',
+            ],
+            'company_tel' => [
+                'max' => 'Le numéro de téléphone ne doit pas dépasser 200 caractères.',
+            ],
+            'edit_pass' => [
+                'max' => 'Le mot de passe de modification ne doit pas dépasser 50 caractères.',
+            ],
+            'lic' => [
+                'max' => 'La licence ne doit pas dépasser 250 caractères.',
+            ],
+            'startdate' => [
+                'date' => 'La date de début est invalide.',
+            ],
+            'enddate' => [
+                'date' => 'La date de fin est invalide.',
+            ],
+            'lang' => [
+                'max' => 'La langue ne doit pas dépasser 20 caractères.',
+            ],
+            'bodycolor' => [
+                'max' => 'La couleur du corps ne doit pas dépasser 50 caractères.',
+            ],
+            'logo' => [
+                'max' => 'Le logo ne doit pas dépasser 255 caractères.',
+            ],
+        ],
+    ],
 ];

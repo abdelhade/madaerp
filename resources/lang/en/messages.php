@@ -396,4 +396,140 @@ return [
     'delete_audit_trail_scheduled' => 'Delete audit trail scheduled',
     'delete_audit_trail_cancelled' => 'Delete audit trail cancelled',
     'delete_audit_trail_failed' => 'Delete audit trail failed',
+
+    // Custom validation messages
+    'validation' => [
+        'custom' => [
+            // AccHeadController
+            'code' => [
+                'required' => 'Account code is required.',
+                'max' => 'Account code must not exceed 9 characters.',
+            ],
+            'aname' => [
+                'required' => 'Account name is required.',
+                'max' => 'Account name must not exceed 100 characters.',
+            ],
+            'phone' => [
+                'max' => 'Phone number must not exceed 15 characters.',
+            ],
+            'address' => [
+                'max' => 'Address must not exceed 250 characters.',
+            ],
+            'e_mail' => [
+                'email' => 'Email must be valid.',
+                'max' => 'Email must not exceed 100 characters.',
+            ],
+            'constant' => [
+                'max' => 'Constant must not exceed 50 characters.',
+            ],
+            'parent_id' => [
+                'integer' => 'Parent account must be a number.',
+            ],
+            'nature' => [
+                'max' => 'Nature must not exceed 50 characters.',
+            ],
+            'kind' => [
+                'max' => 'Kind must not exceed 50 characters.',
+            ],
+            'start_balance' => [
+                'numeric' => 'Starting balance must be a number.',
+            ],
+            'credit' => [
+                'numeric' => 'Credit must be a number.',
+            ],
+            'debit' => [
+                'numeric' => 'Debit must be a number.',
+            ],
+            'balance' => [
+                'numeric' => 'Balance must be a number.',
+            ],
+            'info' => [
+                'max' => 'Info must not exceed 500 characters.',
+            ],
+            'tenant' => [
+                'integer' => 'Tenant must be a number.',
+            ],
+            'branch' => [
+                'integer' => 'Branch must be a number.',
+            ],
+            'zatca_name' => [
+                'max' => 'Trade name must not exceed 100 characters.',
+            ],
+            'vat_number' => [
+                'max' => 'VAT number must not exceed 50 characters.',
+            ],
+            'national_id' => [
+                'max' => 'National ID must not exceed 50 characters.',
+            ],
+            'zatca_address' => [
+                'max' => 'National address must not exceed 250 characters.',
+            ],
+            'company_type' => [
+                'max' => 'Company type must not exceed 50 characters.',
+            ],
+            'nationality' => [
+                'max' => 'Nationality must not exceed 50 characters.',
+            ],
+            // MagicalController
+            'magic_name' => [
+                'required' => 'Magic name is required.',
+                'max' => 'Magic name must not exceed 255 characters.',
+            ],
+            'magic_link' => [
+                'required' => 'Magic link is required.',
+                'max' => 'Magic link must not exceed 255 characters.',
+                'unique' => 'Magic link is already used.',
+            ],
+            'info' => [
+                'max' => 'Info must not exceed 255 characters.',
+            ],
+            'type' => [
+                'required' => 'Field type is required.',
+            ],
+            'name' => [
+                'required' => 'Field name is required.',
+            ],
+            'value' => [
+                'required' => 'Field value is required.',
+            ],
+            'placeholder' => [
+                'required' => 'Placeholder is required.',
+            ],
+            // SettingController
+            'company_name' => [
+                'max' => 'Company name must not exceed 200 characters.',
+            ],
+            'company_add' => [
+                'max' => 'Company address must not exceed 200 characters.',
+            ],
+            'company_email' => [
+                'email' => 'Invalid email format.',
+                'max' => 'Email must not exceed 50 characters.',
+            ],
+            'company_tel' => [
+                'max' => 'Phone number must not exceed 200 characters.',
+            ],
+            'edit_pass' => [
+                'max' => 'Edit password must not exceed 50 characters.',
+            ],
+            'lic' => [
+                'max' => 'License must not exceed 250 characters.',
+            ],
+            'startdate' => [
+                'date' => 'Start date is invalid.',
+            ],
+            'enddate' => [
+                'date' => 'End date is invalid.',
+            ],
+            'lang' => [
+                'max' => 'Language must not exceed 20 characters.',
+            ],
+            'bodycolor' => [
+                'max' => 'Body color must not exceed 50 characters.',
+            ],
+            'logo' => [
+                'max' => 'Logo must not exceed 255 characters.',
+            ],
+        ],
+    ],
 ]; 

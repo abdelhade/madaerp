@@ -209,4 +209,140 @@ return [
     'export_file_sent' => 'Dışa aktarma dosyası gönderildi.',
     'export_file_deleted' => 'Dışa aktarma dosyası silindi.',
     'export_file_archived' => 'Dışa aktarma dosyası arşivlendi.',
+
+    // Özel doğrulama mesajları
+    'validation' => [
+        'custom' => [
+            // AccHeadController
+            'code' => [
+                'required' => 'Hesap kodu gereklidir.',
+                'max' => 'Hesap kodu en fazla 9 karakter olmalıdır.',
+            ],
+            'aname' => [
+                'required' => 'Hesap adı gereklidir.',
+                'max' => 'Hesap adı en fazla 100 karakter olmalıdır.',
+            ],
+            'phone' => [
+                'max' => 'Telefon numarası en fazla 15 karakter olmalıdır.',
+            ],
+            'address' => [
+                'max' => 'Adres en fazla 250 karakter olmalıdır.',
+            ],
+            'e_mail' => [
+                'email' => 'E-posta geçerli olmalıdır.',
+                'max' => 'E-posta en fazla 100 karakter olmalıdır.',
+            ],
+            'constant' => [
+                'max' => 'Sabit alanı en fazla 50 karakter olmalıdır.',
+            ],
+            'parent_id' => [
+                'integer' => 'Üst hesap bir sayı olmalıdır.',
+            ],
+            'nature' => [
+                'max' => 'Doğası en fazla 50 karakter olmalıdır.',
+            ],
+            'kind' => [
+                'max' => 'Tür en fazla 50 karakter olmalıdır.',
+            ],
+            'start_balance' => [
+                'numeric' => 'Başlangıç bakiyesi bir sayı olmalıdır.',
+            ],
+            'credit' => [
+                'numeric' => 'Alacak bir sayı olmalıdır.',
+            ],
+            'debit' => [
+                'numeric' => 'Borç bir sayı olmalıdır.',
+            ],
+            'balance' => [
+                'numeric' => 'Bakiye bir sayı olmalıdır.',
+            ],
+            'info' => [
+                'max' => 'Bilgi en fazla 500 karakter olmalıdır.',
+            ],
+            'tenant' => [
+                'integer' => 'Kiracı bir sayı olmalıdır.',
+            ],
+            'branch' => [
+                'integer' => 'Şube bir sayı olmalıdır.',
+            ],
+            'zatca_name' => [
+                'max' => 'Ticari ad en fazla 100 karakter olmalıdır.',
+            ],
+            'vat_number' => [
+                'max' => 'Vergi numarası en fazla 50 karakter olmalıdır.',
+            ],
+            'national_id' => [
+                'max' => 'Kimlik numarası en fazla 50 karakter olmalıdır.',
+            ],
+            'zatca_address' => [
+                'max' => 'Ulusal adres en fazla 250 karakter olmalıdır.',
+            ],
+            'company_type' => [
+                'max' => 'Şirket türü en fazla 50 karakter olmalıdır.',
+            ],
+            'nationality' => [
+                'max' => 'Uyruk en fazla 50 karakter olmalıdır.',
+            ],
+            // MagicalController
+            'magic_name' => [
+                'required' => 'Sihirli ad gereklidir.',
+                'max' => 'Sihirli ad en fazla 255 karakter olmalıdır.',
+            ],
+            'magic_link' => [
+                'required' => 'Sihirli bağlantı gereklidir.',
+                'max' => 'Sihirli bağlantı en fazla 255 karakter olmalıdır.',
+                'unique' => 'Sihirli bağlantı zaten kullanılmış.',
+            ],
+            'info' => [
+                'max' => 'Bilgi en fazla 255 karakter olmalıdır.',
+            ],
+            'type' => [
+                'required' => 'Alan türü gereklidir.',
+            ],
+            'name' => [
+                'required' => 'Alan adı gereklidir.',
+            ],
+            'value' => [
+                'required' => 'Alan değeri gereklidir.',
+            ],
+            'placeholder' => [
+                'required' => 'Yer tutucu gereklidir.',
+            ],
+            // SettingController
+            'company_name' => [
+                'max' => 'Şirket adı en fazla 200 karakter olmalıdır.',
+            ],
+            'company_add' => [
+                'max' => 'Şirket adresi en fazla 200 karakter olmalıdır.',
+            ],
+            'company_email' => [
+                'email' => 'Geçersiz e-posta formatı.',
+                'max' => 'E-posta en fazla 50 karakter olmalıdır.',
+            ],
+            'company_tel' => [
+                'max' => 'Telefon numarası en fazla 200 karakter olmalıdır.',
+            ],
+            'edit_pass' => [
+                'max' => 'Düzenleme şifresi en fazla 50 karakter olmalıdır.',
+            ],
+            'lic' => [
+                'max' => 'Lisans en fazla 250 karakter olmalıdır.',
+            ],
+            'startdate' => [
+                'date' => 'Başlangıç tarihi geçersiz.',
+            ],
+            'enddate' => [
+                'date' => 'Bitiş tarihi geçersiz.',
+            ],
+            'lang' => [
+                'max' => 'Dil en fazla 20 karakter olmalıdır.',
+            ],
+            'bodycolor' => [
+                'max' => 'Gövde rengi en fazla 50 karakter olmalıdır.',
+            ],
+            'logo' => [
+                'max' => 'Logo en fazla 255 karakter olmalıdır.',
+            ],
+        ],
+    ],
 ];

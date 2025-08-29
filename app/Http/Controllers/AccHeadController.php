@@ -133,7 +133,6 @@ class AccHeadController extends Controller
         if ($parent) {
             $lastAccount = DB::table('acc_head')
                 ->where('code', 'like', $parent . '%')
-                ->where('is_basic', 0)
                 ->orderByDesc('id')
                 ->first();
 
@@ -196,32 +195,32 @@ class AccHeadController extends Controller
             'company_type' => 'nullable|string|max:50',
             'nationality' => 'nullable|string|max:50',
         ], [
-            'code.required' => 'مطلوب تدخل رمز الحساب.',
-            'code.max' => 'رمز الحساب لازم مايعديش 9 حروف.',
-            'aname.required' => 'مطلوب تدخل اسم الحساب.',
-            'aname.max' => 'اسم الحساب لازم مايعديش 100 حرف.',
-            'phone.max' => 'رقم التليفون لازم مايعديش 15 حرف.',
-            'address.max' => 'العنوان لازم مايعديش 250 حرف.',
-            'e_mail.email' => 'البريد الإلكتروني لازم يكون صحيح.',
-            'e_mail.max' => 'البريد الإلكتروني لازم مايعديش 100 حرف.',
-            'constant.max' => 'الثابت لازم مايعديش 50 حرف.',
-            'parent_id.integer' => 'رقم الحساب الأب لازم يكون رقم.',
-            'nature.max' => 'الطبيعة لازم مايعديش 50 حرف.',
-            'kind.max' => 'النوع لازم مايعديش 50 حرف.',
-            'start_balance.numeric' => 'الرصيد الابتدائي لازم يكون رقم.',
-            'credit.numeric' => 'الائتمان لازم يكون رقم.',
-            'debit.numeric' => 'الخصم لازم يكون رقم.',
-            'balance.numeric' => 'الرصيد لازم يكون رقم.',
-            'info.max' => 'المعلومات لازم مايعديش 500 حرف.',
-            'tenant.integer' => 'المستأجر لازم يكون رقم.',
-            'branch.integer' => 'الفرع لازم يكون رقم.',
+            'code.required' => __('validation.custom.code.required'),
+            'code.max' => __('validation.custom.code.max'),
+            'aname.required' => __('validation.custom.aname.required'),
+            'aname.max' => __('validation.custom.aname.max'),
+            'phone.max' => __('validation.custom.phone.max'),
+            'address.max' => __('validation.custom.address.max'),
+            'e_mail.email' => __('validation.custom.e_mail.email'),
+            'e_mail.max' => __('validation.custom.e_mail.max'),
+            'constant.max' => __('validation.custom.constant.max'),
+            'parent_id.integer' => __('validation.custom.parent_id.integer'),
+            'nature.max' => __('validation.custom.nature.max'),
+            'kind.max' => __('validation.custom.kind.max'),
+            'start_balance.numeric' => __('validation.custom.start_balance.numeric'),
+            'credit.numeric' => __('validation.custom.credit.numeric'),
+            'debit.numeric' => __('validation.custom.debit.numeric'),
+            'balance.numeric' => __('validation.custom.balance.numeric'),
+            'info.max' => __('validation.custom.info.max'),
+            'tenant.integer' => __('validation.custom.tenant.integer'),
+            'branch.integer' => __('validation.custom.branch.integer'),
             // رسائل التحقق للحقول الجديدة
-            'zatca_name.max' => 'الاسم التجاري لا يجب أن يتجاوز 100 حرف.',
-            'vat_number.max' => 'الرقم الضريبي لا يجب أن يتجاوز 50 حرف.',
-            'national_id.max' => 'رقم الهوية لا يجب أن يتجاوز 50 حرف.',
-            'zatca_address.max' => 'العنوان الوطني لا يجب أن يتجاوز 250 حرف.',
-            'company_type.max' => 'نوع الشركة لا يجب أن يتجاوز 50 حرف.',
-            'nationality.max' => 'الجنسية لا يجب أن تتجاوز 50 حرف.',
+            'zatca_name.max' => __('validation.custom.zatca_name.max'),
+            'vat_number.max' => __('validation.custom.vat_number.max'),
+            'national_id.max' => __('validation.custom.national_id.max'),
+            'zatca_address.max' => __('validation.custom.zatca_address.max'),
+            'company_type.max' => __('validation.custom.company_type.max'),
+            'nationality.max' => __('validation.custom.nationality.max'),
         ]);
 
         AccHead::create([
@@ -346,12 +345,12 @@ class AccHeadController extends Controller
             'nationality' => 'nullable|string|max:50',
         ], [
             // رسائل التحقق للحقول الجديدة
-            'zatca_name.max' => 'الاسم التجاري لا يجب أن يتجاوز 100 حرف.',
-            'vat_number.max' => 'الرقم الضريبي لا يجب أن يتجاوز 50 حرف.',
-            'national_id.max' => 'رقم الهوية لا يجب أن يتجاوز 50 حرف.',
-            'zatca_address.max' => 'العنوان الوطني لا يجب أن يتجاوز 250 حرف.',
-            'company_type.max' => 'نوع الشركة لا يجب أن يتجاوز 50 حرف.',
-            'nationality.max' => 'الجنسية لا يجب أن تتجاوز 50 حرف.',
+            'zatca_name.max' => __('validation.custom.zatca_name.max'),
+            'vat_number.max' => __('validation.custom.vat_number.max'),
+            'national_id.max' => __('validation.custom.national_id.max'),
+            'zatca_address.max' => __('validation.custom.zatca_address.max'),
+            'company_type.max' => __('validation.custom.company_type.max'),
+            'nationality.max' => __('validation.custom.nationality.max'),
         ]);
 
         $account->update([
