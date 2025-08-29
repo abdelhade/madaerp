@@ -35,7 +35,6 @@ use App\Http\Controllers\TownController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\ProductionOrderController;
 
 use Illuminate\Support\Facades\Route;
