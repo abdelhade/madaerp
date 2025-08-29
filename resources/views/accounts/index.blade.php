@@ -58,36 +58,46 @@
     <div class="container">
         <section class="content-header">
             <div class="container-fluid">
-                <div class="row">
-                    <div class="col">
-                        <h3 class="cake cake-bounce">{{ __('قائمة الحسابات') }}
-                            @isset($parentAccountName)
-                                : {{ $parentAccountName }}
-                            @else
-                                @php
-                                    $typeLabels = [
-                                        'client' => 'العملاء',
-                                        'supplier' => 'الموردين',
-                                        'fund' => 'الصناديق',
-                                        'bank' => 'البنوك',
-                                        'expense' => 'المصروفات',
-                                        'revenue' => 'الإيرادات',
-                                        'creditor' => 'الدائنين',
-                                        'depitor' => 'المدينين',
-                                        'partner' => 'الشركاء',
-                                        'current-partner' => 'جاري الشركاء',
-                                        'asset' => 'الأصول',
-                                        'employee' => 'الموظفين',
-                                        'rentable' => 'المستأجرات',
-                                        'store' => 'المخازن',
-                                    ];
-                                @endphp
 
-                                @if (request('type') && isset($typeLabels[request('type')]))
-                                    _ {{ $typeLabels[request('type')] }}
-                                @endif
-                            @endisset
-                        </h3>
+                @include('components.breadcrumb', [
+                    'title' => $permName ? __('قائمة الحسابات - ' . $permName) : __('قائمة الحسابات'),
+                    'items' => [
+                        ['label' => __('الرئيسيه'), 'url' => route('admin.dashboard')],
+                        $permName ? ['label' => $permName] : ['label' => __('قائمة الحسابات')],
+                    ],
+                ])
+
+                <div class="row mt-3 justify-content-between align-items-center">
+                    @php
+                        $parentCodes = [
+                            'client' => '1103', // العملاء
+                            'supplier' => '2101', // الموردين
+                            'bank' => '1102', // البنوك
+                            'fund' => '1101', // الصناديق
+                            'store' => '1104', // المخازن
+                            'expense' => '57', // المصروفات
+                            'revenue' => '42', // الإيرادات
+                            'creditor' => '2104', // دائنين اخرين
+                            'depitor' => '1106', // مدينين آخرين
+                            'partner' => '31', // الشريك الرئيسي
+                            'current-partner' => '3201', // جاري الشريك
+                            'asset' => '12', // الأصول
+                            'employee' => '2102', // الموظفين
+                            'rentable' => '1202', // مباني (أصل قابل للإيجار)
+                        ];
+
+                        $type = request()->get('type');
+                        $parentCode = $parentCodes[$type] ?? null;
+                    @endphp
+                    <div class="col-md-3">
+                        @if ($parentCode)
+                            {{-- @can("إضافة $permName") --}}
+                                <a href="{{ route('accounts.create', ['parent' => $parentCode]) }}"
+                                    class="btn btn-primary cake cake-fadeIn">
+                                    {{ __('إضافة حساب جديد') }}
+                                </a>
+                            {{-- @endcan --}}
+                        @endif
                     </div>
 
 
