@@ -15,7 +15,13 @@
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive" style="overflow-x: auto;">
-                        <table class="table table-bordered table-striped text-center" style="min-width: 1200px;">
+
+                        <x-table-export-actions table-id="manufacturing-invoice-report-table"
+                            filename="manufacturing-invoice-report-table" excel-label="تصدير Excel" pdf-label="تصدير PDF"
+                            print-label="طباعة" />
+
+                        <table id="manufacturing-invoice-report-table"
+                            class="table table-bordered table-striped text-center" style="min-width: 1200px;">
                             <thead class="table-light">
                                 <tr>
                                     <th>#</th>

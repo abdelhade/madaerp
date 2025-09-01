@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AccHeadSeeder::class,
+            // UpdateAccHeadSeeder::class,
             ProTypesSeeder::class,
             CostCentersSeeder::class,
             NoteSeeder::class,
@@ -40,6 +41,7 @@ class DatabaseSeeder extends Seeder
             AttendanceSeeder::class,
             CvSeeder::class,
             LeaveTypeSeeder::class,
+            RentalsProTypesSeeder::class
         ]);
     }
 }

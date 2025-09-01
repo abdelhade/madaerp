@@ -36,6 +36,17 @@ class MagicalController extends Controller
             'name' => 'required|array',
             'value' => 'required|array',
             'placeholder' => 'required|array',
+        ], [
+            'magic_name.required' => __('validation.custom.magic_name.required'),
+            'magic_name.max' => __('validation.custom.magic_name.max'),
+            'magic_link.required' => __('validation.custom.magic_link.required'),
+            'magic_link.max' => __('validation.custom.magic_link.max'),
+            'magic_link.unique' => __('validation.custom.magic_link.unique'),
+            'info.max' => __('validation.custom.info.max'),
+            'type.required' => __('validation.custom.type.required'),
+            'name.required' => __('validation.custom.name.required'),
+            'value.required' => __('validation.custom.value.required'),
+            'placeholder.required' => __('validation.custom.placeholder.required'),
         ]);
 
         $magical = \App\Models\Magical::create([
