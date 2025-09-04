@@ -186,14 +186,14 @@
                             <livewire:item-management.notes.notesNames />
                         @endcan
                         <!-- {{-- item movement --}}
-                                                                                    @can('عرض تقرير حركة صنف')
+                                                                                            @can('عرض تقرير حركة صنف')
         <li class="nav-item">
-                                                                                                                                                        <a class="nav-link font-family-cairo fw-bold" href="{{ route('item-movement') }}">
-                                                                                                                                                            <i class="ti-control-record"></i>{{ __('navigation.item_movement_report') }}
-                                                                                                                                                        </a>
-                                                                                                                                                    </li>
+                                                                                                                                                                        <a class="nav-link font-family-cairo fw-bold" href="{{ route('item-movement') }}">
+                                                                                                                                                                            <i class="ti-control-record"></i>{{ __('navigation.item_movement_report') }}
+                                                                                                                                                                        </a>
+                                                                                                                                                                    </li>
     @endcan
-                                                                                    {{-- item movement --}} -->
+                                                                                            {{-- item movement --}} -->
                     </ul>
                 </li>
             @endcanany
@@ -695,6 +695,7 @@
                 </li>
             @endcanany
 
+
             @canany(['عرض قيد يومية', 'عرض قيد يوميه متعدد', 'عرض قيود يومية عمليات', 'عرض قيود يوميه عمليات متعدده',
                 'عرض قيود يوميه حسابات', 'عرض تسجيل الارصده الافتتاحيه للمخازن'])
                 <li class="li-main">
@@ -757,10 +758,10 @@
                         {{-- الرصيد الافتتاحى للحسابات --}}
                         {{-- account movement --}}
                         <!-- <li class="nav-item">
-                                                                                        <a class="nav-link font-family-cairo fw-bold" href="{{ route('account-movement') }}">
-                                                                                            <i class="ti-control-record"></i>{{ __('navigation.account_movement_report') }}
-                                                                                        </a>
-                                                                                    </li> -->
+                                                                                                <a class="nav-link font-family-cairo fw-bold" href="{{ route('account-movement') }}">
+                                                                                                    <i class="ti-control-record"></i>{{ __('navigation.account_movement_report') }}
+                                                                                                </a>
+                                                                                            </li> -->
                         {{-- account movement --}}
                         {{-- balance sheet --}}
                         <li class="nav-item">
@@ -820,6 +821,7 @@
                         <span>{{ __('navigation.human_resources') }}</span>
                         <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
                     </a>
+
                     <ul class="sub-menu mm-collapse" aria-expanded="false">
                         @can('عرض الادارات و الاقسام')
                             <li class="nav-item">
@@ -992,7 +994,10 @@
                         </li>
                     </ul>
                 </li>
+
             @endcanany
+
+
             <li class="li-main">
                 <a href="javascript: void(0);">
                     <i data-feather="settings" class="align-self-center menu-icon"></i>
@@ -1014,6 +1019,7 @@
                 </ul>
             </li>
 
+
             <li class="li-main">
                 <a href="javascript: void(0);">
                     <i data-feather="settings" class="align-self-center menu-icon"></i>
@@ -1027,15 +1033,16 @@
                         </a>
                     </li>
 
+
                     <li class="nav-item">
+
                         <a class="nav-link" href="{{ route('rentals.leases.index') }}">
+
                             <i class="ti-control-record"></i>{{ __('عقود الاستأجار') }}
                         </a>
                     </li>
-
                 </ul>
             </li>
-
             <li class="li-main">
                 <a href="javascript: void(0);">
                     <i data-feather="settings" class="align-self-center menu-icon"></i>
@@ -1044,6 +1051,8 @@
                 </a>
                 <ul class="sub-menu mm-collapse" aria-expanded="false">
                     <li class="nav-item">
+                    @dd(0000000000000000000)
+
                         <a class="nav-link" href="{{ route('service.types.index') }}">
                             <i class="ti-control-record"></i>{{ __('انواع الخدمات') }}
                         </a>
@@ -1138,4 +1147,5 @@
 
         </ul>
     </div>
+</div>
 </div>
