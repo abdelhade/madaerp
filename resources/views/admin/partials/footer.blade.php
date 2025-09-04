@@ -31,6 +31,8 @@
             });
         });
     </script>
+
+
     <script>
         //submit by f12
         $(document).on('keydown', function(e) {
@@ -64,6 +66,7 @@
                 let targetId = e.target.getAttribute('data-target');
                 let content = document.getElementById(targetId).innerHTML;
 
+
                 let printWindow = window.open('', '', 'width=800,height=600');
                 printWindow.document.write(content);
                 printWindow.document.close();
@@ -72,11 +75,13 @@
         });
     </script>
 
+
+    </script>
+
     <script>
         function disableButton() {
             document.getElementById("submitBtn").disabled = true;
             return true; // يسمح بعملية الـ submit مرة واحدة
         }
     </script>
-
 </footer>
