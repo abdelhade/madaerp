@@ -74,10 +74,15 @@
 
                                         </td>
                                         <td>
-                                            <span
-                                                class="badge {{ $client->gender === 'male' ? 'bg-primary' : 'bg-pink' }}">
-                                                {{ $client->gender === 'male' ? 'ذكر' : 'أنثى' }}
-                                            </span>
+                                            @if ($client->type === 'person')
+                                                @if ($client->gender === 'male')
+                                                    <span class="badge bg-primary">ذكر</span>
+                                                @elseif ($client->gender === 'female')
+                                                    <span class="badge bg-pink">أنثى</span>
+                                                @endif
+                                            @else
+                                                <span class="badge bg-secondary">—</span>
+                                            @endif
                                         </td>
 
                                         <td>
