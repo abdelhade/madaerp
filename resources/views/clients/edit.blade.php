@@ -175,7 +175,7 @@
 
                                 <div class="col-lg-4 col-md-6">
                                     <label class="form-label">النوع</label>
-                                    <select name="gender" class="form-select">
+                                    <select name="gender" id="gender" class="form-select">
                                         <option value="">اختر النوع</option>
                                         <option value="male"
                                             {{ old('gender', $client->gender) == 'male' ? 'selected' : '' }}>ذكر</option>
@@ -184,6 +184,7 @@
                                         </option>
                                     </select>
                                 </div>
+
 
                                 <!-- حقل الحالة -->
                                 <div class="col-lg-4 col-md-6">
@@ -216,3 +217,22 @@
         </div>
     </div>
 @endsection
+@push('scripts')
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const typeSelect = document.getElementById("type");
+            const genderSelect = document.getElementById("gender");
+
+            function toggleGender() {
+                if (typeSelect.value === "company") {
+                    genderSelect.disabled = true;
+                    genderSelect.value = ""; // نخليها فاضية عشان تتبعت null
+                } else {
+                    genderSelect.disabled = false;
+                }
+            }
+            toggleGender();
+            typeSelect.addEventListener("change", toggleGender);
+        });
+    </script>
+@endpush

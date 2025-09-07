@@ -161,7 +161,7 @@
 
                                 <div class="col-lg-4 col-md-6">
                                     <label class="form-label">النوع</label>
-                                    <select name="gender" class="form-select">
+                                    <select name="gender" id="gender" class="form-select">
                                         <option value="">اختر النوع</option>
                                         <option value="male">ذكر</option>
                                         <option value="female">أنثى</option>
@@ -174,8 +174,8 @@
                                     <div class="status-container d-flex align-items-center justify-content-between">
                                         <span class="status-label">نشط</span>
                                         <div class="form-check form-switch m-0">
-                                            <input type="checkbox" class="form-check-input" id="is_active" name="is_active"
-                                                value="1" checked>
+                                            <input type="checkbox" class="form-check-input" id="is_active"
+                                                name="is_active" value="1" checked>
                                         </div>
                                     </div>
                                 </div>
@@ -198,3 +198,23 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const typeSelect = document.getElementById("type");
+            const genderSelect = document.getElementById("gender");
+
+            function toggleGender() {
+                if (typeSelect.value === "company") {
+                    genderSelect.disabled = true;
+                    genderSelect.value = ""; // نخليه فاضي عشان يتبعت null
+                } else {
+                    genderSelect.disabled = false;
+                }
+            }
+            toggleGender();
+            typeSelect.addEventListener("change", toggleGender);
+        });
+    </script>
+@endpush
