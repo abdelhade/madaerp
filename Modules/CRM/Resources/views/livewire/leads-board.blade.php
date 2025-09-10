@@ -1,208 +1,6 @@
 <div>
     @push('styles')
-        <style>
-            .leads-board {
-                display: flex;
-                gap: 20px;
-                overflow-x: auto;
-                min-height: 70vh;
-                padding: 20px 0;
-                scroll-behavior: smooth;
-                position: relative;
-            }
-
-            .status-column {
-                min-width: 300px;
-                background: #f8f9fa;
-                border-radius: 8px;
-                padding: 15px;
-                border: 2px solid transparent;
-                transition: all 0.3s ease;
-            }
-
-            .status-column.dragover {
-                border-color: #007bff;
-                background: #e7f3ff;
-                transform: scale(1.02);
-                box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
-            }
-
-            .status-column.drag-active {
-                border-color: #28a745;
-                background: #e8f5e8;
-            }
-
-            .status-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 15px;
-                padding-bottom: 10px;
-                border-bottom: 2px solid;
-            }
-
-            .status-title {
-                font-weight: bold;
-                font-size: 16px;
-            }
-
-            .leads-count {
-                background: rgba(255, 255, 255, 0.8);
-                padding: 5px 10px;
-                border-radius: 15px;
-                font-size: 12px;
-            }
-
-            .lead-card {
-                background: white;
-                border-radius: 8px;
-                padding: 15px;
-                margin-bottom: 10px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                cursor: move;
-                transition: all 0.3s ease;
-                border-right: 4px solid #ddd;
-                user-select: none;
-            }
-
-            .lead-card:hover {
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-                transform: translateY(-2px);
-            }
-
-            .lead-card.dragging {
-                opacity: 0.7;
-                transform: rotate(3deg) scale(1.05);
-                z-index: 1000;
-                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-            }
-
-            .lead-card.drag-placeholder {
-                opacity: 0.3;
-                border: 2px dashed #007bff;
-                background: #f0f8ff;
-            }
-
-            .lead-title {
-                font-weight: bold;
-                margin-bottom: 8px;
-                color: #333;
-            }
-
-            .lead-info {
-                font-size: 12px;
-                color: #666;
-                margin-bottom: 5px;
-            }
-
-            .lead-amount {
-                font-weight: bold;
-                color: #28a745;
-                font-size: 14px;
-            }
-
-            .add-lead-btn {
-                width: 100%;
-                padding: 10px;
-                border: 2px dashed #ccc;
-                background: transparent;
-                border-radius: 6px;
-                color: #666;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-
-            .add-lead-btn:hover {
-                border-color: #007bff;
-                color: #007bff;
-                background: rgba(0, 123, 255, 0.05);
-            }
-
-            .modal-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-            }
-
-            .modal-content {
-                background: white;
-                border-radius: 8px;
-                padding: 30px;
-                max-width: 500px;
-                width: 90%;
-                max-height: 90vh;
-                overflow-y: auto;
-            }
-
-            .form-group {
-                margin-bottom: 20px;
-            }
-
-            .form-label {
-                display: block;
-                margin-bottom: 8px;
-                font-weight: bold;
-                color: #333;
-            }
-
-            .form-control {
-                width: 100%;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-
-            .form-control:focus {
-                outline: none;
-                border-color: #007bff;
-                box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-            }
-
-            .btn {
-                padding: 10px 20px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 14px;
-                transition: all 0.3s ease;
-            }
-
-            .btn-primary {
-                background: #007bff;
-                color: white;
-            }
-
-            .btn-primary:hover {
-                background: #0056b3;
-            }
-
-            .btn-secondary {
-                background: #6c757d;
-                color: white;
-                margin-left: 10px;
-            }
-
-            .btn-danger {
-                background: #dc3545;
-                color: white;
-                padding: 5px 10px;
-                font-size: 12px;
-            }
-
-            .lead-actions {
-                display: flex;
-                justify-content: flex-end;
-                margin-top: 10px;
-            }
-        </style>
+        <link href="{{ asset('assets/css/custom-css/leads.css') }}" rel="stylesheet" />
     @endpush
 
     <div class="container-fluid" style="max-width: 1600; overflow-y: auto;">
@@ -270,7 +68,7 @@
                                     style="border-right-color: {{ $status->color }}">
                                     <div class="lead-title">{{ $lead['title'] }}</div>
                                     <div class="lead-info">
-                                        <i class="fas fa-user"></i> {{ $lead['client']['name'] ?? 'غير محدد' }}
+                                        <i class="fas fa-user"></i> {{ $lead['client']['cname'] ?? 'غير محدد' }}
                                     </div>
                                     @if ($lead['amount'])
                                         <div class="lead-amount">
@@ -325,13 +123,69 @@
 
                         <div class="form-group">
                             <label class="form-label">العميل *</label>
-                            <select class="form-control" wire:model="newLead.client_id">
-                                <option value="">اختر العميل</option>
-                                @foreach ($clients as $client)
-                                    <option value="{{ $client->id }}">{{ $client->cname }}</option>
-                                @endforeach
-                            </select>
+
+                            <div class="client-search-container position-relative">
+                                <!-- حقل البحث -->
+                                <div class="input-group">
+                                    <input type="text" class="form-control" wire:model.live="clientSearch"
+                                        placeholder="ابحث عن العميل أو اكتب اسم جديد..." autocomplete="off">
+
+                                    @if ($clientSearch && $newLead['client_id'])
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                wire:click="clearClientSearch" title="مسح">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- قائمة نتائج البحث -->
+                                @if ($showClientDropdown && $clientSearch)
+                                    <div class="client-dropdown">
+                                        @if (count($filteredClients) > 0)
+                                            <!-- العملاء الموجودين -->
+                                            @foreach ($filteredClients as $client)
+                                                <div class="dropdown-item client-item"
+                                                    wire:click="selectClient({{ $client['id'] }}, '{{ $client['cname'] }}')">
+                                                    <i class="fas fa-user text-muted"></i>
+                                                    <span>{{ $client['cname'] }}</span>
+                                                </div>
+                                            @endforeach
+                                        @endif
+
+                                        <!-- زر إنشاء عميل جديد -->
+                                        @if ($clientSearch && !collect($filteredClients)->contains('cname', $clientSearch))
+                                            <div class="dropdown-item create-client-item"
+                                                wire:click="createClientFromSearch">
+                                                <i class="fas fa-plus text-success"></i>
+                                                <span>إنشاء عميل جديد: "<strong>{{ $clientSearch }}</strong>"</span>
+                                            </div>
+                                        @endif
+
+                                        <!-- رسالة عدم وجود نتائج -->
+                                        @if (count($filteredClients) === 0 && collect($filteredClients)->contains('cname', $clientSearch))
+                                            <div class="dropdown-item no-results">
+                                                <i class="fas fa-search text-muted"></i>
+                                                <span>لا توجد نتائج</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                <!-- مؤشر العميل المحدد -->
+                                @if ($newLead['client_id'] && $selectedClientText)
+                                    <small class="text-success mt-1 d-block">
+                                        <i class="fas fa-check-circle"></i>
+                                        تم اختيار: {{ $selectedClientText }}
+                                    </small>
+                                @endif
+                            </div>
+
                             @error('newLead.client_id')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                            @error('clientSearch')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
@@ -370,16 +224,24 @@
 
                         <div class="form-group">
                             <label class="form-label">وصف الفرصة</label>
-                            <textarea class="form-control" wire:model="newLead.description" rows="3" placeholder="تفاصيل إضافية عن الفرصة"></textarea>
+                            <textarea class="form-control" wire:model="newLead.description" rows="3"
+                                placeholder="تفاصيل إضافية عن الفرصة"></textarea>
                         </div>
 
                         <div class="form-group">
-                            <button type="submit" class="btn btn-primary">حفظ الفرصة</button>
-                            <button type="button" class="btn btn-secondary" wire:click="closeModal">إلغاء</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> حفظ الفرصة
+                            </button>
+                            <button type="button" class="btn btn-secondary" wire:click="closeModal">
+                                <i class="fas fa-times"></i> إلغاء
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
+
+            <!-- JavaScript للتحكم في قائمة البحث -->
+
         @endif
 
         {{-- نافذة تعديل الفرصة --}}
@@ -402,7 +264,7 @@
                             <select class="form-control" wire:model="editingLead.client_id">
                                 <option value="">اختر العميل</option>
                                 @foreach ($clients as $client)
-                                    <option value="{{ $client->id }}">{{ $client->name }}</option>
+                                    <option value="{{ $client->id }}">{{ $client->cname }}</option>
                                 @endforeach
                             </select>
                             @error('editingLead.client_id')
@@ -866,7 +728,6 @@
                     }
                 }
 
-                // مراقبة التغييرات في DOM لإضافة أحداث للكروت الجديدة
                 const observer = new MutationObserver((mutations) => {
                     mutations.forEach(mutation => {
                         if (mutation.addedNodes.length) {
@@ -891,6 +752,57 @@
                     requestAnimationFrame(() => setupDragAndDrop());
                 });
             });
+
+            document.addEventListener('click', function(e) {
+                const clientSearchContainer = document.querySelector('.client-search-container');
+                const clientDropdown = document.querySelector('.client-dropdown');
+
+                if (clientSearchContainer && clientDropdown && !clientSearchContainer.contains(e.target)) {
+                    @this.call('hideClientDropdown');
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                const dropdown = document.querySelector('.client-dropdown');
+                if (!dropdown) return;
+
+                const items = dropdown.querySelectorAll('.dropdown-item:not(.no-results)');
+                let currentIndex = Array.from(items).findIndex(item => item.classList.contains('active'));
+
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        currentIndex = Math.min(currentIndex + 1, items.length - 1);
+                        updateActiveItem(items, currentIndex);
+                        break;
+
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        currentIndex = Math.max(currentIndex - 1, 0);
+                        updateActiveItem(items, currentIndex);
+                        break;
+
+                    case 'Enter':
+                        e.preventDefault();
+                        if (currentIndex >= 0 && items[currentIndex]) {
+                            items[currentIndex].click();
+                        }
+                        break;
+
+                    case 'Escape':
+                        @this.call('hideClientDropdown');
+                        break;
+                }
+            });
+
+            function updateActiveItem(items, activeIndex) {
+                items.forEach((item, index) => {
+                    item.classList.remove('active');
+                    if (index === activeIndex) {
+                        item.classList.add('active');
+                    }
+                });
+            }
         </script>
     @endpush
 </div>

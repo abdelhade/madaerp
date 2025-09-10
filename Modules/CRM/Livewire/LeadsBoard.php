@@ -7,6 +7,7 @@ use App\Models\Client;
 use Livewire\Component;
 use Modules\CRM\Models\Lead;
 use Modules\CRM\Models\LeadStatus;
+use Illuminate\Support\Facades\Auth;
 use Modules\CRM\Models\ChanceSource;
 
 class LeadsBoard extends Component
@@ -21,6 +22,14 @@ class LeadsBoard extends Component
     public $selectedLead = null;
     public $sources;
     public $reportData = [];
+
+    // إضافة متغيرات جديدة لإنشاء العميل
+    public $showCreateClient = false;
+    public $newClientName = '';
+    public $clientSearch = '';
+    public $filteredClients = [];
+    public $showClientDropdown = false;
+    public $selectedClientText = '';
 
     // بيانات الفرصة الجديدة
     public $newLead = [
@@ -52,7 +61,9 @@ class LeadsBoard extends Component
         'newLead.amount' => 'nullable|numeric|min:0',
         'newLead.source' => 'nullable|exists:chance_sources,id',
         'newLead.assigned_to' => 'nullable|exists:users,id',
-        'newLead.description' => 'nullable|string'
+        'newLead.description' => 'nullable|string',
+        'newClientName' => 'required_if:showCreateClient,true|string|max:255|unique:clients,cname'
+
     ];
 
     protected $messages = [
@@ -64,14 +75,15 @@ class LeadsBoard extends Component
         'newLead.amount.min' => 'القيمة يجب أن تكون أكبر من أو تساوي صفر',
         'newLead.assigned_to.exists' => 'المستخدم المسؤول غير موجود',
         'newLead.source.exists' => 'المصدر المحدد غير موجود',
+        'newClientName.required_if' => 'اسم العميل مطلوب',
+        'newClientName.max' => 'اسم العميل يجب أن يكون أقل من 255 حرف',
+        'newClientName.unique' => 'اسم العميل موجود بالفعل'
     ];
 
     public function mount()
     {
-        // تحقق من وجود حالات الفرص
         $statusCount = LeadStatus::count();
         if ($statusCount === 0) {
-            // إنشاء حالات افتراضية
             $this->createDefaultStatuses();
         }
 
@@ -95,6 +107,72 @@ class LeadsBoard extends Component
             LeadStatus::create($status);
         }
     }
+    public function hideClientDropdown()
+    {
+        $this->showClientDropdown = false;
+        $this->filteredClients = [];
+    }
+
+    public function updatedClientSearch($value)
+    {
+        if (empty($value)) {
+            $this->hideClientDropdown();
+            return;
+        }
+        $this->filteredClients = collect($this->clients)
+            ->filter(function ($client) use ($value) {
+                return str_contains(strtolower($client['cname']), strtolower($value));
+            })
+            ->take(5)
+            ->values()
+            ->toArray();
+
+        $this->showClientDropdown = true;
+        if ($this->newLead['client_id'] && $this->selectedClientText !== $value) {
+            $this->clearClientSearch(false);
+        }
+    }
+
+    public function selectClient($clientId, $clientName)
+    {
+        $this->newLead['client_id'] = $clientId;
+        $this->clientSearch = $clientName;
+        $this->selectedClientText = $clientName;
+        $this->hideClientDropdown();
+    }
+
+    public function createClientFromSearch()
+    {
+        $this->validate([
+            'clientSearch' => 'required|string|max:255|unique:clients,cname'
+        ], [
+            'clientSearch.unique' => 'يوجد عميل بهذا الاسم بالفعل.',
+            'clientSearch.required' => 'اسم العميل مطلوب.',
+        ]);
+
+        try {
+            $newClient = Client::create([
+                'cname' => $this->clientSearch,
+                'created_by' => Auth::id(),
+            ]);
+            $this->clients = Client::select('id', 'cname')->get()->toArray();
+            $this->selectClient($newClient->id, $newClient->cname);
+
+            session()->flash('message', 'تم إنشاء العميل "' . $newClient->cname . '" واختياره.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'حدث خطأ أثناء إنشاء العميل: ' . $e->getMessage());
+        }
+    }
+
+    public function clearClientSearch($hideDropdown = true)
+    {
+        $this->clientSearch = '';
+        $this->newLead['client_id'] = null;
+        $this->selectedClientText = '';
+        if ($hideDropdown) {
+            $this->hideClientDropdown();
+        }
+    }
 
     public function loadData()
     {
@@ -109,7 +187,7 @@ class LeadsBoard extends Component
                         return [
                             'id' => $lead->id,
                             'title' => $lead->title,
-                            'client' => $lead->client ? $lead->client->only('name') : null,
+                            'client' => $lead->client ? $lead->client->only('cname') : null,
                             'amount' => $lead->amount,
                             'source' => $lead->source,
                             'assigned_to' => $lead->assignedTo ? $lead->assignedTo->only('name') : null,
@@ -121,6 +199,41 @@ class LeadsBoard extends Component
             $this->statuses = collect([]);
             $this->leads = collect([]);
             session()->flash('error', 'حدث خطأ في تحميل البيانات: ' . $e->getMessage());
+        }
+    }
+    public function showCreateClientForm()
+    {
+        $this->showCreateClient = true;
+        $this->newClientName = '';
+    }
+
+    public function hideCreateClientForm()
+    {
+        $this->showCreateClient = false;
+        $this->newClientName = '';
+        $this->resetErrorBag('newClientName');
+    }
+
+    public function createQuickClient()
+    {
+        $this->validate([
+            'newClientName' => 'required|string|max:255|unique:clients,cname'
+        ]);
+
+        try {
+            $newClient = Client::create([
+                'cname' => $this->newClientName,
+                'phone' => null,
+                'email' => null,
+                'address' => null,
+                'created_by' => Auth::id(),
+            ]);
+            $this->clients = Client::all();
+            $this->newLead['client_id'] = $newClient->id;
+            $this->hideCreateClientForm();
+            session()->flash('message', 'تم إنشاء العميل بنجاح!');
+        } catch (\Exception $e) {
+            session()->flash('error', 'حدث خطأ أثناء إنشاء العميل: ' . $e->getMessage());
         }
     }
 
@@ -181,7 +294,7 @@ class LeadsBoard extends Component
     {
         $this->validate([
             'editingLead.title' => 'required|string|max:255',
-            'editingLead.client_id' => 'required|exists:crm_clients,id',
+            'editingLead.client_id' => 'required|exists:clients,id',
             'editingLead.amount' => 'nullable|numeric|min:0',
             'editingLead.source' => 'nullable|exists:chance_sources,id',
             'editingLead.assigned_to' => 'nullable|exists:users,id',
@@ -243,7 +356,6 @@ class LeadsBoard extends Component
                     ];
                 })
             ];
-
             $this->showReportModal = true;
         } catch (\Exception $e) {
             session()->flash('error', 'حدث خطأ في تحميل التقرير: ' . $e->getMessage());
@@ -268,7 +380,6 @@ class LeadsBoard extends Component
     public function addLead()
     {
         $this->validate();
-
         try {
             $leadData = $this->newLead;
             if ($this->selectedStatus) {
@@ -282,13 +393,11 @@ class LeadsBoard extends Component
                     return;
                 }
             }
-
             // تحويل source إلى source_id
             if (!empty($leadData['source'])) {
                 $leadData['source_id'] = $leadData['source'];
                 unset($leadData['source']);
             }
-
             Lead::create($leadData);
             $this->closeModal();
             $this->loadData();
@@ -310,6 +419,10 @@ class LeadsBoard extends Component
             'assigned_to' => '',
             'description' => ''
         ];
+        $this->clientSearch = '';
+        $this->selectedClientText = '';
+        $this->filteredClients = [];
+        $this->showClientDropdown = false;
     }
 
     // إعادة تعيين بيانات الفرصة للتعديل

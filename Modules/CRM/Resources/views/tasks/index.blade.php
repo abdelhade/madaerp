@@ -79,16 +79,20 @@
                                         </td>
                                         <td>{{ \Carbon\Carbon::parse($task->start_date)->format('Y-m-d') }}</td>
                                         <td>{{ \Carbon\Carbon::parse($task->due_date)->format('Y-m-d') }}</td>
+
                                         <td>
                                             @if ($task->hasMedia('tasks'))
-                                                <!-- زر فتح المودال -->
+                                                @php
+                                                    $media = $task->getFirstMedia('tasks');
+                                                    // dump($media->getUrl()); // الرابط الأصلي
+                                                    // dump($media->getUrl('thumb')); // الرابط المصغر
+                                                @endphp
                                                 <button type="button" class="btn btn-sm btn-outline-primary"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#attachmentModal{{ $task->id }}">
                                                     <i class="fas fa-paperclip"></i> عرض
                                                 </button>
 
-                                                <!-- المودال -->
                                                 <div class="modal fade" id="attachmentModal{{ $task->id }}"
                                                     tabindex="-1" aria-labelledby="attachmentModalLabel"
                                                     aria-hidden="true">
@@ -101,12 +105,12 @@
                                                                     data-bs-dismiss="modal" aria-label="Close"></button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                @if (Str::contains($task->getFirstMedia('tasks')->mime_type, 'image'))
-                                                                    <img src="{{ $task->getFirstMediaUrl('tasks') }}"
+                                                                @if ($media && Str::contains($media->mime_type, 'image'))
+                                                                    <img src="{{ $media->getUrl('thumb') }}"
                                                                         class="img-fluid" alt="مرفق المهمة">
                                                                 @else
                                                                     <div class="d-flex justify-content-center">
-                                                                        <a href="{{ $task->getFirstMediaUrl('tasks') }}"
+                                                                        <a href="{{ $media->getUrl() }}"
                                                                             class="btn btn-primary" download>
                                                                             <i class="fas fa-download me-2"></i>تحميل الملف
                                                                         </a>

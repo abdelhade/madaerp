@@ -259,7 +259,7 @@ class DiscountController extends Controller
         }
 
         if ($type == 30) {
-            $acc2Fixed = AccHead::findOrFail(91);
+            $acc2Fixed = AccHead::findOrFail(49);
             $clientsAccounts = AccHead::where('isdeleted', 0)
                 ->where('is_basic', 0)
                 ->where('code', 'like', '1103%')
@@ -268,7 +268,7 @@ class DiscountController extends Controller
 
             return view('discounts.edit', compact('discount', 'type', 'acc2Fixed', 'clientsAccounts', 'titles'));
         } elseif ($type == 31) {
-            $acc1Fixed = AccHead::findOrFail(97);
+            $acc1Fixed = AccHead::findOrFail(54);
             $suppliers = AccHead::where('isdeleted', 0)
                 ->where('is_basic', 0)
                 ->where('code', 'like', '2101%')
@@ -288,9 +288,9 @@ class DiscountController extends Controller
 
             if ($request->type == 30) {
                 $discount->acc1 = $request->acc1;
-                $discount->acc2 = 91;
+                $discount->acc2 = 49;
             } elseif ($request->type == 31) {
-                $discount->acc1 = 97;
+                $discount->acc1 = 54;
                 $discount->acc2 = $request->acc2;
             }
             $discount->save();
@@ -322,7 +322,7 @@ class DiscountController extends Controller
 
                 JournalDetail::create([
                     'journal_id' => $journalId,
-                    'account_id' => 91,
+                    'account_id' => 49,
                     'debit' => 0,
                     'credit' => $discount->pro_value,
                     'type' => 1,
@@ -332,7 +332,7 @@ class DiscountController extends Controller
             } elseif ($discount->pro_type == 31) {
                 JournalDetail::create([
                     'journal_id' => $journalId,
-                    'account_id' => 97,
+                    'account_id' => 54,
                     'debit' => $discount->pro_value,
                     'credit' => 0,
                     'type' => 1,

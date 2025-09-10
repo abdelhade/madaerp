@@ -27,7 +27,7 @@
                                     <th>#</th>
                                     <th>{{ __('الاسم') }}</th>
                                     <th>{{ __('البريد الالكتروني ') }}</th>
-                                    <th>{{ __('الادوار') }}</th>
+                                    <th>{{ __('الصلاحيات') }}</th>
                                     <th>{{ __('تم الانشاء في ') }}</th>
                                     @canany(['تعديل المدراء', 'حذف المدراء'])
                                         <th>{{ __('العمليات') }}</th>
@@ -42,9 +42,8 @@
                                         <td class="font-family-cairo fw-bold font-14 text-center">{{ $user->name }}</td>
                                         <td class="font-family-cairo fw-bold font-14 text-center">{{ $user->email }}</td>
                                         <td class="font-family-cairo fw-bold font-14 text-center">
-                                            @foreach ($user->roles as $role)
-                                                <span class="badge bg-primary">{{ $role->name }}</span>
-                                            @endforeach
+                                            <span
+                                                class="badge bg-primary text-dark">{{ $user->permissions->count() }}</span>
                                         </td>
                                         <td>{{ $user->created_at->format('Y-m-d') }}</td>
                                         @canany(['تعديل المدراء', 'حذف المدراء'])
