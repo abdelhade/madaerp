@@ -36,10 +36,8 @@ class MultiVoucherController extends Controller
         $type = $request->type;
         $pro_type = ProType::where('pname', $type)->first()?->id;
         $ptext = ProType::where('pname', $type)->first()?->ptext;
+        // dd($type, $pro_type, $ptext);
 
-        if (!$pro_type) {
-            abort(404, 'نوع العملية غير موجود');
-        }
         $employees = AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
             ->where('code', 'like', '2102%')
@@ -304,7 +302,7 @@ class MultiVoucherController extends Controller
         // الموظفين
         $employees = \App\Models\AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
-            ->where('code', 'like', '2022%')
+            ->where('code', 'like', '2102%')
             ->get();
 
         // الحسابات حسب نوع العملية
@@ -342,9 +340,6 @@ class MultiVoucherController extends Controller
             'subEntries'
         ));
     }
-
-
-
 
     public function update(Request $request, $id)
     {

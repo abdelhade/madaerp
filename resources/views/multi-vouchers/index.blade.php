@@ -4,8 +4,6 @@
         'title' => __('vouchers'),
         'items' => [['label' => __('Home'), 'url' => route('admin.dashboard')], ['label' => __('vouchers')]],
     ])
-
-
     <div class="card">
         @if (session('success'))
             <div class="alert alert-success cake cake-pulse">
@@ -13,11 +11,17 @@
             </div>
         @endif
         <div class="card-header">
-
-            <a href="{{ route('multi-vouchers.create') }}" type="button" class="btn btn-primary">{{ __('Add New') }}
-                <i class="fas fa-plus me-2"></i>
-            </a>
+            @if (request('type') == 'multi_payment')
+                <a href="{{ route('multi-vouchers.create', ['type' => 'multi_payment']) }}" class="btn btn-primary">
+                    إضافة سند دفع
+                </a>
+            @elseif (request('type') == 'multi_receipt')
+                <a href="{{ route('multi-vouchers.create', ['type' => 'multi_receipt']) }}" class="btn btn-success">
+                    إضافة سند قبض
+                </a>
+            @endif
         </div>
+
         <div class="card-body">
             <div class="table-responsive" style="overflow-x: auto;">
                 <table class="table table-striped mb-0" style="min-width: 1200px;">
@@ -65,10 +69,10 @@
                                 <td class="font-family-cairo fw-bold font-14 text-center">
                                     {{ $multi->confirmed ? 'نعم' : 'لا' }}</td>
                                 <td class="font-family-cairo fw-bold font-14 text-center" x-show="columns[16]">
-                                    <button>
-                                        <a href="{{ route('multi-vouchers.edit', $multi) }}"
-                                            class="text-primary font-16"><i class="las la-eye"></i></a>
-                                    </button>
+
+                                    <a href="{{ route('multi-vouchers.edit', $multi) }}"
+                                        class="btn btn-success btn-icon-square-sm"><i class="las la-edit"></i></a>
+
                                     <form action="{{ route('multi-vouchers.destroy', $multi->id) }}" method="POST"
                                         style="display:inline;">
                                         @csrf
