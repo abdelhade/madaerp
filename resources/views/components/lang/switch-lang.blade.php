@@ -17,7 +17,7 @@
     <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2"
         style="border-radius: 8px; min-width: 140px; padding: 0.5rem 0;" aria-labelledby="langDropdown">
         <li>
-            <a class="dropdown-item d-flex align-items-center px-3 py-2 text-dark"
+            <a class="dropdown-item d-flex align-items-center px-3 py-2 text-dark @if(app()->getLocale() === 'ar') active @endif"
                 href="{{ route('locale.switch', ['locale' => 'ar']) }}"
                 style="transition: all 0.2s ease; border-radius: 4px; margin: 0 0.25rem;">
                 <img src="https://flagcdn.com/w20/eg.png" class="me-2"
@@ -26,7 +26,7 @@
             </a>
         </li>
         <li>
-            <a class="dropdown-item d-flex align-items-center px-3 py-2 text-dark"
+            <a class="dropdown-item d-flex align-items-center px-3 py-2 text-dark @if(app()->getLocale() === 'en') active @endif"
                 href="{{ route('locale.switch', ['locale' => 'en']) }}"
                 style="transition: all 0.2s ease; border-radius: 4px; margin: 0 0.25rem;">
                 <img src="https://flagcdn.com/w20/gb.png" class="me-2"
@@ -55,9 +55,10 @@
     }
 
     /* Active language indicator */
-    .dropdown-item[href*="{{ app()->getLocale() }}"] {
-        background-color: rgba(0, 102, 204, 0.08);
-        font-weight: 600;
+    .dropdown-item.active {
+        background-color: rgba(0, 102, 204, 0.08) !important;
+        font-weight: 600 !important;
+        color: #0066cc !important;
     }
 
     /* Responsive adjustments */
