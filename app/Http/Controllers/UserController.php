@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Modules\Authorization\Models\Role;
-use App\Http\Requests\StoreUserRequest;
-use Modules\Authorization\Models\Permission;
-use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Routing\Controller;
+use Modules\Branches\Models\Branch;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\StoreUserRequest;
+use RealRashid\SweetAlert\Facades\Alert;
+use Modules\Authorization\Models\Permission;
 
 class UserController extends Controller
 {
@@ -33,11 +33,10 @@ class UserController extends Controller
     public function create()
     {
         try {
-            $roles = Role::pluck('name', 'id');
             $permissions = Permission::all()->groupBy('category');
-
-            return view('users.create', compact('roles', 'permissions'));
-        } catch (\Exception $e) {
+            $branches = Branch::where('is_active', 1)->get();
+            return view('users.create', compact('permissions', 'branches'));
+        } catch (\Exception) {
             Alert::toast('حدث خطأ أثناء تحميل صفحة إنشاء المستخدم', 'error');
             return redirect()->route('users.index');
         }
@@ -51,21 +50,26 @@ class UserController extends Controller
                 $permissions = Permission::whereIn('id', $request->permissions)->pluck('name')->toArray();
                 $user->givePermissionTo($permissions);
             }
+            if ($request->filled('branches')) {
+                $user->branches()->sync($request->branches);
+            }
             Alert::toast('تم إنشاء المستخدم بنجاح', 'success');
             return redirect()->route('users.index');
-        } catch (\Exception $e) {
-            Alert::toast('حدث خطأ أثناء إنشاء المستخدم: ' . $e->getMessage(), 'error');
+        } catch (\Exception) {
+            Alert::toast('حدث خطأ أثناء إنشاء المستخدم: ', 'error');
             return redirect()->back()->withInput();
         }
     }
 
     public function edit(User $user)
     {
-        $roles = Role::all();
         $permissions = Permission::all()->groupBy('category');
         $userPermissions = $user->permissions->pluck('name')->toArray();
+        $branches = Branch::where('is_active', 1)->get();
+        $userBranches = $user->branches->pluck('id')->toArray();
 
-        return view('users.edit', compact('user', 'permissions', 'roles', 'userPermissions'));
+
+        return view('users.edit', compact('user', 'permissions', 'userPermissions', 'branches', 'userBranches'));
     }
 
     public function update(Request $request, User $user)
@@ -96,6 +100,12 @@ class UserController extends Controller
                 $user->syncPermissions([]);
             }
 
+            if ($request->filled('branches')) {
+                $user->branches()->sync($request->branches);
+            } else {
+                $user->branches()->sync([]);
+            }
+
             Alert::toast('تم تحديث المستخدم بنجاح', 'success');
             return redirect()->route('users.index');
         } catch (\Exception $e) {
@@ -110,8 +120,8 @@ class UserController extends Controller
             $user->delete();
             Alert::toast('تم حذف المستخدم بنجاح', 'success');
             return redirect()->route('users.index');
-        } catch (\Exception $e) {
-            Alert::toast('حدث خطأ أثناء حذف المستخدم: ' . $e->getMessage(), 'error');
+        } catch (\Exception) {
+            Alert::toast('حدث خطأ أثناء حذف المستخدم: ', 'error');
             return redirect()->route('users.index');
         }
     }
