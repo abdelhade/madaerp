@@ -28,6 +28,7 @@
                                     <th>{{ __('الاسم') }}</th>
                                     <th>{{ __('البريد الالكتروني ') }}</th>
                                     <th>{{ __('الصلاحيات') }}</th>
+                                    <th>{{ __('الفروع') }}</th>
                                     <th>{{ __('تم الانشاء في ') }}</th>
                                     @canany(['تعديل المدراء', 'حذف المدراء'])
                                         <th>{{ __('العمليات') }}</th>
@@ -43,7 +44,12 @@
                                         <td class="font-family-cairo fw-bold font-14 text-center">{{ $user->email }}</td>
                                         <td class="font-family-cairo fw-bold font-14 text-center">
                                             <span
-                                                class="badge bg-primary text-dark">{{ $user->permissions->count() }}</span>
+                                                class="badge bg-primary">{{ $user->permissions->count() }}</span>
+                                        </td>
+                                        <td class="font-family-cairo fw-bold font-14 text-center">
+                                            @foreach ($user->branches as $branch)
+                                                <span class="badge bg-info text-dark">{{ $branch->name }}</span>
+                                            @endforeach
                                         </td>
                                         <td>{{ $user->created_at->format('Y-m-d') }}</td>
                                         @canany(['تعديل المدراء', 'حذف المدراء'])

@@ -33,37 +33,52 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="mb-3 col-md-4">
-                                        <label>الاسم</label>
-                                        <input type="text" name="name" class="form-control" required>
-                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="row">
+                                            <div class="mb-3 col-md-6">
+                                                <label>الاسم</label>
+                                                <input type="text" name="name" class="form-control" required>
+                                            </div>
 
-                                    <div class="mb-3 col-md-4">
-                                        <label>البريد الإلكتروني</label>
-                                        <input type="email" name="email" class="form-control" required>
-                                    </div>
+                                            <div class="mb-3 col-md-6">
+                                                <label>البريد الإلكتروني</label>
+                                                <input type="email" name="email" class="form-control" required>
+                                            </div>
 
-                                    <div class="mb-3 col-md-4">
-                                        <label>كلمة المرور</label>
-                                        <div class="input-group">
-                                            <input type="password" name="password" class="form-control" id="password"
-                                                required>
-                                            <button type="button" class="btn btn-primary"
-                                                onclick="togglePassword('password', this)">
-                                                <i class="fa fa-eye"></i>
-                                            </button>
+                                            <div class="mb-3 col-md-6">
+                                                <label>كلمة المرور</label>
+                                                <div class="input-group">
+                                                    <input type="password" name="password" class="form-control"
+                                                        id="password" required>
+                                                    <button type="button" class="btn btn-primary"
+                                                        onclick="togglePassword('password', this)">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3 col-md-6">
+                                                <label>تأكيد كلمة المرور</label>
+                                                <div class="input-group">
+                                                    <input type="password" name="password_confirmation" class="form-control"
+                                                        id="password_confirmation" required>
+                                                    <button type="button" class="btn btn-primary"
+                                                        onclick="togglePassword('password_confirmation', this)">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="mb-3 col-md-4">
-                                        <label>تأكيد كلمة المرور</label>
-                                        <div class="input-group">
-                                            <input type="password" name="password_confirmation" class="form-control"
-                                                id="password_confirmation" required>
-                                            <button type="button" class="btn btn-primary"
-                                                onclick="togglePassword('password_confirmation', this)">
-                                                <i class="fa fa-eye"></i>
-                                            </button>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label>اختر الفروع</label>
+                                            <select name="branches[]" class="form-control" multiple>
+                                                @foreach ($branches as $branch)
+                                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                @endforeach
+                                            </select>
                                         </div>
                                     </div>
                                 </div>

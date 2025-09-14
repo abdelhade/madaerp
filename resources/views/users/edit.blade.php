@@ -26,50 +26,71 @@
                 @method('PUT')
                 <div class="tab-content" id="v-pills-tabContent">
 
-                    {{-- Basic Information Tab --}}
                     <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel"
                         aria-labelledby="v-pills-home-tab">
                         <div class="card">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="mb-3 col-md-4">
-                                        <label>الاسم</label>
-                                        <input type="text" name="name" class="form-control"
-                                            value="{{ old('name', $user->name) }}" required>
-                                    </div>
+                                    {{-- Left side: Name, Email, Password --}}
+                                    <div class="col-md-8">
+                                        <div class="row">
+                                            <div class="mb-3 col-md-6">
+                                                <label>الاسم</label>
+                                                <input type="text" name="name" class="form-control"
+                                                    value="{{ old('name', $user->name) }}" required>
+                                            </div>
 
-                                    <div class="mb-3 col-md-4">
-                                        <label>البريد الإلكتروني</label>
-                                        <input type="email" name="email" class="form-control"
-                                            value="{{ old('email', $user->email) }}" required>
-                                    </div>
+                                            <div class="mb-3 col-md-6">
+                                                <label>البريد الإلكتروني</label>
+                                                <input type="email" name="email" class="form-control"
+                                                    value="{{ old('email', $user->email) }}" required>
+                                            </div>
 
-                                    <div class="mb-3 col-md-4">
-                                        <label>كلمة المرور (اتركها فارغة إن لم ترغب في التغيير)</label>
-                                        <div class="input-group">
-                                            <input type="password" name="password" class="form-control" id="password">
-                                            <button type="button" class="btn btn-primary"
-                                                onclick="togglePassword('password', this)">
-                                                <i class="fa fa-eye"></i>
-                                            </button>
+                                            <div class="mb-3 col-md-6">
+                                                <label>كلمة المرور (اتركها فارغة إن لم ترغب في التغيير)</label>
+                                                <div class="input-group">
+                                                    <input type="password" name="password" class="form-control"
+                                                        id="password">
+                                                    <button type="button" class="btn btn-primary"
+                                                        onclick="togglePassword('password', this)">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3 col-md-6">
+                                                <label>تأكيد كلمة المرور</label>
+                                                <div class="input-group">
+                                                    <input type="password" name="password_confirmation" class="form-control"
+                                                        id="password_confirmation">
+                                                    <button type="button" class="btn btn-primary"
+                                                        onclick="togglePassword('password_confirmation', this)">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="mb-3 col-md-4">
-                                        <label>تأكيد كلمة المرور</label>
-                                        <div class="input-group">
-                                            <input type="password" name="password_confirmation" class="form-control"
-                                                id="password_confirmation">
-                                            <button type="button" class="btn btn-primary"
-                                                onclick="togglePassword('password_confirmation', this)">
-                                                <i class="fa fa-eye"></i>
-                                            </button>
+                                    {{-- Right side: Branches --}}
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label>اختر الفروع</label>
+                                            <select name="branches[]" class="form-control" multiple>
+                                                @foreach ($branches as $branch)
+                                                    <option value="{{ $branch->id }}"
+                                                        {{ in_array($branch->id, $userBranches) ? 'selected' : '' }}>
+                                                        {{ $branch->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
 
                     {{-- Permissions Tab --}}
                     <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
@@ -243,7 +264,7 @@
                 });
             }
 
-      
+
             document.querySelectorAll('.permission-category').forEach(tab => {
                 tab.addEventListener('click', function() {
                     document.querySelectorAll('.permission-category').forEach(t => t.classList
@@ -258,12 +279,12 @@
                         activeContent.classList.remove('d-none');
                     }
 
-                   
+
                     if (selectAll) selectAll.checked = false;
                 });
             });
 
-            
+
             document.querySelectorAll('.permission-category-content').forEach(container => {
                 container.addEventListener('change', function(e) {
                     if (e.target.type === 'checkbox' && e.target.id !== 'selectAll') {
