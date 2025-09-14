@@ -57,6 +57,13 @@
 
                 </li>
             @endcan
+
+            <li>
+                <a title="{{ __('Branches') }}" href="{{ route('branches.index') }}" class="nav-link">
+                    <i class="fas fa-store fa-2x text-primary"></i>
+                </a>
+
+            </li>
         </ul>
     </nav>
     <!-- end navbar-->
