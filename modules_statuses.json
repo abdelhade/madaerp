@@ -9,5 +9,6 @@
     "Maintenance": true,
     "POS": true,
     "Progress": true,
-    "Reports": true
+    "Reports": true,
+    "Branches": true
 }
