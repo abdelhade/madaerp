@@ -22,6 +22,7 @@ class ShippingCompanyRequest extends FormRequest
             'address'   => 'required|string',
             'base_rate' => 'required|numeric|min:0',
             'is_active' => 'boolean',
+            'branch_id' => 'required|exists:branches,id',
         ];
     }
 
@@ -45,6 +46,9 @@ class ShippingCompanyRequest extends FormRequest
             'base_rate.min'      => 'سعر التوصيل يجب أن يكون أكبر من أو يساوي 0.',
 
             'is_active.boolean' => 'حالة الشركة يجب أن تكون صح أو خطأ.',
+
+            'branch_id.required' => 'الفرع مطلوب.',
+            'branch_id.exists' => 'الفرع المختار غير صحيح.',
         ];
     }
 }

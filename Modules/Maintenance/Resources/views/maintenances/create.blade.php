@@ -111,6 +111,8 @@
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
+
+                            <x-branches::branch-select :branches="$branches" />
                         </div>
 
                         <div class="d-flex justify-content-start mt-4">

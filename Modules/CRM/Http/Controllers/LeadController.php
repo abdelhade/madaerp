@@ -39,7 +39,7 @@ class LeadController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'client_id' => 'required|exists:crm_clients,id',
+            'client_id' => 'required|exists:clients,id',
             'status_id' => 'required|exists:crm_lead_statuses,id',
             'amount' => 'nullable|numeric|min:0',
             'source' => 'nullable|string|max:255',

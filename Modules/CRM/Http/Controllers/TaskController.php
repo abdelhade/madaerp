@@ -28,6 +28,7 @@ class TaskController extends Controller
      */
     public function create()
     {
+        $branches = userBranches();
         $taskTypes = TaskType::pluck('title', 'id');
         $users = User::pluck('name', 'id');
 

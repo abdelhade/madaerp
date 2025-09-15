@@ -29,6 +29,7 @@ class ActivityRequest extends FormRequest
             'scheduled_at' => 'nullable|date_format:H:i',
             'client_id'     => 'nullable|exists:clients,id',
             'assigned_to'   => 'nullable|exists:users,id',
+            'branch_id' => 'required|exists:branches,id',
         ];
     }
 
@@ -49,6 +50,8 @@ class ActivityRequest extends FormRequest
             'client_id.exists'   => 'العميل غير موجود.',
             'assigned_to.required' => 'الموظف المسؤول مطلوب.',
             'assigned_to.exists'   => 'الموظف غير موجود.',
+            'branch_id.required' => 'الفرع مطلوب.',
+            'branch_id.exists' => 'الفرع المختار غير صحيح.',
         ];
     }
 }

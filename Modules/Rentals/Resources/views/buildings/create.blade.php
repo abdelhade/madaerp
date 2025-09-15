@@ -89,6 +89,8 @@
                             @enderror
                         </div>
 
+                        <x-branches::branch-select :branches="$branches" />
+
                     </div>
 
                     <div class="card-footer text-end bg-transparent border-top pt-3 pe-0">

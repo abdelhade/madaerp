@@ -19,9 +19,10 @@ class OrderController extends Controller
 
     public function create()
     {
+        $branches = userBranches();
         $drivers = Driver::where('is_available', true)->get();
         $shipments = Shipment::all();
-        return view('shipping::orders.create', compact('drivers', 'shipments'));
+        return view('shipping::orders.create', compact('drivers', 'shipments', 'branches'));
     }
 
     public function store(OrderRequest $request)

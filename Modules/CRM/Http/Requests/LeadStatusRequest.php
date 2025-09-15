@@ -33,6 +33,7 @@ class LeadStatusRequest extends FormRequest
                 Rule::unique('lead_statuses', 'order_column')->ignore($id),
             ],
             'color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'branch_id' => 'required|exists:branches,id',
         ];
     }
 
@@ -51,6 +52,8 @@ class LeadStatusRequest extends FormRequest
             'order_column.integer' => 'يجب أن يكون الترتيب رقماً صحيحاً',
             'order_column.min' => 'يجب أن يكون الترتيب أكبر من الصفر',
             'order_column.unique' => 'هذا الترتيب موجود بالفعل، برجاء اختيار ترتيب مختلف',
+            'branch_id.required' => 'الفرع مطلوب.',
+            'branch_id.exists' => 'الفرع المختار غير صحيح.',
 
         ];
     }

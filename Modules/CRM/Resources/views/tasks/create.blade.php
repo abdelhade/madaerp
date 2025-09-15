@@ -145,6 +145,8 @@
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
+
+                            <x-branches::branch-select :branches="$branches" />
                         </div>
 
                         <!-- أزرار الحفظ -->
@@ -156,6 +158,7 @@
                                 <i class="las la-times"></i> إلغاء
                             </a>
                         </div>
+
                     </form>
                 </div>
             </div>
