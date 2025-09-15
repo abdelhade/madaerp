@@ -20,7 +20,8 @@ class MaintenanceController extends Controller
     public function create()
     {
         $types = ServiceType::all();
-        return view('maintenance::maintenances.create', compact('types'));
+        $branches = userBranches();
+        return view('maintenance::maintenances.create', compact('types', 'branches'));
     }
 
     public function store(MaintenanceRequest $request)

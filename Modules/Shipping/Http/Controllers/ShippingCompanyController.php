@@ -17,7 +17,8 @@ class ShippingCompanyController extends Controller
 
     public function create()
     {
-        return view('shipping::companies.create');
+        $branches = userBranches();
+        return view('shipping::companies.create', compact('branches'));
     }
 
     public function store(ShippingCompanyRequest $request)

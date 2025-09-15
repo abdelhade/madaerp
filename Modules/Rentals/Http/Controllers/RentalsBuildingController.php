@@ -28,7 +28,8 @@ class RentalsBuildingController extends Controller
      */
     public function create()
     {
-        return view('rentals::buildings.create');
+        $branches = userBranches();
+        return view('rentals::buildings.create', compact('branches'));
     }
 
     /**

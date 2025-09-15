@@ -25,8 +25,9 @@ class ActivityController extends Controller
      */
     public function create()
     {
+        $branches = userBranches();
         $users = User::pluck('name', 'id');
-        return view('crm::activities.create', compact('users'));
+        return view('crm::activities.create', compact('users', 'branches'));
     }
 
     /**

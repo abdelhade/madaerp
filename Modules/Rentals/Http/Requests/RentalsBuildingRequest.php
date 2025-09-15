@@ -23,6 +23,7 @@ class RentalsBuildingRequest extends FormRequest
             'floors' => 'nullable|integer|min:1',
             'area' => 'nullable|numeric|min:0',
             'details' => 'nullable|string',
+            'branch_id' => 'required|exists:branches,id',
         ];
     }
 
@@ -48,6 +49,8 @@ class RentalsBuildingRequest extends FormRequest
             'floors.min' => 'عدد الطوابق يجب أن يكون على الأقل 1.',
             'area.numeric' => 'المساحة يجب أن تكون رقم.',
             'area.min' => 'المساحة لا يمكن أن تكون أقل من 0.',
+            'branch_id.required' => 'الفرع مطلوب.',
+            'branch_id.exists' => 'الفرع المختار غير صحيح.',
         ];
     }
 }

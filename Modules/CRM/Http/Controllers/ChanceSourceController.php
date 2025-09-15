@@ -27,7 +27,8 @@ class ChanceSourceController extends Controller
 
     public function create()
     {
-        return view('crm::chance-source.create');
+        $branches = userBranches();
+        return view('crm::chance-source.create', compact('branches'));
     }
 
     public function store(ChanceSourceRequest $request)

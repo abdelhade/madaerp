@@ -31,7 +31,8 @@ class LeadStatusController extends Controller
      */
     public function create()
     {
-        return view('crm::lead-status.create');
+        $branches = userBranches();
+        return view('crm::lead-status.create', compact('branches'));
     }
 
     /**

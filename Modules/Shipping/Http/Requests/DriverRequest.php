@@ -18,6 +18,7 @@ class DriverRequest extends FormRequest
             'phone' => 'required|string|max:20',
             'vehicle_type' => 'required|string|max:100',
             'is_available' => 'boolean',
+            'branch_id' => 'required|exists:branches,id',
         ];
     }
 
@@ -37,6 +38,9 @@ class DriverRequest extends FormRequest
             'vehicle_type.max'      => 'نوع المركبة يجب ألا يتجاوز 100 حرف.',
 
             'is_available.boolean'  => 'حالة السائق يجب أن تكون صح أو خطأ.',
+
+            'branch_id.required' => 'الفرع مطلوب.',
+            'branch_id.exists' => 'الفرع المختار غير صحيح.',
         ];
     }
 }

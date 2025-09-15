@@ -13,6 +13,7 @@ class ChanceSourceRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
+            'branch_id' => 'required|exists:branches,id',
         ];
     }
 
@@ -25,6 +26,8 @@ class ChanceSourceRequest extends FormRequest
             'title.required' => 'حقل العنوان مطلوب.',
             'title.string'   => 'يجب أن يكون العنوان نصاً.',
             'title.max'      => 'لا يمكن أن يزيد العنوان عن 255 حرفاً.',
+            'branch_id.required' => 'الفرع مطلوب.',
+            'branch_id.exists' => 'الفرع المختار غير صحيح.',
         ];
     }
 

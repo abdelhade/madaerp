@@ -22,6 +22,7 @@ class MaintenanceRequest extends FormRequest
             'status' => 'required|integer',
             'date' => 'nullable|date',
             'accural_date' => 'nullable|date',
+            'branch_id' => 'required|exists:branches,id',
         ];
     }
 
@@ -45,6 +46,8 @@ class MaintenanceRequest extends FormRequest
 
             'status.required' => 'الحالة مطلوبة.',
             'status.integer' => 'الحالة يجب أن تكون رقم صحيح.',
+            'branch_id.required' => 'الفرع مطلوب.',
+            'branch_id.exists' => 'الفرع المختار غير صحيح.',
         ];
     }
 }

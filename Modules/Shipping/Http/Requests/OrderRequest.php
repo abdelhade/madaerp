@@ -22,6 +22,7 @@ class OrderRequest extends FormRequest
             'customer_name'  => 'required|string|max:255',
             'customer_address' => 'required|string',
             'delivery_status'  => 'required|in:pending,assigned,in_transit,delivered',
+            'branch_id' => 'required|exists:branches,id',
         ];
     }
 
@@ -45,6 +46,9 @@ class OrderRequest extends FormRequest
 
             'delivery_status.required' => 'حالة التوصيل مطلوبة.',
             'delivery_status.in'       => 'حالة التوصيل غير صحيحة.',
+
+            'branch_id.required' => 'الفرع مطلوب.',
+            'branch_id.exists' => 'الفرع المختار غير صحيح.',
         ];
     }
 }

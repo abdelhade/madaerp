@@ -26,6 +26,7 @@ class TaskRequest extends FormRequest
             'client_comment' => ['nullable', 'string'],
             'user_comment'   => ['nullable', 'string'],
             'attachment'     => ['nullable', 'file', 'max:5120', 'mimes:jpg,jpeg,png,pdf,doc,docx'],
+            'branch_id' => 'required|exists:branches,id',
         ];
     }
 
@@ -60,6 +61,9 @@ class TaskRequest extends FormRequest
             'attachment.file'  => 'الملف المرفق يجب أن يكون ملفاً.',
             'attachment.max'   => 'الملف لا يجب أن يتجاوز 5 ميجابايت.',
             'attachment.mimes' => 'صيغة الملف غير مدعومة. الصيغ المسموحة: jpg, jpeg, png, pdf, doc, docx.',
+
+            'branch_id.required' => 'الفرع مطلوب.',
+            'branch_id.exists' => 'الفرع المختار غير صحيح.',
         ];
     }
 

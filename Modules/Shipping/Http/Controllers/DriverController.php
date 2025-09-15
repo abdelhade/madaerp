@@ -17,7 +17,8 @@ class DriverController extends Controller
 
     public function create()
     {
-        return view('shipping::drivers.create');
+        $branches = userBranches();
+        return view('shipping::drivers.create', compact('branches'));
     }
 
     public function store(DriverRequest $request)

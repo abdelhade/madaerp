@@ -22,6 +22,7 @@ class ShipmentRequest extends FormRequest
             'customer_address'    => 'required|string',
             'weight'              => 'required|numeric|min:0',
             'status'              => 'required|in:pending,in_transit,delivered',
+            'branch_id' => 'required|exists:branches,id',
         ];
     }
 
@@ -45,6 +46,9 @@ class ShipmentRequest extends FormRequest
 
             'status.required' => 'حالة الشحنة مطلوبة.',
             'status.in'       => 'حالة الشحنة غير صحيحة.',
+
+            'branch_id.required' => 'الفرع مطلوب.',
+            'branch_id.exists' => 'الفرع المختار غير صحيح.',
         ];
     }
 }
