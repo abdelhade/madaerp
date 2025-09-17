@@ -73,6 +73,23 @@
                             @enderror
                         </div>
                     @endif
+
+                    <x-branches::branch-select :branches="$branches" model="branch_id" />
+
+                    @if ($type == 14)
+                        <div class="col-lg-1">
+                            <label for="status">{{ __('حالة الفاتوره') }}</label>
+                            <select wire:model="status" id="status"
+                                class="form-control form-control-sm @error('status') is-invalid @enderror">
+                                @foreach ($statues as $statusCase)
+                                    <option value="{{ $statusCase->value }}">{{ $statusCase->translate() }}</option>
+                                @endforeach
+                            </select>
+                            @error('status')
+                                <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                            @enderror
+                        </div>
+                    @endif
                 </div>
 
                 <div class="row form-control">

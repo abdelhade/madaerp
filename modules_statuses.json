@@ -11,7 +11,5 @@
     "Progress": true,
     "Reports": true,
     "Branches": true,
-    "Accounts": true,
-    "Livewire": true,
-    "AccountCreator": true
+    "Accounts": true
 }

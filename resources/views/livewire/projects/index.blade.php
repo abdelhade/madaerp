@@ -51,7 +51,7 @@ new class extends Component {
             <i class="las la-plus"></i> إضافة مشروع جديد
         </a>
     </div>
-
+    <br>
     @if (session()->has('success'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
             class="alert alert-success alert-dismissible fade show" role="alert">
@@ -78,7 +78,8 @@ new class extends Component {
                         $projectsForStatus = $this->projects->filter(fn($p) => $p->status === $statusKey);
                     @endphp
                     @forelse($projectsForStatus as $project)
-                        <div class="kanban-card card mb-3 shadow-sm border-{{ $this->getStatusBadgeClass($project->status) }}">
+                        <div
+                            class="kanban-card card mb-3 shadow-sm border-{{ $this->getStatusBadgeClass($project->status) }}">
                             <div class="card-body p-2">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <span class="fw-bold">{{ $project->name }}</span>
@@ -92,11 +93,12 @@ new class extends Component {
                                 <div class="mb-1" style="font-size: 0.9rem;">
                                     <span>تاريخ البدء: {{ $project->start_date->format('Y-m-d') }}</span><br>
                                     <span>تاريخ الانتهاء المتوقع: {{ $project->end_date->format('Y-m-d') }}</span><br>
-                                    <span>تاريخ الانتهاء الفعلي: {{ $project->actual_end_date?->format('Y-m-d') ?? '-' }}</span>
+                                    <span>تاريخ الانتهاء الفعلي:
+                                        {{ $project->actual_end_date?->format('Y-m-d') ?? '-' }}</span>
                                 </div>
                                 <div class="mb-1" style="font-size: 0.9rem;">
-                                    <span>أنشئ بواسطة: {{ $project->createdBy->name }}</span><br>
-                                    <span>تم التحديث بواسطة: {{ $project->updatedBy->name }}</span>
+                                    <span>أنشئ بواسطة: {{ $project->createdBy?->name ?? '-' }}</span><br>
+                                    <span>تم التحديث بواسطة: {{ $project->updatedBy?->name ?? '-' }}</span>
                                 </div>
                                 @canany(abilities: ['تعديل المشاريع', 'حذف المشاريع'])
                                     <div class="d-flex gap-2 mt-2">
