@@ -38,6 +38,8 @@ class EditInvoiceForm extends Component
     public $balanceAfterInvoice = 0;
     public $showBalance = false;
 
+    public $branch_id;
+    public $branches;
 
     public $showConvertModal = false;
     public $selectedConvertType = null;
@@ -117,6 +119,10 @@ class EditInvoiceForm extends Component
 
     public function mount($operationId)
     {
+        $this->branches = userBranches();
+        if ($this->branches->isNotEmpty()) {
+            $this->branch_id = $this->branches->first()->id;
+        }
         $this->operationId = $operationId;
         $this->operation = OperHead::with(['operationItems.item.units', 'operationItems.item.prices'])
             ->findOrFail($operationId);
@@ -844,6 +850,7 @@ class EditInvoiceForm extends Component
 
     public function updateForm()
     {
+
         // تحقق من وجود العملية
         if (!$this->operation || !$this->operationId) {
             $this->dispatch('alert', [
@@ -861,7 +868,6 @@ class EditInvoiceForm extends Component
             ]);
             return false;
         }
-
         // استدعاء خدمة الحفظ مع تمرير العلم isEdit = true
         $service = new \App\Services\SaveInvoiceService();
         $result = $service->saveInvoice($this, true); // true يعني أن العملية تعديل

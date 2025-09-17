@@ -57,20 +57,39 @@
                     </div>
 
                     {{-- اختيار نوع السعر العام للفاتورة --}}
-                    <div class="col-lg-3">
-                        <label for="selectedPriceType">{{ __('اختر نوع السعر للفاتورة') }}</label>
-                        <select wire:model.live="selectedPriceType"
-                            class="form-control form-control-sm @error('selectedPriceType') is-invalid @enderror"
-                            @if ($is_disabled) disabled @endif>
-                            <option value="">{{ __('اختر نوع السعر') }}</option>
-                            @foreach ($priceTypes as $id => $name)
-                                <option value="{{ $id }}">{{ $name }}</option>
-                            @endforeach
-                        </select>
-                        @error('selectedPriceType')
-                            <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
-                        @enderror
-                    </div>
+                    @if (in_array($type, [10, 12, 14, 16, 22]))
+                        <div class="col-lg-3">
+                            <label for="selectedPriceType">{{ __('اختر نوع السعر للفاتورة') }}</label>
+                            <select wire:model.live="selectedPriceType"
+                                class="form-control form-control-sm @error('selectedPriceType') is-invalid @enderror"
+                                @if ($is_disabled) disabled @endif>
+                                <option value="">{{ __('اختر نوع السعر') }}</option>
+                                @foreach ($priceTypes as $id => $name)
+                                    <option value="{{ $id }}">{{ $name }}</option>
+                                @endforeach
+                            </select>
+                            @error('selectedPriceType')
+                                <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                            @enderror
+                        </div>
+                    @endif
+
+                    <x-branches::branch-select :branches="$branches" model="branch_id" />
+
+                    @if ($type == 14)
+                        <div class="col-lg-1">
+                            <label for="status">{{ __('حالة الفاتوره') }}</label>
+                            <select wire:model="status" id="status"
+                                class="form-control form-control-sm @error('status') is-invalid @enderror">
+                                @foreach ($statues as $statusCase)
+                                    <option value="{{ $statusCase->value }}">{{ $statusCase->translate() }}</option>
+                                @endforeach
+                            </select>
+                            @error('status')
+                                <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                            @enderror
+                        </div>
+                    @endif
                 </div>
 
                 <div class="row form-control">

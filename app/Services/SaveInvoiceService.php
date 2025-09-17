@@ -62,6 +62,8 @@ class SaveInvoiceService
 
         DB::beginTransaction();
         try {
+            // dd($component->all());
+
             // for testing notifications
 
             // $user = User::find(Auth::id());
@@ -100,7 +102,7 @@ class SaveInvoiceService
                 'fat_plus'       => $component->additional_value,
                 'fat_total'      => $component->subtotal,
                 'info'           => $component->notes,
-                'status'         => $component->status ?? null,
+                'status'         => $component->status ?? 0,
                 'acc_fund'       => $component->cash_box_id ?: 0,
                 'paid_from_client' => $component->received_from_client,
                 'user'           => Auth::id(),
@@ -245,13 +247,13 @@ class SaveInvoiceService
             );
 
             return $operation->id;
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             DB::rollBack();
-            logger()->error('خطأ أثناء حفظ الفاتورة: ' . $e->getMessage());
+            logger()->error('خطأ أثناء حفظ الفاتورة: ');
             $component->dispatch(
                 'error',
                 title: 'خطأ!',
-                text: 'فشل في حفظ الفاتورة: ' . $e->getMessage(),
+                text: 'فشل في حفظ الفاتورة: ',
                 icon: 'error'
             );
             return false;
