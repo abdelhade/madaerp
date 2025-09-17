@@ -53,7 +53,7 @@
                                             <div class="form-group">
                                                 <label for="code">{{ __('الكود') }}</label><span
                                                     class="text-danger">*</span>
-                                                <input required class="form-control font-bold" type="text" name="code"
+                                                <input readonly required class="form-control font-bold" type="text" name="code"
                                                     value="{{ $last_id }}" id="code">
                                             </div>
                                         </div>
@@ -62,8 +62,8 @@
                                             <div class="form-group">
                                                 <label for="aname">{{ __('الاسم') }}</label><span
                                                     class="text-danger">*</span>
-                                                <input required class="form-control font-bold" type="text" name="aname"
-                                                    id="frst">
+                                                <input required  class="form-control font-bold frst" type="text" name="aname"
+                                                    id="aname">
                                                 <div id="resaname"></div>
                                             </div>
                                         </div>
