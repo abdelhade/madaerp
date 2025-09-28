@@ -1,132 +1,144 @@
 <div>
-    <div class="content-wrapper">
-        <section class="content">
-            <form wire:submit="updateForm">
-                @include('components.invoices.invoice-head')
+    <div class="invoice-container" style="position: relative;">
+        <div class="payment-badge {{ $this->getPaymentBadgeClass() }}">
+            <div class="badge-text">{{ $this->getPaymentBadgeText() }}</div>
+        </div>
 
-                <div class="row">
-                    <div class="col-lg-4 mb-3" style="position: relative;">
-                        <label>ابحث عن صنف</label>
-                        <input type="text" wire:model.live="searchTerm" class="form-control frst"
-                            placeholder="ابدأ بكتابة اسم الصنف..." autocomplete="off"
-                            wire:keydown.arrow-down="handleKeyDown" wire:keydown.arrow-up="handleKeyUp"
-                            wire:keydown.enter.prevent="handleEnter"
-                            @if ($is_disabled) disabled @endif />
-                        @if (strlen($searchTerm) > 0 && $searchResults->count())
-                            <ul class="list-group position-absolute w-100" style="z-index: 999;">
-                                @foreach ($searchResults as $index => $item)
-                                    <li class="list-group-item list-group-item-action
+
+        <!-- محتوى الفاتورة -->
+        ...
+
+        <div class="content-wrapper">
+            <section class="content">
+                <form wire:submit="updateForm">
+
+                    @include('components.invoices.invoice-head')
+
+                    <div class="row">
+                        <div class="col-lg-4 mb-3" style="position: relative;">
+                            <label>ابحث عن صنف</label>
+                            <input type="text" wire:model.live="searchTerm" class="form-control frst"
+                                placeholder="ابدأ بكتابة اسم الصنف..." autocomplete="off"
+                                wire:keydown.arrow-down="handleKeyDown" wire:keydown.arrow-up="handleKeyUp"
+                                wire:keydown.enter.prevent="handleEnter"
+                                @if ($is_disabled) disabled @endif />
+                            @if (strlen($searchTerm) > 0 && $searchResults->count())
+                                <ul class="list-group position-absolute w-100" style="z-index: 999;">
+                                    @foreach ($searchResults as $index => $item)
+                                        <li class="list-group-item list-group-item-action
                                              @if ($selectedResultIndex === $index) active @endif"
-                                        wire:click="addItemFromSearch({{ $item->id }})">
-                                        {{ $item->name }}
+                                            wire:click="addItemFromSearch({{ $item->id }})">
+                                            {{ $item->name }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @elseif(strlen($searchTerm) > 0 && $searchResults->isEmpty())
+                                <ul class="list-group position-absolute w-100" style="z-index: 999;">
+                                    <li class="list-group-item list-group-item-action list-group-item-success @if ($isCreateNewItemSelected) active @endif"
+                                        style="cursor: pointer;"
+                                        wire:click.prevent="createNewItem('{{ $searchTerm }}')">
+                                        <i class="fas fa-plus"></i>
+                                        <strong>إنشاء صنف جديد:</strong> "{{ $searchTerm }}"
                                     </li>
-                                @endforeach
-                            </ul>
-                        @elseif(strlen($searchTerm) > 0 && $searchResults->isEmpty())
-                            <ul class="list-group position-absolute w-100" style="z-index: 999;">
-                                <li class="list-group-item list-group-item-action list-group-item-success @if ($isCreateNewItemSelected) active @endif"
-                                    style="cursor: pointer;" wire:click.prevent="createNewItem('{{ $searchTerm }}')">
-                                    <i class="fas fa-plus"></i>
-                                    <strong>إنشاء صنف جديد:</strong> "{{ $searchTerm }}"
-                                </li>
-                            </ul>
-                        @elseif(strlen($searchTerm) > 0)
-                            <div class="mt-2" style="position: absolute; z-index: 1000; width: 100%;">
-                                <div class="list-group-item text-danger">
-                                    لا توجد نتائج لـ "{{ $searchTerm }}"
+                                </ul>
+                            @elseif(strlen($searchTerm) > 0)
+                                <div class="mt-2" style="position: absolute; z-index: 1000; width: 100%;">
+                                    <div class="list-group-item text-danger">
+                                        لا توجد نتائج لـ "{{ $searchTerm }}"
+                                    </div>
                                 </div>
+                            @endif
+                        </div>
+
+                        <div class="col-lg-4 mb-3">
+                            <label>ابحث بالباركود</label>
+                            <input type="text" wire:model.live="barcodeTerm" class="form-control" id="barcode-search"
+                                placeholder="ادخل الباركود " autocomplete="off" wire:keydown.enter="addItemByBarcode"
+                                @if ($is_disabled) disabled @endif />
+                            @if (strlen($barcodeTerm) > 0 && $barcodeSearchResults->count())
+                                <ul class="list-group position-absolute w-100" style="z-index: 999;">
+                                    @foreach ($barcodeSearchResults as $index => $item)
+                                        <li class="list-group-item list-group-item-action"
+                                            wire:click="addItemFromSearch({{ $item->id }})">
+                                            {{ $item->name }} ({{ $item->code }})
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+
+                        {{-- اختيار نوع السعر العام للفاتورة --}}
+                        @if (in_array($type, [10, 12, 14, 16, 22]))
+                            <div class="col-lg-3">
+                                <label for="selectedPriceType">{{ __('اختر نوع السعر للفاتورة') }}</label>
+                                <select wire:model.live="selectedPriceType"
+                                    class="form-control form-control-sm @error('selectedPriceType') is-invalid @enderror"
+                                    @if ($is_disabled) disabled @endif>
+                                    <option value="">{{ __('اختر نوع السعر') }}</option>
+                                    @foreach ($priceTypes as $id => $name)
+                                        <option value="{{ $id }}">{{ $name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('selectedPriceType')
+                                    <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                                @enderror
+                            </div>
+                        @endif
+
+                        <x-branches::branch-select :branches="$branches" model="branch_id" />
+
+                        @if ($type == 14)
+                            <div class="col-lg-1">
+                                <label for="status">{{ __('حالة الفاتوره') }}</label>
+                                <select wire:model="status" id="status"
+                                    class="form-control form-control-sm @error('status') is-invalid @enderror">
+                                    @foreach ($statues as $statusCase)
+                                        <option value="{{ $statusCase->value }}">{{ $statusCase->translate() }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('status')
+                                    <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                                @enderror
                             </div>
                         @endif
                     </div>
 
-                    <div class="col-lg-4 mb-3">
-                        <label>ابحث بالباركود</label>
-                        <input type="text" wire:model.live="barcodeTerm" class="form-control" id="barcode-search"
-                            placeholder="ادخل الباركود " autocomplete="off" wire:keydown.enter="addItemByBarcode"
-                            @if ($is_disabled) disabled @endif />
-                        @if (strlen($barcodeTerm) > 0 && $barcodeSearchResults->count())
-                            <ul class="list-group position-absolute w-100" style="z-index: 999;">
-                                @foreach ($barcodeSearchResults as $index => $item)
-                                    <li class="list-group-item list-group-item-action"
-                                        wire:click="addItemFromSearch({{ $item->id }})">
-                                        {{ $item->name }} ({{ $item->code }})
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @endif
+                    <div class="row form-control">
+                        @include('components.invoices.invoice-item-table')
                     </div>
 
-                    {{-- اختيار نوع السعر العام للفاتورة --}}
-                    @if (in_array($type, [10, 12, 14, 16, 22]))
-                        <div class="col-lg-3">
-                            <label for="selectedPriceType">{{ __('اختر نوع السعر للفاتورة') }}</label>
-                            <select wire:model.live="selectedPriceType"
-                                class="form-control form-control-sm @error('selectedPriceType') is-invalid @enderror"
-                                @if ($is_disabled) disabled @endif>
-                                <option value="">{{ __('اختر نوع السعر') }}</option>
-                                @foreach ($priceTypes as $id => $name)
-                                    <option value="{{ $id }}">{{ $name }}</option>
-                                @endforeach
-                            </select>
-                            @error('selectedPriceType')
-                                <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
-                            @enderror
-                        </div>
-                    @endif
+                    {{-- قسم الإجماليات والمدفوعات --}}
+                    @include('components.invoices.invoice-footer')
 
-                    <x-branches::branch-select :branches="$branches" model="branch_id" />
-
-                    @if ($type == 14)
-                        <div class="col-lg-1">
-                            <label for="status">{{ __('حالة الفاتوره') }}</label>
-                            <select wire:model="status" id="status"
-                                class="form-control form-control-sm @error('status') is-invalid @enderror">
-                                @foreach ($statues as $statusCase)
-                                    <option value="{{ $statusCase->value }}">{{ $statusCase->translate() }}</option>
-                                @endforeach
-                            </select>
-                            @error('status')
-                                <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
-                            @enderror
-                        </div>
-                    @endif
-                </div>
-
-                <div class="row form-control">
-                    @include('components.invoices.invoice-item-table')
-                </div>
-
-                {{-- قسم الإجماليات والمدفوعات --}}
-                @include('components.invoices.invoice-footer')
-
-                {{-- أزرار التحكم --}}
-                <div class="row mt-4">
-                    <div class="col-12 text-left">
-                        <!-- زر حفظ الفاتورة -->
-                        {{-- <button type="submit" class="btn btn-lg btn-primary"
+                    {{-- أزرار التحكم --}}
+                    <div class="row mt-4">
+                        <div class="col-12 text-left">
+                            <!-- زر حفظ الفاتورة -->
+                            {{-- <button type="submit" class="btn btn-lg btn-primary"
                             @if ($is_disabled) disabled @endif>
                             <i class="fas fa-save"></i> حفظ الفاتورة
                         </button> --}}
 
-                        <!-- زر تعديل الفاتورة -->
-                        @if ($is_disabled)
-                            <button type="button" wire:click="enableEditing" class="btn btn-lg btn-success">
-                                <i class="fas fa-edit"></i> تعديل الفاتورة
-                            </button>
-                        @endif
+                            <!-- زر تعديل الفاتورة -->
+                            @if ($is_disabled)
+                                <button type="button" wire:click="enableEditing" class="btn btn-lg btn-success">
+                                    <i class="fas fa-edit"></i> تعديل الفاتورة
+                                </button>
+                            @endif
 
-                        <!-- زر تحويل الفاتورة -->
-                        {{-- @if ($this->canConvertInvoice())
+                            <!-- زر تحويل الفاتورة -->
+                            {{-- @if ($this->canConvertInvoice())
                             <button type="button" wire:click="openConvertModal" class="btn btn-lg btn-warning"
                                 title="تحويل الفاتورة إلى نوع آخر">
                                 <i class="fas fa-exchange-alt"></i> تحويل الفاتورة
                             </button>
                         @endif --}}
+                        </div>
                     </div>
-                </div>
 
-                <!-- نافذة تحويل الفاتورة المنبثقة -->
-                {{-- @if ($showConvertModal)
+                    <!-- نافذة تحويل الفاتورة المنبثقة -->
+                    {{-- @if ($showConvertModal)
                     <!-- خلفية النافذة -->
                     <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);"
                         wire:click="closeConvertModal">
@@ -222,8 +234,9 @@
                         </div>
                     </div>
                 @endif --}}
-            </form>
-        </section>
+                </form>
+            </section>
+        </div>
     </div>
 
     <style>
@@ -265,6 +278,49 @@
             .modal-dialog-centered {
                 min-height: calc(100vh - 3.5rem);
             }
+        }
+
+        .payment-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 120px;
+            height: 120px;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .payment-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            border-left: 120px solid transparent;
+            border-top: 120px solid;
+        }
+
+        .payment-badge .badge-text {
+            position: absolute;
+            top: 20px;
+            right: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            transform: rotate(45deg);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .payment-badge.unpaid::before {
+            border-top-color: #dc3545;
+        }
+
+        .payment-badge.partial::before {
+            border-top-color: #ffc107;
+            color: #000;
+        }
+
+        .payment-badge.full::before {
+            border-top-color: #28a745;
         }
     </style>
 

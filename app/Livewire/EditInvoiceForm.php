@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Carbon\Carbon;
 use Livewire\Component;
 use App\Models\JournalDetail;
 use App\Helpers\ItemViewModel;
@@ -890,7 +891,33 @@ class EditInvoiceForm extends Component
         return false;
     }
 
+        public function getPaymentBadgeClass()
+        {
+            $totalAmount = $this->total_after_additional;
+            $paidAmount = $this->received_from_client;
 
+            if ($paidAmount == 0) {
+                return 'unpaid'; // غير مدفوع
+            } elseif ($paidAmount >= $totalAmount) {
+                return 'full'; // مدفوع كامل
+            } else {
+                return 'partial'; // مدفوع جزئي
+            }
+        }
+
+        public function getPaymentBadgeText()
+        {
+            $totalAmount = $this->total_after_additional;
+            $paidAmount = $this->received_from_client;
+
+            if ($paidAmount == 0) {
+                return 'غير مدفوع';
+            } elseif ($paidAmount >= $totalAmount) {
+                return 'مدفوع';
+            } else {
+                return 'جزئي';
+            }
+        }
 
     public function cancelUpdate()
     {
