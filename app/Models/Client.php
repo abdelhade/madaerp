@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\ClientType;
 use Modules\CRM\Models\Lead;
 use Modules\Branches\Models\Branch;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Inquiries\Models\InquiryData;
 
 class Client extends Model
 {
@@ -37,6 +39,7 @@ class Client extends Model
 
     protected $casts = [
         'date_of_birth' => 'date',
+        'type' => ClientType::class,
     ];
 
     public function branch()
@@ -47,5 +50,15 @@ class Client extends Model
     public function leads()
     {
         return $this->hasMany(Lead::class, 'client_id');
+    }
+
+    public function projectsAsClient()
+    {
+        return $this->hasMany(InquiryData::class, 'client_id');
+    }
+
+    public function projectsAsMainContractor()
+    {
+        return $this->hasMany(InquiryData::class, 'main_contractor_id');
     }
 }

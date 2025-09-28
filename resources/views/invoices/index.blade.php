@@ -32,12 +32,12 @@
                     <form method="GET" action="{{ route('invoices.index') }}" class="row g-3 align-items-end">
                         <input type="hidden" name="type" value="{{ $invoiceType }}">
 
-                        <div class="col-md-4">
+                        <div class="col-md-1">
                             <label for="start_date" class="form-label">{{ __('من تاريخ') }}</label>
                             <input type="date" name="start_date" id="start_date" class="form-control"
                                 value="{{ $startDate }}">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-1">
                             <label for="end_date" class="form-label">{{ __('إلى تاريخ') }}</label>
                             <input type="date" name="end_date" id="end_date" class="form-control"
                                 value="{{ $endDate }}">
@@ -87,6 +87,8 @@
                                             {{ in_array($invoiceType, [11, 13, 15, 17]) ? __('التكلفة') : __('الربح') }}
                                         </th>
                                     @endif
+                                    <th class="font-family-cairo fw-bold font-14 text-center">{{ __('حالة الدفع') }}</th>
+
                                     <th class="font-family-cairo fw-bold font-14 text-center">{{ __('العمليات') }}</th>
                                 </tr>
                             </thead>
@@ -124,6 +126,21 @@
                                         @if (!in_array($invoiceType, [11, 13, 18, 19, 20, 21]))
                                             <td>{{ $invoice->profit }}</td>
                                         @endif
+                                        <td class="text-center">
+                                            @php
+                                                $totalAmount = $invoice->pro_value;
+                                                $paidAmount = $invoice->paid_from_client;
+                                            @endphp
+
+                                            @if ($paidAmount == 0)
+                                                <span class="badge bg-danger">غير مدفوع</span>
+                                            @elseif ($paidAmount >= $totalAmount)
+                                                <span class="badge bg-success">مدفوع</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark">جزئي</span>
+                                            @endif
+                                        </td>
+
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center flex-wrap gap-2">
                                                 @if ($invoice->pro_type == 11)

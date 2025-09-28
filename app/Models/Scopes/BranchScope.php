@@ -11,6 +11,8 @@ use App\Models\User;
 
 class BranchScope implements Scope
 {
+        protected static $cachedBranchIds = [];
+
     /**
      * Apply the scope to a given Eloquent query builder.
      */
@@ -22,8 +24,17 @@ class BranchScope implements Scope
             $activeBranches = $user->branches()
                 ->where('is_active', 1)
                 ->pluck('branches.id');
+            $userId = Auth::id();
 
-            $builder->whereIn($model->getTable() . '.branch_id', $activeBranches);
+            if (!isset(static::$cachedBranchIds[$userId])) {
+                static::$cachedBranchIds[$userId] = Auth::user()
+                    ->branches()
+                    ->where('is_active', 1)
+                    ->pluck('branches.id')
+                    ->toArray();
+            }
+
+            $builder->whereIn($model->getTable() . '.branch_id', static::$cachedBranchIds[$userId]);
         }
     }
 }
