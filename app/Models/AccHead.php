@@ -91,4 +91,11 @@ class AccHead extends Model
     {
         return $this->belongsTo(AccountsType::class, 'acc_type');
     }
+
+    // polymorphic relationship with Employee and anyother model
+    public function accountable()
+    {
+        return $this->morphTo();
+    }   
+
 }

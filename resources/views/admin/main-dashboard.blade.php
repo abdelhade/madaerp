@@ -348,7 +348,7 @@
     // Function to create app card HTML
     function createAppCard(app) {
         return `
-        <a href="${app.route}" class="app-card">
+        <a href="javascript:void(0);" class="app-card" onclick="handleAppClick('${app.name}', '${app.route}')">
             <div class="app-icon" style="background-color: ${app.iconBg};">
                 <i data-lucide="${app.icon}" style="color: ${app.iconColor}; width: 24px; height: 24px;"></i>
             </div>
@@ -385,9 +385,10 @@
 
     function handleAppClick(appName, route) {
         // تحديد نوع القسم المطلوب إظهاره في السايدبار
+        event.preventDefault();
         const sidebarSections = {
 
-            'الرئيسيه': 'all',
+            'الرئيسيه': 'main',
             'البيانات الاساسيه': 'accounts',
             'الاصناف': 'items',
             'الخصومات': 'discounts',
@@ -395,13 +396,13 @@
             'الصلاحيات': 'permissions',
             'CRM': 'crm',
             'المبيعات': 'sales-invoices',
-            'المشتريات': 'purshase-invoices',
-            'ادارة المخزون': 'invoices',
+            'المشتريات': 'purchases-invoices',
+            'ادارة المخزون': 'inventory-invoices',
             'السندات الماليه': 'vouchers',
             'التحويلات النقديه': 'transfers',
             'رواتب الموظفين': 'multi-vouchers',
             'الاستحقاقات': 'contract-journals',
-            'عمليات الاصول': 'depreciation-journals',
+            'عمليات الاصول': 'Assets-operations',
             'أدارة الحسابات': 'basic_journal-journals',
             'المشاريع': 'projects',
             'الموارد البشريه': 'departments',
@@ -418,7 +419,7 @@
         const sectionType = sidebarSections[appName] || 'all';
 
         // إعادة التوجيه مع تمرير نوع القسم
-        window.location.href = `${route}?sidebar=${sectionType}`;
+        window.location.href = route + (route.includes('?') ? '&' : '?') + `sidebar=${sectionType}`;
     }
 
     // تحديث إنشاء البطاقات

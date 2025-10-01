@@ -2,17 +2,13 @@
 
 namespace Modules\Inquiries\Models;
 
-use App\Models\City;
-use App\Models\Town;
-use App\Models\Client;
-use App\Models\Project;
+use App\Models\{City, Town, Client, Project};
 use App\Enums\ClientType;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Modules\Inquiries\Models\ProjectDocument;
-use Modules\Inquiries\Enums\QuotationStateEnum;
-use Modules\Inquiries\Enums\{KonTitle, StatusForKon, InquiryStatus};
+use Modules\Inquiries\Enums\{KonTitle, StatusForKon, InquiryStatus, QuotationStateEnum};
 
 class Inquiry extends Model implements HasMedia
 {
@@ -55,6 +51,11 @@ class Inquiry extends Model implements HasMedia
         return $this->belongsTo(Client::class, 'owner_id')->where('type', ClientType::Owner->value);
     }
 
+    public function assignedEngineer()
+    {
+        return $this->belongsTo(Client::class, 'assigned_engineer_id')->where('type', ClientType::ENGINEER->value);
+    }
+
     public function city()
     {
         return $this->belongsTo(City::class);
@@ -90,14 +91,14 @@ class Inquiry extends Model implements HasMedia
         return $this->belongsTo(InquirySource::class);
     }
 
-    public function assignedEngineer()
-    {
-        return $this->belongsTo(Client::class, 'assigned_engineer');
-    }
-
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(InquiryComment::class)->with('user')->latest();
     }
 
     public static function getStatusOptions()
