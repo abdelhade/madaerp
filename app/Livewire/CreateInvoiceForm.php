@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Enums\ItemType;
 use Livewire\Component;
 use App\Enums\InvoiceStatus;
 use App\Helpers\ItemViewModel;
@@ -110,6 +111,7 @@ class CreateInvoiceForm extends Component
         20 => 'امر اضافة',
         21 => 'تحويل من مخزن لمخزن',
         22 => 'امر حجز',
+        24 => 'فاتورة خدمه',
     ];
     protected $listeners = [
         'account-created' => 'handleAccountCreated',
@@ -180,6 +182,7 @@ class CreateInvoiceForm extends Component
         $employees         = $this->getAccountsByCode('2102%');
         $wasted           = $this->getAccountsByCode('55%');
         $accounts         = $this->getAccountsByCode('1108%');
+        $expensesAccount  = $this->getAccountsByCode('53%');
 
         $map = [
             10 => ['acc1' => 'clientsAccounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'], // فاتورة مبيعات
@@ -195,11 +198,14 @@ class CreateInvoiceForm extends Component
             20 => ['acc1' => 'accounts', 'acc1_role' => 'دائن', 'acc2_role' => 'مدين'],
             21 => ['acc1' => 'stores', 'acc1_role' => 'مخزن منه', 'acc2_role' => 'مخزن إليه'], // تحويل من مخزن لمخزن
             22 => ['acc1' => 'clientsAccounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'],
+            24 => ['acc1' => 'expensesAccount', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'], // فاتورة خدمة
+
         ];
 
         // تحديد قوائم الحسابات
         $this->acc1List = isset($map[$type]) ? ${$map[$type]['acc1']} : collect();
-        $this->acc2List = $stores;
+        // acc2List: default stores; for service invoice (24) we want suppliers
+        $this->acc2List = $this->type == 24 ? $suppliersAccounts : $stores;
 
         $this->acc1Role = $map[$type]['acc1_role'] ?? 'مدين';
         $this->acc2Role = $map[$type]['acc2_role'] ?? 'دائن';
@@ -217,6 +223,10 @@ class CreateInvoiceForm extends Component
         } elseif (in_array($this->type, [18, 19, 20])) {
             $this->acc1_id = null;
             $this->acc2_id = 62;
+        } elseif (in_array($this->type, [24])) {
+            // Service invoice: acc1 is expenses, acc2 is supplier
+            $this->acc1_id = $this->acc1List->first()->id ?? null;
+            $this->acc2_id = $suppliersAccounts->first()->id ?? null;
         } elseif ($this->type == 21) { // تحويل من مخزن لمخزن
             $this->acc1_id = null;
             $this->acc2_id = null;
@@ -241,6 +251,13 @@ class CreateInvoiceForm extends Component
 
             if (isset($convertData['items_data']) && !empty($convertData['items_data'])) {
                 $this->invoiceItems = $convertData['items_data'];
+                $this->invoiceItems = collect($convertData['items_data'])->filter(function ($item) {
+                    if ($this->type == 11) {
+                        $itemModel = Item::find($item['item_id']);
+                        return $itemModel && $itemModel->type != ItemType::Service->value;
+                    }
+                    return true;
+                })->values()->toArray();
             }
             session()->forget('convert_invoice_data');
 
@@ -264,7 +281,12 @@ class CreateInvoiceForm extends Component
         $this->employees = $employees;
         $this->priceTypes = Price::pluck('name', 'id')->toArray();
         $this->searchResults = collect();
-        $this->items = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])->take(20)->get();
+
+        $this->items = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])
+            ->when(in_array($this->type, [11, 13, 15, 17]), function ($query) {
+                $query->where('type', ItemType::Inventory->value); // فقط الأصناف المخزنية لفواتير المشتريات
+            })->take(20)->get();
+        // dd($this->items);
         $this->barcodeSearchResults = collect();
 
         if ($this->type == 10 && $this->acc1_id) {
@@ -411,9 +433,13 @@ class CreateInvoiceForm extends Component
             $this->acc1List = $accounts;
         } elseif ($this->type == 21) {
             $this->acc1List = $stores;
+        } elseif ($this->type == 24) {
+            // Service invoice: expenses account as acc1
+            $this->acc1List = $this->getAccountsByCodeAndBranch('5%', $branchId);
         }
 
-        $this->acc2List = $stores;
+        // acc2 default stores; for service invoice (24) suppliers
+        $this->acc2List = $this->type == 24 ? $suppliersAccounts : $stores;
         $this->employees = $this->getAccountsByCodeAndBranch('2102%', $branchId);
         $this->deliverys = $this->getAccountsByCodeAndBranch('2102%', $branchId);
 
@@ -427,6 +453,12 @@ class CreateInvoiceForm extends Component
         $this->items = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])
             ->where(function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId)->orWhereNull('branch_id');
+            })
+            ->when(in_array($this->type, [11, 13, 15, 17]), function ($query) {
+                $query->where('type', ItemType::Inventory->value); // فقط الأصناف المخزنية لفواتير المشتريات
+            })
+            ->when($this->type == 24, function ($query) {
+                $query->where('type', ItemType::Service->value); // فقط الأصناف الخدمية لفاتورة الخدمة
             })
             ->take(20)
             ->get();
@@ -751,9 +783,17 @@ class CreateInvoiceForm extends Component
 
         // الكويري للبحث عن الأصناف
         $this->searchResults = Item::with(['units' => fn($q) => $q->orderBy('pivot_u_val'), 'prices'])
-            ->where('name', 'like', '%' . $searchTerm . '%')
-            ->orWhereHas('barcodes', function ($query) use ($searchTerm) {
-                $query->where('barcode', 'like', '%' . $searchTerm . '%');
+            ->where(function ($query) use ($searchTerm) {
+                $query->where('name', 'like', '%' . $searchTerm . '%')
+                    ->orWhereHas('barcodes', function ($subQuery) use ($searchTerm) {
+                        $subQuery->where('barcode', 'like', '%' . $searchTerm . '%');
+                    });
+            })
+            ->when(in_array($this->type, [11, 13, 15, 17]), function ($query) {
+                $query->where('type', ItemType::Inventory->value); // فقط الأصناف المخزنية لفواتير المشتريات
+            })
+            ->when($this->type == 24, function ($query) {
+                $query->where('type', ItemType::Service->value); // فقط الأصناف الخدمية لفاتورة الخدمة
             })
             ->take($limit)
             ->get();
@@ -771,7 +811,6 @@ class CreateInvoiceForm extends Component
                 break;
             }
         }
-
         // إذا كان الصنف موجود، زيادة الكمية بدلاً من إضافة صف جديد
         if ($existingItemIndex !== null) {
             $this->invoiceItems[$existingItemIndex]['quantity']++;

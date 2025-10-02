@@ -36,7 +36,7 @@ class ProTypesSeeder extends Seeder
             ['id' => 21, 'pname' => 'inventory_transfer', 'ptext' => 'تحويل من مخزن لمخزن', 'ptype' => 'تحويل'],
             ['id' => 22, 'pname' => 'reservation_order', 'ptext' => 'امر حجز', 'ptype' => 'أمر بيع'],
             ['id' => 23, 'pname' => 'branch_transfer', 'ptext' => 'تحويل بين فروع', 'ptype' => 'تحويل'],
-
+            ['id' => 24, 'pname' => 'service_invoice', 'ptext' => 'فاتورة خدمه', 'ptype' => 'فاتورة'],
 
             ['id' => 30, 'pname' => 'allowed_discount', 'ptext' => 'خصم مسموح به', 'ptype' => 'سند'],
             ['id' => 31, 'pname' => 'earned_discount', 'ptext' => 'خصم مكتسب', 'ptype' => 'سند'],
