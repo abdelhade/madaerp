@@ -1,13 +1,22 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Inquiries\Livewire\DifficultyMatrix;
-use Modules\Inquiries\Http\Controllers\{WorkTypeController, InquiriesController, InquirySourceController, DifficultyMatrixController};
+use Modules\Inquiries\Http\Controllers\{WorkTypeController, InquiriesController, InquirySourceController, DifficultyMatrixController, QuotationInfoController, InquiryDocumentController};
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('inquiries', InquiriesController::class)->names('inquiries');
-    Route::resource('inquiry-sources', InquirySourceController::class)->names('inquiry.sources')->except(['show']);;
+    Route::resource('inquiry-documents', InquiryDocumentController::class)->names([
+        'index'   => 'inquiry.documents.index',
+        'create'  => 'inquiry.documents.create',
+        'store'   => 'inquiry.documents.store',
+        'show'    => 'inquiry.documents.show',
+        'edit'    => 'inquiry.documents.edit',
+        'update'  => 'inquiry.documents.update',
+        'destroy' => 'inquiry.documents.destroy',
+    ]);
+
+    Route::resource('inquiry-sources', InquirySourceController::class)->names('inquiry.sources')->except(['show']);
 
     Route::prefix('inquiry-sources')->name('inquiry.sources.')->group(function () {
         Route::post('/{id}/toggle-status', [InquirySourceController::class, 'toggleStatus'])->name('toggleStatus');
@@ -15,6 +24,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::resource('work-types', WorkTypeController::class)->names('work.types')->except(['show']);
+
+    Route::get('quotation-info/create', [QuotationInfoController::class, 'create'])->name('quotation-info.create');
 
     Route::prefix('work-types')->name('work.types.')->group(function () {
         Route::post('/{id}/toggle-status', [WorkTypeController::class, 'toggleStatus'])->name('toggleStatus');

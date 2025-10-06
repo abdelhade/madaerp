@@ -11,9 +11,8 @@ use App\Models\{City, Town, Client};
 use Illuminate\Support\Facades\Auth;
 use Modules\CRM\Models\ClientCategory;
 use Modules\Progress\Models\ProjectProgress;
-use Modules\Inquiries\Enums\{KonTitle, StatusForKon, InquiryStatus};
-use Modules\Inquiries\Enums\{KonPriorityEnum, ProjectSizeEnum, ClientPriorityEnum};
-use Modules\Inquiries\Models\{WorkType, Inquiry, InquirySource, SubmittalChecklist, ProjectDocument, WorkCondition, InquiryComment};
+use Modules\Inquiries\Enums\{KonTitle, StatusForKon, InquiryStatus, KonPriorityEnum, ProjectSizeEnum, ClientPriorityEnum};
+use Modules\Inquiries\Models\{WorkType, Inquiry, InquirySource, SubmittalChecklist, ProjectDocument, WorkCondition, InquiryComment, QuotationType};
 
 class CreateInquiry extends Component
 {
@@ -101,21 +100,6 @@ class CreateInquiry extends Component
         ['name' => 'other', 'checked' => false, 'description' => '']
     ];
 
-    public $types = [
-        ['name' => 'With material', 'checked' => false],
-        ['name' => 'Without materials', 'checked' => false],
-        ['name' => 'Rental only', 'checked' => false],
-    ];
-
-    public $units = [
-        ['name' => 'Liner Meter', 'checked' => false],
-        ['name' => 'Per pile', 'checked' => false],
-        ['name' => 'LumpSum', 'checked' => false],
-        ['name' => 'Per Month', 'checked' => false],
-        ['name' => 'Per week', 'checked' => false],
-        ['name' => 'Per hour', 'checked' => false],
-    ];
-
     public $newClient = [
         'cname' => '',
         'email' => '',
@@ -140,6 +124,9 @@ class CreateInquiry extends Component
 
     public $submittalChecklist = [];
     public $workingConditions = [];
+
+    public $quotationTypes = [];
+    public $selectedQuotationUnits = [];
 
     protected $listeners = [
         'getWorkTypeChildren' => 'emitWorkTypeChildren',
@@ -176,6 +163,8 @@ class CreateInquiry extends Component
         $lastTender = Inquiry::latest('id')->first();
         $nextNumber = $lastTender ? $lastTender->id + 1 : 1;
         $this->tenderNo = 'T-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+        $this->quotationTypes = QuotationType::with('units')->orderBy('name')->get();
 
         $submittalsFromDB = SubmittalChecklist::all();
         $this->submittalChecklist = $submittalsFromDB->map(function ($item) {
@@ -596,8 +585,6 @@ class CreateInquiry extends Component
 
     public function save()
     {
-        dd($this->all());
-        // التحقق من البيانات
         $this->validate([
             'projectId' => 'required|exists:projects,id',
             'inquiryDate' => 'required|date',
@@ -619,8 +606,6 @@ class CreateInquiry extends Component
             'konPriority' => 'nullable',
             'documentFiles.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
         ]);
-        $selectedTypes = collect($this->types)->where('checked', true)->pluck('name')->toArray();
-        $selectedUnits = collect($this->units)->where('checked', true)->pluck('name')->toArray();
         try {
             DB::beginTransaction();
             $inquiry = Inquiry::create([
@@ -676,8 +661,6 @@ class CreateInquiry extends Component
                 'client_priority' => $this->clientPriority,
                 'kon_priority' => $this->konPriority,
 
-                'types' => json_encode($selectedTypes),
-                'unit' => json_encode($selectedUnits),
                 'type_note' => $this->type_note,
             ]);
 
@@ -726,6 +709,39 @@ class CreateInquiry extends Component
                 }
             }
 
+            if (!empty($this->selectedQuotationUnits) && is_array($this->selectedQuotationUnits)) {
+                $attachments = []; // array للـ attach الجماعي
+
+                foreach ($this->selectedQuotationUnits as $typeId => $unitIds) {
+                    // تأكد إن typeId valid (عدد > 0)
+                    if (!is_numeric($typeId) || (int)$typeId <= 0) {
+                        continue; // تجاهل types غير صحيحة
+                    }
+                    $typeId = (int) $typeId; // cast لـ int
+
+                    if (!empty($unitIds) && is_array($unitIds)) {
+                        foreach ($unitIds as $unitId => $isSelected) {
+                            // الفلترة الرئيسية: تأكد إن unitId valid و selected
+                            if ($isSelected === true || $isSelected === 1) {
+                                // تحقق من unitId: يبقى numeric، > 0، ومش string فاضية
+                                if (is_numeric($unitId) && (int)$unitId > 0) {
+                                    $unitId = (int) $unitId; // cast لـ int آمن
+                                    $attachments[$unitId] = ['quotation_type_id' => $typeId];
+                                }
+                                // لو $unitId مش numeric أو =0، هيتجاهل تلقائيًا
+                            }
+                        }
+                    }
+                }
+                // attach بس لو في attachments valid
+                if (!empty($attachments)) {
+                    $inquiry->quotationUnits()->attach($attachments);
+                } else {
+                    // اختياري: log لو مفيش selections
+                    Log::info('No valid quotation units selected for inquiry ' . $inquiry->id);
+                }
+            }
+
             // 6. حفظ التعليقات المؤقتة
             foreach ($this->tempComments as $tempComment) {
                 InquiryComment::create([
@@ -736,24 +752,9 @@ class CreateInquiry extends Component
             }
 
             DB::commit();
-
-            session()->flash('message', 'تم حفظ الاستفسار بنجاح!');
-            session()->flash('alert-type', 'success');
-
             return redirect()->route('inquiries.index');
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             DB::rollBack();
-
-            // تسجيل الخطأ
-            Log::error('خطأ في حفظ الاستفسار: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            session()->flash('message', 'حدث خطأ أثناء الحفظ: ' . $e->getMessage());
-            session()->flash('alert-type', 'error');
-
             return back();
         }
     }

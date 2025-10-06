@@ -59,9 +59,6 @@ return new class extends Migration
             $table->enum('client_priority', ClientPriorityEnum::values())->nullable();
             $table->enum('kon_priority', KonPriorityEnum::values())->nullable();
 
-            //quotation info
-            $table->json('types')->nullable();
-            $table->json('unit')->nullable();
             $table->string('type_note')->nullable();
 
             $table->timestamps();
