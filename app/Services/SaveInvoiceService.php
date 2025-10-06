@@ -75,7 +75,7 @@ class SaveInvoiceService
             //     'created_at' => now()->toDateTimeString(),
             // ]));
 
-            $isJournal = in_array($component->type, [10, 11, 12, 13, 18, 19, 20, 21, 23]) ? 1 : 0;
+            $isJournal = in_array($component->type, [10, 11, 12, 13, 18, 19, 20, 21, 23, 24]) ? 1 : 0;
             $isManager = $isJournal ? 0 : 1;
             $isReceipt = in_array($component->type, [10, 22, 13]);
             $isPayment = in_array($component->type, [11, 12]);
@@ -345,6 +345,10 @@ class SaveInvoiceService
                 $debit = $component->acc2_id;  // المخزن الذي استلم البضاعة (مدين)
                 $credit = $component->acc1_id; // المخزن الذي أرسل البضاعة (دائن)
                 break; // تحويل
+            case 24:
+                $debit = $component->acc1_id;  // المصروفات المختارة (مدين)
+                $credit = $component->acc2_id; // المورد (دائن)
+                break; // فاتورة خدمه
         }
 
         // إنشاء رأس القيد
