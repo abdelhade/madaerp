@@ -34,5 +34,18 @@
         <i class="ti-control-record"></i>{{ __('Diffculty Matrix') }}
     </a>
 </li>
+
+<li class="nav-item">
+    <a class="nav-link" href="{{ route('quotation-info.create') }}">
+        <i class="ti-control-record"></i>{{ __('Quotation Info') }}
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link" href="{{ route('inquiry.documents.index') }}">
+        <i class="ti-control-record"></i>{{ __('Documents') }}
+    </a>
+</li>
+
 {{-- </ul>
 </li> --}}

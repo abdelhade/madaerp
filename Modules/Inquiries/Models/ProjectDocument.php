@@ -16,7 +16,7 @@ class ProjectDocument extends Model
 
     public function inquiries()
     {
-        return $this->belongsToMany(InquiryData::class, 'inquiry_project_document')
+        return $this->belongsToMany(Inquiry::class, 'inquiry_project_document')
             ->withPivot('description')
             ->withTimestamps();
     }

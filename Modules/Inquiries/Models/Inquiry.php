@@ -101,6 +101,13 @@ class Inquiry extends Model implements HasMedia
         return $this->hasMany(InquiryComment::class)->with('user')->latest();
     }
 
+    public function quotationUnits()
+    {
+        return $this->belongsToMany(QuotationUnit::class, 'inquiry_quotation_info', 'inquiry_id', 'quotation_unit_id')
+            ->withPivot('quotation_type_id')
+            ->withTimestamps();
+    }
+
     public static function getStatusOptions()
     {
         return InquiryStatus::cases();
