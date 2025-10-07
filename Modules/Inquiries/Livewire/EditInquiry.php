@@ -7,8 +7,8 @@ use App\Enums\ClientType;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\{City, Town, Client};
 use Illuminate\Support\Facades\Auth;
+use App\Models\{City, Town, Client};
 use Modules\CRM\Models\ClientCategory;
 use Modules\Progress\Models\ProjectProgress;
 use Modules\Inquiries\Models\InquiryDocument;
@@ -28,17 +28,15 @@ class EditInquiry extends Component
     public $currentWorkTypeSteps = [1 => null];
     public $currentWorkPath = [];
 
-    public $workTypeSteps = [1 => null];
-    public $inquirySourceSteps = [1 => null];
-    public $selectedWorkPath = [];
     public $selectedInquiryPath = [];
+    public $inquirySourceSteps = [1 => null];
     public $finalWorkType = '';
     public $finalInquirySource = '';
-
     public $projectId;
     public $inquiryDate;
     public $reqSubmittalDate;
     public $projectStartDate;
+
     public $cityId;
     public $townId;
     public $townDistance;
@@ -61,14 +59,18 @@ class EditInquiry extends Component
     public $totalProjectValue;
     public $quotationStateReason;
     public $quotationState;
-
     public $totalSubmittalScore = 0;
     public $totalConditionsScore = 0;
-    public $totalScore = 0;
     public $projectDifficulty = 1;
-
     public $documentFiles = [];
-    public $existingDocuments = [];
+
+    public $totalScore = 0;
+
+    public $modalClientType = null;
+    public $modalClientTypeLabel = '';
+
+    public $projectImage;
+    public $existingProjectImage;
 
     public $workTypes = [];
     public $inquirySources = [];
@@ -85,7 +87,6 @@ class EditInquiry extends Component
     public $projectSizeOptions = [];
     public $inquiryName;
 
-    // Temporary Comments
     public $tempComments = [];
     public $newTempComment = '';
     public $existingComments = [];
@@ -95,32 +96,12 @@ class EditInquiry extends Component
     public $clientPriorityOptions = [];
     public $konPriorityOptions = [];
 
+    public $clientCategories = [];
     public $engineers = [];
     public $quotationStateOptions = [];
 
-    public $projectDocuments = [
-        ['name' => 'Soil report', 'checked' => false],
-        ['name' => 'Arch. Drawing', 'checked' => false],
-        ['name' => 'Str. Drawing', 'checked' => false],
-        ['name' => 'Spacification', 'checked' => false],
-        ['name' => 'Pile design', 'checked' => false],
-        ['name' => 'shoring design', 'checked' => false],
-        ['name' => 'other', 'checked' => false, 'description' => '']
-    ];
+    public $projectDocuments = [];
 
-    public $type_note = null;
-
-    public $submittalChecklist = [];
-    public $workingConditions = [];
-
-    // New properties for quotation types and units
-    public $quotationTypes = [];
-    public $selectedQuotationUnits = [];
-
-    // New properties for client modal
-    public $modalClientType = null;
-    public $modalClientTypeLabel = '';
-    public $clientCategories = [];
     public $newClient = [
         'cname' => '',
         'email' => '',
@@ -139,8 +120,15 @@ class EditInquiry extends Component
         'gender' => '',
         'is_active' => true,
         'type' => null,
-        'client_category_id' => null,
     ];
+
+    public $type_note = null;
+
+    public $submittalChecklist = [];
+    public $workingConditions = [];
+
+    public $quotationTypes = [];
+    public $selectedQuotationUnits = [];
 
     protected $listeners = [
         'getWorkTypeChildren' => 'emitWorkTypeChildren',
@@ -156,11 +144,11 @@ class EditInquiry extends Component
             'submittalChecklists',
             'workConditions',
             'projectDocuments',
-            'workType.ancestors',
-            'inquirySource.ancestors',
+            'workType',
+            'inquirySource',
             'comments.user',
             'quotationUnits',
-            'media',
+            'media'
         ])->findOrFail($id);
 
         $this->loadInitialData();
@@ -173,10 +161,12 @@ class EditInquiry extends Component
         $this->engineers = Client::where('type', ClientType::ENGINEER->value)->get()->toArray();
         $this->quotationStateOptions = Inquiry::getQuotationStateOptions();
         $this->projectSizeOptions = ProjectSizeEnum::values();
+        $this->inquiryDate = now()->format('Y-m-d');
         $this->workTypes = WorkType::where('is_active', true)->whereNull('parent_id')->get()->toArray();
         $this->inquirySources = InquirySource::where('is_active', true)->whereNull('parent_id')->get()->toArray();
         $this->projects = ProjectProgress::all()->toArray();
         $this->cities = City::all()->toArray();
+        $this->towns = $this->cityId ? Town::where('city_id', $this->cityId)->get()->toArray() : [];
         $this->clients = Client::whereIn('type', [ClientType::Person->value, ClientType::Company->value])->get()->toArray();
         $this->mainContractors = Client::where('type', ClientType::MainContractor->value)->get()->toArray();
         $this->consultants = Client::where('type', ClientType::Consultant->value)->get()->toArray();
@@ -186,36 +176,44 @@ class EditInquiry extends Component
         $this->konTitleOptions = Inquiry::getKonTitleOptions();
         $this->clientPriorityOptions = ClientPriorityEnum::values();
         $this->konPriorityOptions = KonPriorityEnum::values();
-        $this->clientCategories = ClientCategory::all()->toArray();
 
         $this->quotationTypes = QuotationType::with('units')->orderBy('name')->get();
 
         $submittalsFromDB = SubmittalChecklist::all();
-        $this->submittalChecklist = $submittalsFromDB->map(fn($item) => [
-            'id' => $item->id,
-            'name' => $item->name,
-            'checked' => false,
-            'value' => $item->score
-        ])->toArray();
+        $this->submittalChecklist = $submittalsFromDB->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'checked' => false,
+                'value' => $item->score
+            ];
+        })->toArray();
 
         $documentsFromDB = InquiryDocument::orderBy('name')->get();
-        $this->projectDocuments = $documentsFromDB->map(fn($item) => [
-            'id' => $item->id,
-            'name' => $item->name,
-            'checked' => false,
-            'description' => ''
-        ])->toArray();
+        $this->projectDocuments = $documentsFromDB->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'checked' => false,
+                'description' => ''
+            ];
+        })->toArray();
 
         $conditionsFromDB = WorkCondition::all();
-        $this->workingConditions = $conditionsFromDB->map(fn($item) => [
-            'id' => $item->id,
-            'name' => $item->name,
-            'checked' => false,
-            'options' => $item->options,
-            'selectedOption' => null,
-            'value' => $item->options ? 0 : $item->score,
-            'default_score' => $item->score
-        ])->toArray();
+        $this->workingConditions = $conditionsFromDB->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'checked' => false,
+                'options' => $item->options,
+                'selectedOption' => null,
+                'value' => $item->options ? 0 : $item->score,
+                'default_score' => $item->score
+            ];
+        })->toArray();
+
+        $this->clientCategories = ClientCategory::all()->toArray();
+        $this->documentFiles = [];
     }
 
     private function populateFormData()
@@ -253,65 +251,105 @@ class EditInquiry extends Component
         $this->quotationStateReason = $inquiry->rejection_reason;
         $this->type_note = $inquiry->type_note;
 
-        if ($this->cityId) {
-            $this->towns = Town::where('city_id', $this->cityId)->get()->toArray();
+        // Load work type hierarchy
+        if ($inquiry->work_type_id) {
+            $this->buildWorkTypeHierarchy($inquiry->work_type_id);
         }
 
-        $this->loadExistingRelations();
-        $this->loadMedia();
-    }
-
-    private function loadMedia()
-    {
-        $this->existingProjectImage = $this->inquiry->getFirstMedia('project-image');
-        $this->existingDocuments = $this->inquiry->getMedia('inquiry-documents')->map(fn($media) => [
-            'id' => $media->id,
-            'name' => $media->name,
-            'file_name' => $media->file_name,
-            'size' => $media->size,
-            'url' => $media->getUrl()
-        ])->toArray();
-    }
-
-    private function loadExistingRelations()
-    {
-        // Work Types
-        if ($this->inquiry->workType) {
-            $workTypeHierarchy = $this->inquiry->workType->ancestors->pluck('id')->push($this->inquiry->work_type_id)->toArray();
-            foreach ($workTypeHierarchy as $index => $typeId) {
-                $this->currentWorkTypeSteps['step_' . ($index + 1)] = $typeId;
-            }
-            $this->dispatch('prepopulateWorkTypes', steps: $this->currentWorkTypeSteps, path: $this->currentWorkPath);
+        // Load inquiry source hierarchy
+        if ($inquiry->inquiry_source_id) {
+            $this->buildInquirySourceHierarchy($inquiry->inquiry_source_id);
         }
 
-        // Inquiry Sources
-        if ($this->inquiry->inquirySource) {
-            $inquirySourceHierarchy = $this->inquiry->inquirySource->ancestors->pluck('id')->push($this->inquiry->inquiry_source_id)->toArray();
-            foreach ($inquirySourceHierarchy as $index => $sourceId) {
-                $this->inquirySourceSteps['inquiry_source_step_' . ($index + 1)] = $sourceId;
-            }
-            $this->dispatch('prepopulateInquirySources', steps: $this->inquirySourceSteps, path: $this->selectedInquiryPath);
-        }
+        // Load checklists
+        $this->checkItems($this->submittalChecklist, $inquiry->submittalChecklists->pluck('id'));
+        $this->checkItems($this->workingConditions, $inquiry->workConditions->pluck('id'));
+        $this->checkItems($this->projectDocuments, $inquiry->projectDocuments->pluck('id'));
 
-        // Checklists
-        $this->checkItems($this->submittalChecklist, $this->inquiry->submittalChecklists->pluck('id'));
-        $this->checkItems($this->workingConditions, $this->inquiry->workConditions->pluck('id'));
-        $this->checkItems($this->projectDocuments, $this->inquiry->projectDocuments->pluck('id'));
-
-        // Quotation Units
-        foreach ($this->inquiry->quotationUnits as $unit) {
+        // Load quotation units
+        foreach ($inquiry->quotationUnits as $unit) {
             if (isset($unit->pivot->quotation_type_id)) {
                 $this->selectedQuotationUnits[$unit->pivot->quotation_type_id][$unit->id] = true;
             }
         }
 
-        // Comments
-        $this->existingComments = $this->inquiry->comments->map(fn($comment) => [
-            'id' => $comment->id,
-            'comment' => $comment->comment,
-            'user_name' => $comment->user->name ?? 'Unknown',
-            'created_at' => $comment->created_at->format('Y-m-d H:i:s'),
-        ])->toArray();
+        // Load existing comments
+        $this->existingComments = $inquiry->comments->map(function ($comment) {
+            return [
+                'id' => $comment->id,
+                'comment' => $comment->comment,
+                'user_name' => $comment->user->name ?? 'Unknown',
+                'created_at' => $comment->created_at->format('Y-m-d H:i:s'),
+            ];
+        })->toArray();
+
+        // Load media
+        $this->existingProjectImage = $inquiry->getFirstMedia('project-image');
+        $this->existingDocuments = $inquiry->getMedia('inquiry-documents')->map(function ($media) {
+            return [
+                'id' => $media->id,
+                'name' => $media->name,
+                'file_name' => $media->file_name,
+                'size' => $media->size,
+                'url' => $media->getUrl()
+            ];
+        })->toArray();
+    }
+
+    private function buildWorkTypeHierarchy($workTypeId)
+    {
+        $workType = WorkType::find($workTypeId);
+        if (!$workType) return;
+
+        $hierarchy = collect();
+        $current = $workType;
+
+        while ($current) {
+            $hierarchy->prepend($current);
+            $current = $current->parent;
+        }
+
+        $this->currentWorkTypeSteps = [];
+        $this->currentWorkPath = [];
+
+        foreach ($hierarchy as $index => $type) {
+            $stepNumber = $index + 1;
+            $this->currentWorkTypeSteps[$stepNumber] = $type->id;
+            $this->currentWorkPath[$index] = $type->name;
+        }
+
+        $this->dispatch('prepopulateWorkTypes', [
+            'steps' => $this->currentWorkTypeSteps,
+            'path' => $this->currentWorkPath
+        ]);
+    }
+
+    private function buildInquirySourceHierarchy($inquirySourceId)
+    {
+        $inquirySource = InquirySource::find($inquirySourceId);
+        if (!$inquirySource) return;
+
+        $hierarchy = collect();
+        $current = $inquirySource;
+
+        while ($current) {
+            $hierarchy->prepend($current);
+            $current = $current->parent;
+        }
+
+        $this->inquirySourceSteps = [];
+        $this->selectedInquiryPath = [];
+
+        foreach ($hierarchy as $index => $source) {
+            $stepNumber = $index + 1;
+            $this->inquirySourceSteps[$stepNumber] = $source->id;
+            $this->selectedInquiryPath[$index] = $source->name;
+        }
+
+        $this->dispatch('prepopulateInquirySources', [
+            'steps' => $this->inquirySourceSteps,
+            'path' => $this->selectedInquiryPath
+        ]);
     }
 
     private function checkItems(&$list, $existingIds)
@@ -326,9 +364,18 @@ class EditInquiry extends Component
 
     public function generateTenderId()
     {
-        $workTypeName = $this->currentWorkPath ? end($this->currentWorkPath) : '';
+        $workTypeName = '';
+        if (!empty($this->currentWorkPath)) {
+            $workTypeName = end($this->currentWorkPath);
+        } elseif (!empty($this->selectedWorkTypes)) {
+            $workTypeName = end($this->selectedWorkTypes)['path']
+                ? end(end($this->selectedWorkTypes)['path'])
+                : '';
+        }
+
         $cityName = $this->cityId ? City::find($this->cityId)?->title : '';
         $townName = $this->townId ? Town::find($this->townId)?->title : '';
+
         $this->tenderId = trim("{$this->tenderNo} - {$workTypeName} - {$cityName} - {$townName}", ' -');
     }
 
@@ -351,7 +398,15 @@ class EditInquiry extends Component
         if ($media) {
             $media->delete();
         }
-        $this->loadMedia(); // Refresh the list
+        $this->existingDocuments = $this->inquiry->getMedia('inquiry-documents')->map(function ($media) {
+            return [
+                'id' => $media->id,
+                'name' => $media->name,
+                'file_name' => $media->file_name,
+                'size' => $media->size,
+                'url' => $media->getUrl()
+            ];
+        })->toArray();
     }
 
     public function removeProjectImage()
@@ -373,6 +428,7 @@ class EditInquiry extends Component
                 'path' => $this->currentWorkPath,
                 'final_description' => ''
             ];
+
             $this->currentWorkTypeSteps = [1 => null];
             $this->currentWorkPath = [];
         }
@@ -388,17 +444,16 @@ class EditInquiry extends Component
     public function updatedCurrentWorkTypeSteps($value, $key)
     {
         $stepNum = (int) str_replace('step_', '', $key);
-        $this->currentWorkTypeSteps = array_slice($this->currentWorkTypeSteps, 0, $stepNum, true);
-        $this->currentWorkTypeSteps['step_' . $stepNum] = $value;
+        $this->currentWorkTypeSteps = array_slice($this->currentWorkTypeSteps, 0, $stepNum + 1, true);
 
         if ($value) {
             $selectedWorkType = WorkType::where('is_active', true)->find($value);
             if ($selectedWorkType) {
-                $this->currentWorkPath = array_slice($this->currentWorkPath, 0, $stepNum - 1, true);
-                $this->currentWorkPath[$stepNum - 1] = $selectedWorkType->name;
+                $this->currentWorkPath = array_slice($this->currentWorkPath, 0, $stepNum, true);
+                $this->currentWorkPath[$stepNum] = $selectedWorkType->name;
             }
         } else {
-            $this->currentWorkPath = array_slice($this->currentWorkPath, 0, $stepNum - 1, true);
+            $this->currentWorkPath = array_slice($this->currentWorkPath, 0, $stepNum, true);
         }
         $this->generateTenderId();
     }
@@ -406,17 +461,16 @@ class EditInquiry extends Component
     public function updatedInquirySourceSteps($value, $key)
     {
         $stepNum = (int) str_replace('inquiry_source_step_', '', $key);
-        $this->inquirySourceSteps = array_slice($this->inquirySourceSteps, 0, $stepNum, true);
-        $this->inquirySourceSteps['inquiry_source_step_' . $stepNum] = $value;
+        $this->inquirySourceSteps = array_slice($this->inquirySourceSteps, 0, $stepNum + 1, true);
 
         if ($value) {
             $selectedInquirySource = InquirySource::where('is_active', true)->find($value);
             if ($selectedInquirySource) {
-                $this->selectedInquiryPath = array_slice($this->selectedInquiryPath, 0, $stepNum - 1, true);
-                $this->selectedInquiryPath[$stepNum - 1] = $selectedInquirySource->name;
+                $this->selectedInquiryPath = array_slice($this->selectedInquiryPath, 0, $stepNum, true);
+                $this->selectedInquiryPath[$stepNum] = $selectedInquirySource->name;
             }
         } else {
-            $this->selectedInquiryPath = array_slice($this->selectedInquiryPath, 0, $stepNum - 1, true);
+            $this->selectedInquiryPath = array_slice($this->selectedInquiryPath, 0, $stepNum, true);
         }
     }
 
@@ -435,6 +489,9 @@ class EditInquiry extends Component
             $property = $parts[1];
             if (isset($this->projectDocuments[$index])) {
                 $this->projectDocuments[$index][$property] = $value;
+                if ($this->projectDocuments[$index]['name'] === 'other' && $property === 'checked' && !$value) {
+                    $this->projectDocuments[$index]['description'] = '';
+                }
             }
         }
     }
@@ -457,25 +514,43 @@ class EditInquiry extends Component
                         $this->workingConditions[$index]['value'] = $firstOption;
                     }
                 } else {
-                    $this->workingConditions[$index]['value'] = $this->workingConditions[$index]['default_score'] ?? 0;
+                    $this->workingConditions[$index]['value'] = $this->workingConditions[$index]['value'] ?? 0;
                 }
             }
         } elseif ($property === 'selectedOption') {
             $this->workingConditions[$index]['value'] = $value;
         }
+
         $this->calculateScores();
     }
 
     public function calculateScores()
     {
-        $this->totalSubmittalScore = collect($this->submittalChecklist)->where('checked', true)->sum('value');
-        $this->totalConditionsScore = collect($this->workingConditions)->where('checked', true)->sum('value');
+        $this->totalSubmittalScore = 0;
+        foreach ($this->submittalChecklist as $item) {
+            if ($item['checked']) {
+                $this->totalSubmittalScore += (int) ($item['value'] ?? 0);
+            }
+        }
+
+        $this->totalConditionsScore = 0;
+        foreach ($this->workingConditions as $condition) {
+            if ($condition['checked']) {
+                $this->totalConditionsScore += (int) ($condition['value'] ?? 0);
+            }
+        }
+
         $this->totalScore = $this->totalSubmittalScore + $this->totalConditionsScore;
 
-        if ($this->totalScore < 6) $this->projectDifficulty = 1;
-        elseif ($this->totalScore <= 10) $this->projectDifficulty = 2;
-        elseif ($this->totalScore <= 15) $this->projectDifficulty = 3;
-        else $this->projectDifficulty = 4;
+        if ($this->totalScore < 6) {
+            $this->projectDifficulty = 1;
+        } elseif ($this->totalScore <= 10) {
+            $this->projectDifficulty = 2;
+        } elseif ($this->totalScore <= 15) {
+            $this->projectDifficulty = 3;
+        } else {
+            $this->projectDifficulty = 4;
+        }
     }
 
     public function updatedSubmittalChecklist($value, $key)
@@ -489,7 +564,10 @@ class EditInquiry extends Component
             $town = Town::find($this->townId);
             $this->townDistance = $town?->distance;
         }
-        if (str_starts_with($propertyName, 'submittalChecklist') || str_starts_with($propertyName, 'workingConditions')) {
+        if (
+            strpos($propertyName, 'submittalChecklist') !== false ||
+            strpos($propertyName, 'workingConditions') !== false
+        ) {
             $this->calculateScores();
         }
     }
@@ -508,12 +586,16 @@ class EditInquiry extends Component
 
     public function addTempComment()
     {
-        $this->validate(['newTempComment' => 'required|string|min:3|max:1000']);
+        $this->validate([
+            'newTempComment' => 'required|string|min:3|max:1000',
+        ]);
+
         $this->tempComments[] = [
             'comment' => $this->newTempComment,
             'user_name' => Auth::user()->name,
             'created_at' => now()->format('Y-m-d H:i:s'),
         ];
+
         $this->newTempComment = '';
     }
 
@@ -526,7 +608,9 @@ class EditInquiry extends Component
     public function removeExistingComment($commentId)
     {
         InquiryComment::where('id', $commentId)->delete();
-        $this->existingComments = array_filter($this->existingComments, fn($c) => $c['id'] != $commentId);
+        $this->existingComments = array_filter($this->existingComments, function ($comment) use ($commentId) {
+            return $comment['id'] != $commentId;
+        });
     }
 
     public function openClientModal($type)
@@ -534,8 +618,26 @@ class EditInquiry extends Component
         $this->modalClientType = $type;
         $clientTypeEnum = ClientType::tryFrom($type);
         $this->modalClientTypeLabel = $clientTypeEnum ? $clientTypeEnum->label() : 'عميل';
-        $this->resetClientForm();
-        $this->newClient['type'] = $type;
+        $this->newClient = [
+            'cname' => '',
+            'email' => '',
+            'phone' => '',
+            'phone2' => '',
+            'company' => '',
+            'address' => '',
+            'address2' => '',
+            'date_of_birth' => '',
+            'national_id' => '',
+            'contact_person' => '',
+            'contact_phone' => '',
+            'contact_relation' => '',
+            'info' => '',
+            'job' => '',
+            'gender' => '',
+            'is_active' => true,
+            'type' => $type,
+        ];
+
         $this->resetValidation();
     }
 
@@ -546,16 +648,41 @@ class EditInquiry extends Component
             'newClient.phone' => 'required|string|max:20',
             'newClient.email' => 'nullable|email|unique:clients,email',
             'newClient.gender' => 'required|in:male,female',
+        ], [
+            'newClient.cname.required' => 'اسم العميل مطلوب',
+            'newClient.phone.required' => 'رقم الهاتف مطلوب',
+            'newClient.email.email' => 'صيغة البريد الإلكتروني غير صحيحة',
+            'newClient.email.unique' => 'البريد الإلكتروني مستخدم بالفعل',
         ]);
 
         try {
             DB::beginTransaction();
-            $client = Client::create(array_merge($this->newClient, [
+            $client = Client::create([
+                'cname' => $this->newClient['cname'],
+                'email' => $this->newClient['email'],
+                'phone' => $this->newClient['phone'],
+                'phone2' => $this->newClient['phone2'],
+                'company' => $this->newClient['company'],
+                'address' => $this->newClient['address'],
+                'address2' => $this->newClient['address2'],
+                'date_of_birth' => $this->newClient['date_of_birth'],
+                'national_id' => $this->newClient['national_id'],
+                'contact_person' => $this->newClient['contact_person'],
+                'contact_phone' => $this->newClient['contact_phone'],
+                'contact_relation' => $this->newClient['contact_relation'],
+                'info' => $this->newClient['info'],
+                'job' => $this->newClient['job'],
+                'gender' => $this->newClient['gender'],
+                'client_category_id' => $this->newClient['client_category_id'],
+                'is_active' => $this->newClient['is_active'] ?? true,
+                'type' => $this->modalClientType,
                 'created_by' => Auth::id(),
                 'tenant' => Auth::user()->tenant ?? 0,
                 'branch' => Auth::user()->branch ?? 0,
                 'branch_id' => Auth::user()->branch_id ?? 1,
-            ]));
+            ]);
+
+            Log::info('القيم عند الحفظ:', $this->newClient);
 
             switch ($this->modalClientType) {
                 case ClientType::Person->value:
@@ -577,9 +704,13 @@ class EditInquiry extends Component
             }
 
             DB::commit();
+
             $this->dispatch('closeClientModal');
+
             $this->refreshClientLists();
+
             session()->flash('message', 'تم إضافة ' . $this->modalClientTypeLabel . ' بنجاح');
+
             $this->resetClientForm();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -600,8 +731,25 @@ class EditInquiry extends Component
 
     private function resetClientForm()
     {
-        $this->newClient = array_fill_keys(array_keys($this->newClient), '');
-        $this->newClient['is_active'] = true;
+        $this->newClient = [
+            'cname' => '',
+            'email' => '',
+            'phone' => '',
+            'phone2' => '',
+            'company' => '',
+            'address' => '',
+            'address2' => '',
+            'date_of_birth' => '',
+            'national_id' => '',
+            'contact_person' => '',
+            'contact_phone' => '',
+            'contact_relation' => '',
+            'info' => '',
+            'job' => '',
+            'gender' => '',
+            'is_active' => true,
+            'type' => null,
+        ];
     }
 
     public function save()
@@ -612,53 +760,106 @@ class EditInquiry extends Component
             $this->inquiry->update([
                 'inquiry_name' => $this->inquiryName,
                 'project_id' => $this->projectId,
+
                 'inquiry_date' => $this->inquiryDate,
                 'req_submittal_date' => $this->reqSubmittalDate,
                 'project_start_date' => $this->projectStartDate,
+
                 'city_id' => $this->cityId,
                 'town_id' => $this->townId,
                 'town_distance' => $this->townDistance,
+
                 'status' => $this->status,
                 'status_for_kon' => $this->statusForKon,
                 'kon_title' => $this->konTitle,
-                'work_type_id' => !empty($this->currentWorkTypeSteps) ? end($this->currentWorkTypeSteps) : null,
+
+                'work_type_id' => !empty($this->currentWorkTypeSteps)
+                    ? end($this->currentWorkTypeSteps)
+                    : null,
                 'final_work_type' => $this->finalWorkType,
-                'inquiry_source_id' => !empty($this->inquirySourceSteps) ? end($this->inquirySourceSteps) : null,
-                'final_inquiry_source' => $this->finalInquirySource,
+
+                'inquiry_source_id' => !empty($this->inquirySourceSteps)
+                    ? end($this->inquirySourceSteps)
+                    : null,
+                'final_inquiry_source' =>  $this->finalInquirySource,
+
                 'client_id' => $this->clientId,
                 'main_contractor_id' => $this->mainContractorId,
                 'consultant_id' => $this->consultantId,
                 'owner_id' => $this->ownerId,
                 'assigned_engineer_id' => $this->assignedEngineer,
+
                 'total_check_list_score' => $this->totalScore,
                 'project_difficulty' => $this->projectDifficulty,
+
                 'tender_number' => $this->tenderNo,
                 'tender_id' => $this->tenderId,
+
                 'estimation_start_date' => $this->estimationStartDate,
                 'estimation_finished_date' => $this->estimationFinishedDate,
                 'submitting_date' => $this->submittingDate,
                 'total_project_value' => $this->totalProjectValue,
+
                 'quotation_state' => $this->quotationState,
                 'rejection_reason' => $this->quotationStateReason,
+
                 'project_size' => $this->projectSize,
+
                 'client_priority' => $this->clientPriority,
                 'kon_priority' => $this->konPriority,
+
                 'type_note' => $this->type_note,
             ]);
 
-            // Sync relations
-            $this->inquiry->submittalChecklists()->sync(
-                collect($this->submittalChecklist)->where('checked', true)->pluck('id')
-            );
-            $this->inquiry->workConditions()->sync(
-                collect($this->workingConditions)->where('checked', true)->pluck('id')
-            );
+            // Handle project image
+            if ($this->projectImage) {
+                // Remove existing project image
+                if ($this->existingProjectImage) {
+                    $this->existingProjectImage->delete();
+                }
+                $this->inquiry
+                    ->addMedia($this->projectImage->getRealPath())
+                    ->usingFileName($this->projectImage->getClientOriginalName())
+                    ->toMediaCollection('project-image');
+            }
 
-            // Sync project documents with description
+            // Handle document files
+            if (!empty($this->documentFiles)) {
+                foreach ($this->documentFiles as $file) {
+                    $this->inquiry
+                        ->addMedia($file->getRealPath())
+                        ->usingFileName($file->getClientOriginalName())
+                        ->toMediaCollection('inquiry-documents');
+                }
+            }
+
+            // Sync submittal checklists
+            $submittalIds = [];
+            foreach ($this->submittalChecklist as $item) {
+                if (!empty($item['checked']) && isset($item['id'])) {
+                    $submittalIds[] = $item['id'];
+                }
+            }
+            $this->inquiry->submittalChecklists()->sync($submittalIds);
+
+            // Sync working conditions
+            $conditionIds = [];
+            foreach ($this->workingConditions as $condition) {
+                if (!empty($condition['checked']) && isset($condition['id'])) {
+                    $conditionIds[] = $condition['id'];
+                }
+            }
+            $this->inquiry->workConditions()->sync($conditionIds);
+
+            // Sync project documents
             $this->inquiry->projectDocuments()->detach();
             foreach ($this->projectDocuments as $document) {
                 if (!empty($document['checked'])) {
-                    $this->inquiry->projectDocuments()->attach($document['id'], [
+                    $projectDocument = InquiryDocument::firstOrCreate(
+                        ['name' => $document['name']]
+                    );
+
+                    $this->inquiry->projectDocuments()->attach($projectDocument->id, [
                         'description' => $document['description'] ?? null
                     ]);
                 }
@@ -666,18 +867,28 @@ class EditInquiry extends Component
 
             // Sync quotation units
             $attachments = [];
-            if (!empty($this->selectedQuotationUnits)) {
+            if (!empty($this->selectedQuotationUnits) && is_array($this->selectedQuotationUnits)) {
                 foreach ($this->selectedQuotationUnits as $typeId => $unitIds) {
-                    if (!empty($unitIds)) {
-                        foreach (array_keys($unitIds) as $unitId) {
-                            if ($unitIds[$unitId]) {
-                                $attachments[$unitId] = ['quotation_type_id' => $typeId];
+                    if (!is_numeric($typeId) || (int)$typeId <= 0) {
+                        continue;
+                    }
+                    $typeId = (int) $typeId;
+
+                    if (!empty($unitIds) && is_array($unitIds)) {
+                        foreach ($unitIds as $unitId => $isSelected) {
+                            if ($isSelected === true || $isSelected === 1) {
+                                if (is_numeric($unitId) && (int)$unitId > 0) {
+                                    $unitId = (int) $unitId;
+                                    $attachments[$unitId] = ['quotation_type_id' => $typeId];
+                                }
                             }
                         }
                     }
                 }
+                if (!empty($attachments)) {
+                    $this->inquiry->quotationUnits()->sync($attachments);
+                }
             }
-            $this->inquiry->quotationUnits()->sync($attachments);
 
             // Save new temporary comments
             foreach ($this->tempComments as $tempComment) {
@@ -690,12 +901,12 @@ class EditInquiry extends Component
 
             DB::commit();
             return redirect()->route('inquiries.index')->with('message', 'تم تحديث الاستفسار بنجاح!');
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             DB::rollBack();
-            Log::error('خطأ في تحديث الاستفسار: ' . $e->getMessage());
-            return back()->with('error', 'حدث خطأ أثناء التحديث: ' . $e->getMessage());
+            Log::error('خطأ في تحديث الاستفسار: ');
+            return back()->with('error', 'حدث خطأ أثناء التحديث: ');
         }
-        }
+    }
 
     public function render()
     {
