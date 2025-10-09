@@ -1,5 +1,5 @@
-    @extends('admin.dashboard')
+@extends('admin.dashboard')
 
-    @section('content')
-        <livewire:manufacturing::manufacturing-invoice />
-    @endsection
+@section('content')
+    <livewire:manufacturing::manufacturing-invoice />
+@endsection
