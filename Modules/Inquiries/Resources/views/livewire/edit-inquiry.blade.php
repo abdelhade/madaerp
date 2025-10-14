@@ -51,6 +51,34 @@
                                                     @enderror
                                                 </div>
 
+                                                <div class="col-md-1 mb-3">
+                                                    <label class="form-label fw-bold">حالة التسعير</label>
+                                                    <select wire:model.live="quotationState" class="form-select">
+                                                        <option value="">اختر الحالة...</option>
+                                                        @foreach ($quotationStateOptions as $state)
+                                                            <option value="{{ $state->value }}">
+                                                                {{ $state->label() }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('quotationState')
+                                                        <span class="text-danger">{{ $message }}</span>
+                                                    @enderror
+                                                </div>
+
+                                                @if (in_array($this->quotationState, [
+                                                        \Modules\Inquiries\Enums\QuotationStateEnum::REJECTED->value,
+                                                        \Modules\Inquiries\Enums\QuotationStateEnum::RE_ESTIMATION->value,
+                                                    ]))
+                                                    <div class="col-md-2 mb-3">
+                                                        <label class="form-label fw-bold">سبب الحالة</label>
+                                                        <input type="text" wire:model.live="quotationStateReason"
+                                                            class="form-control" placeholder="أدخل السبب...">
+                                                        @error('quotationStateReason')
+                                                            <span class="text-danger">{{ $message }}</span>
+                                                        @enderror
+                                                    </div>
+                                                @endif
+
                                                 <div class="col-md-2 mb-3">
                                                     <label class="form-label fw-bold">حالة الاستفسار</label>
                                                     <select wire:model="status" class="form-select">
@@ -197,33 +225,6 @@
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-md-2 mb-3">
-                                                    <label class="form-label fw-bold">حالة التسعير</label>
-                                                    <select wire:model.live="quotationState" class="form-select">
-                                                        <option value="">اختر الحالة...</option>
-                                                        @foreach ($quotationStateOptions as $state)
-                                                            <option value="{{ $state->value }}">
-                                                                {{ $state->label() }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('quotationState')
-                                                        <span class="text-danger">{{ $message }}</span>
-                                                    @enderror
-                                                </div>
-
-                                                @if (in_array($this->quotationState, [
-                                                        \Modules\Inquiries\Enums\QuotationStateEnum::REJECTED->value,
-                                                        \Modules\Inquiries\Enums\QuotationStateEnum::RE_ESTIMATION->value,
-                                                    ]))
-                                                    <div class="col-md-2 mb-3">
-                                                        <label class="form-label fw-bold">سبب الحالة</label>
-                                                        <input type="text" wire:model.live="quotationStateReason"
-                                                            class="form-control" placeholder="أدخل السبب...">
-                                                        @error('quotationStateReason')
-                                                            <span class="text-danger">{{ $message }}</span>
-                                                        @enderror
-                                                    </div>
-                                                @endif
 
                                                 <div class="col-md-2 mb-3">
                                                     <label class="form-label fw-bold">حجم المشروع</label>
