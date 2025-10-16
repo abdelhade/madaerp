@@ -160,6 +160,8 @@ Route::middleware(['auth'])->group(function () {
     // 📁 Account Movement
     Route::get('account-movement/{accountId?}', [AccHeadController::class, 'accountMovementReport'])->name('account-movement');
 
+    Route::get('journals/statistics', [JournalController::class, 'statistics'])->name('journal.statistics');
+
     Route::resource('journals', JournalController::class)->names('journals');
 
     Route::resource('cost_centers', CostCenterController::class)->names('cost_centers');
@@ -171,15 +173,20 @@ Route::middleware(['auth'])->group(function () {
     // 📁 Invoice View Route
     Route::get('invoice/view/{operationId}', [InvoiceController::class, 'view'])->name('invoice.view');
     // 📁 Transfer Route
-    Route::resource('transfers', TransferController::class)->names('transfers');
+
     Route::get('/discounts/general-statistics', [DiscountController::class, 'generalStatistics'])->name('discounts.general-statistics');
     Route::resource('discounts', DiscountController::class)->names('discounts');
 
     // abdelhade
     Route::get('journal-summery', [JournalSummeryController::class, 'index'])->name('journal-summery');
     Route::resource('cost_centers', CostCenterController::class);
+
+    Route::get('/vouchers/statistics', [VoucherController::class, 'statistics'])->name('vouchers.statistics');
     Route::resource('vouchers', VoucherController::class)->names('vouchers');
+
+    Route::get('transfers/statistics', [TransferController::class, 'statistics'])->name('transfers.statistics');
     Route::resource('transfers', TransferController::class)->names('transfers');
+
     Route::resource('accounts', AccHeadController::class)->except(['show'])->names('accounts');
     // 📁 Account Movement
     Route::get('account-movement/{accountId?}', [AccHeadController::class, 'accountMovementReport'])->name('account-movement');
@@ -189,7 +196,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('accounts/balance-sheet', [AccHeadController::class, 'balanceSheet'])->name('accounts.balanceSheet');
     // 📁 Start Balance
     Route::get('accounts/start-balance', [AccHeadController::class, 'startBalance'])->name('accounts.startBalance');
+
+    Route::get('multi-vouchers/statistics', [MultiVoucherController::class, 'statistics'])->name('multi-vouchers.statistics');
     Route::resource('multi-vouchers', MultiVoucherController::class)->names('multi-vouchers');
+
     Route::resource('multi-journals', MultiJournalController::class)->names('multi-journals');
 
     Route::resource('production-orders', ProductionOrderController::class)->names('production-orders');
@@ -202,10 +212,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/overall', [ReportController::class, 'overall'])->name('reports.overall');
     Route::get('home', [HomeController::class, 'index'])->name('home.index');
-    
+
     // API routes لتتبع الموقع (بدون CSRF)
     Route::post('/api/location/track', [App\Http\Controllers\LocationController::class, 'storeTracking'])->name('api.location.track')->middleware(['auth:web', 'throttle:60,1']);
-    
+
     Route::get('/api/location/history', [App\Http\Controllers\LocationController::class, 'getHistory'])->name('api.location.history')->middleware(['auth:web', 'throttle:60,1']);
 
 
@@ -223,6 +233,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/items/statistics', [ItemController::class, 'getStatistics'])->name('items.statistics');
     Route::get('/items/statistics/refresh', [ItemController::class, 'refresh'])->name('items.statistics.refresh');
+
 
 
     require __DIR__ . '/modules/magicals.php';
