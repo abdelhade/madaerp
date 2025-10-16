@@ -16,6 +16,12 @@
         <ul class="sub-menu mm-collapse" aria-expanded="false"> --}}
 @can('عرض قيد يومية')
     <li class="nav-item">
+        <a class="nav-link" href="{{ route('journal.statistics') }}">
+            <i class="ti-control-record"></i>{{ __('Journal Statistics') }}
+        </a>
+    </li>
+
+    <li class="nav-item">
         <a class="nav-link" href="{{ route('journals.create', ['type' => 'basic_journal']) }}">
             <i class="ti-control-record"></i>{{ __('navigation.daily_journal') }}
         </a>
