@@ -1,8 +1,5 @@
 @extends('admin.dashboard')
 
-@section('title', $pageTitle)
-
-{{-- Dynamic Sidebar: نعرض فقط الشيكات والحسابات --}}
 @section('sidebar')
     @include('components.sidebar.checks')
 @endsection
