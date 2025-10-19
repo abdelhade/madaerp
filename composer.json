@@ -21,7 +21,6 @@
         "livewire/flux": "^2.1.1",
         "livewire/livewire": "3.6.4",
         "livewire/volt": "^1.7.0",
-        "maatwebsite/excel": "^3.1",
         "mhmiton/laravel-modules-livewire": "^5.1",
         "nwidart/laravel-modules": "^12.0",
         "picqer/php-barcode-generator": "^3.2",
@@ -31,9 +30,7 @@
         "spatie/laravel-permission": "^6.20",
         "spatie/laravel-translation-loader": "^2.8",
         "spatie/laravel-activitylog": "^4.10",
-        "spatie/laravel-settings": "^3.2",
-        "barryvdh/laravel-dompdf": "^2.1",
-        "maatwebsite/excel": "^3.2"
+        "spatie/laravel-settings": "^3.2"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",
@@ -56,7 +53,8 @@
         },
         "files": [
             "Modules/Settings/Helpers/HelperSettings.php",
-            "app/Helpers/BranchHelper.php"
+            "app/Helpers/BranchHelper.php",
+            "app/Helpers/FormatHelper.php"
         ]
     },
     "autoload-dev": {

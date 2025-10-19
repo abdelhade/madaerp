@@ -13,7 +13,6 @@ use App\Models\OperHead;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use function App\Helpers\userBranches;
 
 class MultiVoucherController extends Controller
 {
