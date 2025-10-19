@@ -28,6 +28,7 @@ class InvoiceController extends Controller
         21 => 'تحويل من مخزن لمخزن',
         22 => 'امر حجز',
         24 => 'فاتورة خدمه',
+        25 => 'طلب احتياج',
     ];
 
     // public function index(Request $request)
@@ -92,7 +93,7 @@ class InvoiceController extends Controller
         // Define sections for breadcrumb and navigation
         $sections = [
             'ادارة المبيعات' => [10, 12, 14, 16, 22],
-            'ادارة المشتريات' => [11, 13, 15, 17, 24],
+            'ادارة المشتريات' => [11, 13, 15, 17, 24, 25],
             'ادارة المخزون' => [18, 19, 20, 21],
         ];
 
