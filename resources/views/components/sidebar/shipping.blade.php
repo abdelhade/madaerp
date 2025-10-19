@@ -1,4 +1,10 @@
 <li class="nav-item">
+    <a class="nav-link" href="{{ route('shipping.dashboard.statistics') }}">
+        <i class="ti-bar-chart"></i>{{ __('navigation.shipping_statistics') }}
+    </a>
+</li>
+
+<li class="nav-item">
     <a class="nav-link" href="{{ route('companies.index') }}">
         <i class="ti-control-record"></i>{{ __('navigation.shipping_companies') }}
     </a>
