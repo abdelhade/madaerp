@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
             EmployeesJobSeeder::class,
             ShiftSeeder::class,
             SettingSeeder::class,
-            ItemSeeder::class,
+            // ItemSeeder::class,
             LeadStatusSeeder::class,
             KpiSeeder::class,
             EmployeeSeeder::class,
