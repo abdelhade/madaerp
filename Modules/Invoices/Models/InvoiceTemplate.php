@@ -14,11 +14,15 @@ class InvoiceTemplate extends Model
         'visible_columns',
         'sort_order',
         'is_active',
+        'column_widths',
+        'column_order',
     ];
 
     protected $casts = [
         'visible_columns' => 'array',
         'is_active' => 'boolean',
+        'column_widths' => 'array',
+        'column_order' => 'array',
     ];
 
     /**
@@ -80,5 +84,20 @@ class InvoiceTemplate extends Model
     public function hasColumn(string $columnKey): bool
     {
         return in_array($columnKey, $this->visible_columns ?? []);
+    }
+
+    public function getColumnWidth(string $columnKey): int
+    {
+        return $this->column_widths[$columnKey] ?? 10; // القيمة الافتراضية 10%
+    }
+
+    // أضف دالة للحصول على الأعمدة مرتبة
+    public function getOrderedColumns(): array
+    {
+        if (empty($this->column_order)) {
+            return $this->visible_columns ?? [];
+        }
+
+        return $this->column_order;
     }
 }

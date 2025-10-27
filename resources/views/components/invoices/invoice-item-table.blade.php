@@ -1,67 +1,30 @@
 <table class="table table-striped mb-0" style="min-width: 1200px;">
+
     <thead class="table-light text-center align-middle">
         <tr>
-            @if ($this->shouldShowColumn('item_name'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('الصنف') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('item_code'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('الكود') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('barcode'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('الباركود') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('unit'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('الوحدة') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('quantity'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('الكمية') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('length'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('الطول') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('width'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('العرض') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('height'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('الارتفاع') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('density'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('الكثافة') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('price'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('السعر') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('discount'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('الخصم') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('sub_value'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('القيمة') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('notes'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('ملاحظات') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('expiry_date'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('تاريخ الانتهاء') }}</th>
-            @endif
-
-            @if ($this->shouldShowColumn('batch_number'))
-                <th class="font-family-cairo fw-bold font-14 text-center">{{ __('رقم الدفعة') }}</th>
-            @endif
-
-            <th class="font-family-cairo fw-bold font-14 text-center">{{ __('إجراء') }}</th>
+            @foreach ($this->currentTemplate->getOrderedColumns() as $columnKey)
+                @if ($this->shouldShowColumn($columnKey))
+                    @php
+                        $width = $this->currentTemplate->getColumnWidth($columnKey);
+                        $columnNames = [
+                            'item_name' => 'الصنف',
+                            'unit' => 'الوحدة',
+                            'quantity' => 'الكمية',
+                            'length' => 'الطول',
+                            'width' => 'العرض',
+                            'height' => 'الارتفاع',
+                            'density' => 'الكثافة',
+                            'price' => 'السعر',
+                            'discount' => 'الخصم',
+                            'sub_value' => 'القيمة',
+                        ];
+                    @endphp
+                    <th class="font-family-cairo fw-bold font-14 text-center" style="width: {{ $width }}%;">
+                        {{ $columnNames[$columnKey] ?? $columnKey }}
+                    </th>
+                @endif
+            @endforeach
+            <th class="font-family-cairo fw-bold font-14 text-center" style="width: 5%;">إجراء</th>
         </tr>
     </thead>
     <tbody>
