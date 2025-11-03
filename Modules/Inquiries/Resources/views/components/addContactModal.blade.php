@@ -74,6 +74,56 @@
                                 wire:model="newContact.phone_2" placeholder="{{ __('Enter alternative phone') }}">
                         </div>
 
+                        <!-- Contact Roles (Multi-select with Checkboxes) -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                {{ __('Contact Classification') }} <span class="text-danger">*</span>
+                            </label>
+                            <div class="border rounded p-3 bg-light">
+                                <div class="row">
+                                    @foreach ($inquirieRoles as $role)
+                                        <div class="col-md-6 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox"
+                                                    value="{{ $role['id'] }}" id="role{{ $role['id'] }}"
+                                                    wire:model="selectedRoles">
+                                                <label class="form-check-label" for="role{{ $role['id'] }}">
+                                                    @switch($role['name'])
+                                                        @case('Client')
+                                                            <i class="fas fa-user-tie text-primary me-1"></i>
+                                                        @break
+
+                                                        @case('Main Contractor')
+                                                            <i class="fas fa-hard-hat text-warning me-1"></i>
+                                                        @break
+
+                                                        @case('Consultant')
+                                                            <i class="fas fa-user-graduate text-info me-1"></i>
+                                                        @break
+
+                                                        @case('Owner')
+                                                            <i class="fas fa-crown text-success me-1"></i>
+                                                        @break
+
+                                                        @case('Engineer')
+                                                            <i class="fas fa-user-cog text-danger me-1"></i>
+                                                        @break
+
+                                                        @default
+                                                            <i class="fas fa-user me-1"></i>
+                                                    @endswitch
+                                                    {{ __($role['name']) }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @error('selectedRoles')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <!-- Address 1 -->
                         <div class="col-md-6 mb-3">
                             <label for="contactAddress1" class="form-label fw-bold">{{ __('Address 1') }}</label>
@@ -85,13 +135,15 @@
                         <div class="col-md-6 mb-3">
                             <label for="contactAddress2" class="form-label fw-bold">{{ __('Address 2') }}</label>
                             <input type="text" class="form-control" id="contactAddress2"
-                                wire:model="newContact.address_2" placeholder="{{ __('Enter alternative address') }}">
+                                wire:model="newContact.address_2"
+                                placeholder="{{ __('Enter alternative address') }}">
                         </div>
 
                         <!-- Tax Number (for companies) -->
                         @if ($newContact['type'] === 'company')
                             <div class="col-md-6 mb-3">
-                                <label for="contactTaxNumber" class="form-label fw-bold">{{ __('Tax Number') }}</label>
+                                <label for="contactTaxNumber"
+                                    class="form-label fw-bold">{{ __('Tax Number') }}</label>
                                 <input type="text" class="form-control" id="contactTaxNumber"
                                     wire:model="newContact.tax_number" placeholder="{{ __('Enter tax number') }}">
                             </div>
@@ -151,3 +203,19 @@
         });
     </script>
 @endpush
+<style>
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .form-check-label {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .form-check:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+        border-radius: 4px;
+    }
+</style>

@@ -47,6 +47,8 @@ class CreateInquiry extends Component
     public $cityId;
     public $townId;
 
+    public $selectedRoles = [];
+
     // متغيرات المشروع
     public $assignEngineerDate;
     public $status;
@@ -282,13 +284,12 @@ class CreateInquiry extends Component
             'newContact.phone_1' => 'required|string|max:20',
             'newContact.email' => 'nullable|email|unique:contacts,email',
             'newContact.type' => 'required|in:person,company',
-            'modalContactType' => 'required|integer|min:1',
+            'selectedRoles' => 'required|array|min:1',
+            'selectedRoles.*' => 'exists:inquiries_roles,id',
         ]);
 
         try {
             DB::beginTransaction();
-
-            $role = InquirieRole::findOrFail($this->modalContactType);
 
             $contact = Contact::create([
                 'name' => $this->newContact['name'],
@@ -303,20 +304,23 @@ class CreateInquiry extends Component
                 'notes' => $this->newContact['notes'],
             ]);
 
-            // إضافة الدور للـ Contact
-            $contact->roles()->attach($role->id);
+            // إضافة جميع الأدوار المختارة
+            $contact->roles()->attach($this->selectedRoles);
 
-            // تحديد الخانة المناسبة
-            $roleKey = match ($role->name) {
-                'Client' => 'client',
-                'Main Contractor' => 'main_contractor',
-                'Consultant' => 'consultant',
-                'Owner' => 'owner',
-                'Engineer' => 'engineer',
-                default => 'client'
-            };
+            // تحديد الخانة المناسبة للدور الأساسي
+            $mainRole = InquirieRole::find($this->modalContactType);
+            if ($mainRole) {
+                $roleKey = match ($mainRole->name) {
+                    'Client' => 'client',
+                    'Main Contractor' => 'main_contractor',
+                    'Consultant' => 'consultant',
+                    'Owner' => 'owner',
+                    'Engineer' => 'engineer',
+                    default => 'client'
+                };
 
-            $this->selectedContacts[$roleKey] = $contact->id;
+                $this->selectedContacts[$roleKey] = $contact->id;
+            }
 
             DB::commit();
 
@@ -326,11 +330,11 @@ class CreateInquiry extends Component
             // إرسال حدث لتحديث الـ SearchableSelect
             $this->dispatch('contactAdded');
 
-            session()->flash('message', __('Added Successfully', ['type' => $role->name]));
+            session()->flash('message', __('Added Successfully'));
             $this->resetContactForm();
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', __('Error Adding Contact'));
+            session()->flash('error', __('Error Adding Contact: ') . $e->getMessage());
         }
     }
 
@@ -395,6 +399,7 @@ class CreateInquiry extends Component
         ];
         $this->modalContactType = null;
         $this->modalContactTypeLabel = '';
+        $this->selectedRoles = [];
     }
 
     // عند اختيار Contact من القائمة
