@@ -19,28 +19,10 @@
                             <label class="form-label fw-bold">{{ __('Client') }}</label>
                             <div class="d-flex gap-2 align-items-center">
                                 <div class="flex-grow-1">
-                                    <select class="form-select" wire:model.live="selectedContacts.client">
-                                        <option value="">{{ __('Search for client or add new...') }}</option>
-                                        @foreach ($contacts as $contact)
-                                            <option value="{{ $contact['id'] }}">
-                                                {{ $contact['name'] }}
-                                                @if ($contact['type'] === 'company')
-                                                    ({{ __('Company') }})
-                                                @endif
-                                                @if (!empty($contact['parent_id']))
-                                                    @php
-                                                        $parent = collect($contacts)->firstWhere(
-                                                            'id',
-                                                            $contact['parent_id'],
-                                                        );
-                                                    @endphp
-                                                    @if ($parent)
-                                                        - {{ $parent['name'] }}
-                                                    @endif
-                                                @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <livewire:app::searchable-select :model="Modules\Inquiries\Models\Contact::class" label-field="name"
+                                        wire-model="selectedContacts.client"
+                                        placeholder="{{ __('Search for client...') }}" :selected-id="$selectedContacts['client']"
+                                        :key="'client-select-' . ($selectedContacts['client'] ?? 'new')" />
                                 </div>
                                 <button type="button" class="btn btn-sm btn-primary" wire:click="openContactModal(1)"
                                     title="{{ __('Add New Client') }}">
@@ -106,28 +88,11 @@
                             <label class="form-label fw-bold">{{ __('Main Contractor') }}</label>
                             <div class="d-flex gap-2 align-items-center">
                                 <div class="flex-grow-1">
-                                    <select class="form-select" wire:model.live="selectedContacts.main_contractor">
-                                        <option value="">{{ __('Search or add new contractor...') }}</option>
-                                        @foreach ($contacts as $contact)
-                                            <option value="{{ $contact['id'] }}">
-                                                {{ $contact['name'] }}
-                                                @if ($contact['type'] === 'company')
-                                                    ({{ __('Company') }})
-                                                @endif
-                                                @if (!empty($contact['parent_id']))
-                                                    @php
-                                                        $parent = collect($contacts)->firstWhere(
-                                                            'id',
-                                                            $contact['parent_id'],
-                                                        );
-                                                    @endphp
-                                                    @if ($parent)
-                                                        - {{ $parent['name'] }}
-                                                    @endif
-                                                @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <livewire:app::searchable-select :model="Modules\Inquiries\Models\Contact::class" label-field="name"
+                                        wire-model="selectedContacts.main_contractor"
+                                        placeholder="{{ __('Search for contractor...') }}" :selected-id="$selectedContacts['main_contractor']"
+                                        :key="'contractor-select-' .
+                                            ($selectedContacts['main_contractor'] ?? 'new')" />
                                 </div>
                                 <button type="button" class="btn btn-sm btn-warning" wire:click="openContactModal(2)"
                                     title="{{ __('Add New Contractor') }}">
@@ -196,28 +161,10 @@
                             <label class="form-label fw-bold">{{ __('Consultant') }}</label>
                             <div class="d-flex gap-2 align-items-center">
                                 <div class="flex-grow-1">
-                                    <select class="form-select" wire:model.live="selectedContacts.consultant">
-                                        <option value="">{{ __('Search for consultant or add new...') }}</option>
-                                        @foreach ($contacts as $contact)
-                                            <option value="{{ $contact['id'] }}">
-                                                {{ $contact['name'] }}
-                                                @if ($contact['type'] === 'company')
-                                                    ({{ __('Company') }})
-                                                @endif
-                                                @if (!empty($contact['parent_id']))
-                                                    @php
-                                                        $parent = collect($contacts)->firstWhere(
-                                                            'id',
-                                                            $contact['parent_id'],
-                                                        );
-                                                    @endphp
-                                                    @if ($parent)
-                                                        - {{ $parent['name'] }}
-                                                    @endif
-                                                @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <livewire:app::searchable-select :model="Modules\Inquiries\Models\Contact::class" label-field="name"
+                                        wire-model="selectedContacts.consultant"
+                                        placeholder="{{ __('Search for consultant...') }}" :selected-id="$selectedContacts['consultant']"
+                                        :key="'consultant-select-' . ($selectedContacts['consultant'] ?? 'new')" />
                                 </div>
                                 <button type="button" class="btn btn-sm btn-info" wire:click="openContactModal(3)"
                                     title="{{ __('Add New Consultant') }}">
@@ -283,28 +230,10 @@
                             <label class="form-label fw-bold">{{ __('Owner') }}</label>
                             <div class="d-flex gap-2 align-items-center">
                                 <div class="flex-grow-1">
-                                    <select class="form-select" wire:model.live="selectedContacts.owner">
-                                        <option value="">{{ __('Search for owner or add new...') }}</option>
-                                        @foreach ($contacts as $contact)
-                                            <option value="{{ $contact['id'] }}">
-                                                {{ $contact['name'] }}
-                                                @if ($contact['type'] === 'company')
-                                                    ({{ __('Company') }})
-                                                @endif
-                                                @if (!empty($contact['parent_id']))
-                                                    @php
-                                                        $parent = collect($contacts)->firstWhere(
-                                                            'id',
-                                                            $contact['parent_id'],
-                                                        );
-                                                    @endphp
-                                                    @if ($parent)
-                                                        - {{ $parent['name'] }}
-                                                    @endif
-                                                @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <livewire:app::searchable-select :model="Modules\Inquiries\Models\Contact::class" label-field="name"
+                                        wire-model="selectedContacts.owner"
+                                        placeholder="{{ __('Search for owner...') }}" :selected-id="$selectedContacts['owner']"
+                                        :key="'owner-select-' . ($selectedContacts['owner'] ?? 'new')" />
                                 </div>
                                 <button type="button" class="btn btn-sm btn-success" wire:click="openContactModal(4)"
                                     title="{{ __('Add New Owner') }}">
@@ -370,28 +299,10 @@
                             <label class="form-label fw-bold">{{ __('Assigned Engineer') }}</label>
                             <div class="d-flex gap-2 align-items-center">
                                 <div class="flex-grow-1">
-                                    <select class="form-select" wire:model.live="selectedContacts.engineer">
-                                        <option value="">{{ __('Search for engineer or add new...') }}</option>
-                                        @foreach ($contacts as $contact)
-                                            <option value="{{ $contact['id'] }}">
-                                                {{ $contact['name'] }}
-                                                @if ($contact['type'] === 'company')
-                                                    ({{ __('Company') }})
-                                                @endif
-                                                @if (!empty($contact['parent_id']))
-                                                    @php
-                                                        $parent = collect($contacts)->firstWhere(
-                                                            'id',
-                                                            $contact['parent_id'],
-                                                        );
-                                                    @endphp
-                                                    @if ($parent)
-                                                        - {{ $parent['name'] }}
-                                                    @endif
-                                                @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <livewire:app::searchable-select :model="Modules\Inquiries\Models\Contact::class" label-field="name"
+                                        wire-model="selectedContacts.engineer"
+                                        placeholder="{{ __('Search for engineer...') }}" :selected-id="$selectedContacts['engineer']"
+                                        :key="'engineer-select-' . ($selectedContacts['engineer'] ?? 'new')" />
                                 </div>
                                 <button type="button" class="btn btn-sm btn-danger" wire:click="openContactModal(5)"
                                     title="{{ __('Add New Engineer') }}">

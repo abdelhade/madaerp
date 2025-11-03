@@ -131,6 +131,7 @@ class CreateInquiry extends Component
         'getWorkTypeChildren' => 'emitWorkTypeChildren',
         'getInquirySourceChildren' => 'emitInquirySourceChildren',
         'itemSelected' => 'handleItemSelected',
+        'contactSelected' => 'handleContactSelected',
         'openContactModal' => 'openContactModal',
         'locationSelected' => 'handleLocationSelected',
     ];
@@ -322,6 +323,9 @@ class CreateInquiry extends Component
 
             $this->dispatch('closeContactModal');
             $this->refreshContactsList();
+
+            // إرسال حدث لتحديث الـ SearchableSelect
+            $this->dispatch('contactAdded');
 
             session()->flash('message', __('Added Successfully', ['type' => $role->name]));
             $this->resetContactForm();
@@ -820,6 +824,58 @@ class CreateInquiry extends Component
         $wireModel = $data['wireModel'];
         $value = $data['value'];
         $this->{$wireModel} = $value;
+    }
+
+    public function handleContactSelected($data)
+    {
+        $wireModel = $data['wireModel'];
+        $contactId = $data['value'];
+
+        // تحديد أي خانة من selectedContacts نحدث
+        if (strpos($wireModel, 'selectedContacts.') === 0) {
+            $key = str_replace('selectedContacts.', '', $wireModel);
+            $this->selectedContacts[$key] = $contactId;
+
+            // إضافة الدور للـ Contact
+            if ($contactId) {
+                $this->assignRoleToContact($contactId, $key);
+            }
+        }
+
+        // تحديث قائمة الـ contacts
+        $this->refreshContactsList();
+    }
+
+    private function assignRoleToContact($contactId, $roleKey)
+    {
+        $contact = Contact::find($contactId);
+        if (!$contact) {
+            return;
+        }
+
+        $roleMap = [
+            'client' => 'Client',
+            'main_contractor' => 'Main Contractor',
+            'consultant' => 'Consultant',
+            'owner' => 'Owner',
+            'engineer' => 'Engineer',
+        ];
+
+        $roleName = $roleMap[$roleKey] ?? null;
+        if (!$roleName) {
+            return;
+        }
+
+        $role = InquirieRole::where('name', $roleName)->first();
+        if (!$role) {
+            return;
+        }
+
+        // التحقق إذا كان الـ Contact لديه هذا الدور بالفعل
+        if (!$contact->roles()->where('role_id', $role->id)->exists()) {
+            // إضافة الدور للـ Contact
+            $contact->roles()->attach($role->id);
+        }
     }
 
     public function removeDocumentFile($index)
