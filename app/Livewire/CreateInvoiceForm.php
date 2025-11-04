@@ -124,7 +124,9 @@ class CreateInvoiceForm extends Component
     ];
     protected $listeners = [
         'account-created' => 'handleAccountCreated',
-        'branch-changed' => 'handleBranchChange'
+        'branch-changed' => 'handleBranchChange',
+        'itemSelected' => 'handleItemSelected',
+
     ];
 
     public function mount($type, $hash)
@@ -136,6 +138,27 @@ class CreateInvoiceForm extends Component
 
         $this->initializeInvoice($type, $hash);
         $this->loadTemplatesForType();
+    }
+
+    public function handleItemSelected($data)
+    {
+        if ($data['wireModel'] === 'acc1_id') {
+            $this->acc1_id = $data['value'];
+
+            // تحديث الرصيد والتوصيات كما في updatedAcc1Id
+            if ($this->showBalance && $data['value']) {
+                $this->currentBalance = $this->getAccountBalance($data['value']);
+                $this->calculateBalanceAfterInvoice();
+            }
+
+            if ($this->type == 10 && $data['value']) {
+                $this->recommendedItems = $this->getRecommendedItems($data['value']);
+            } else {
+                $this->recommendedItems = [];
+            }
+
+            $this->checkCashAccount($data['value']);
+        }
     }
 
     public function loadTemplatesForType()
@@ -180,7 +203,35 @@ class CreateInvoiceForm extends Component
             $this->calculateTotals();
         }
     }
+    /**
+     * Get where conditions for acc1 based on invoice type
+     */
+    public function getAcc1WhereConditions(): array
+    {
+        $conditions = [
+            'isdeleted' => 0,
+            'is_basic' => 0,
+        ];
 
+        // تحديد نوع الحساب حسب نوع الفاتورة
+        if (in_array($this->type, [10, 12, 14, 16, 22])) {
+            // عملاء (Clients) - الكود يبدأ بـ 1103
+            $conditions['code_like'] = '1103%';
+        } elseif (in_array($this->type, [11, 13, 15, 17, 25])) {
+            // موردين (Suppliers) - الكود يبدأ بـ 2101
+            $conditions['code_like'] = '2101%';
+        } elseif ($this->type == 21) {
+            // تحويل من مخزن (المخازن) - الكود يبدأ بـ 1107
+            $conditions['code_like'] = '1107%';
+        }
+
+        // فلترة حسب الفرع
+        if ($this->branch_id) {
+            $conditions['branch_id'] = $this->branch_id;
+        }
+
+        return $conditions;
+    }
     /**
      * تغيير النموذج المختار
      */
@@ -229,6 +280,9 @@ class CreateInvoiceForm extends Component
         // تحديث قائمة الحسابات
         if ($type === 'client' || $type === 'supplier') {
             // إعادة تحميل acc1List حسب الفرع أيضاً
+            $this->acc1_id = $account['id'];
+            $this->dispatch('refreshItems')->to('app::searchable-select');
+
             if ($type === 'client') {
                 $this->acc1List = $this->getAccountsByCodeAndBranch('1103%', $this->branch_id);
             } else {
@@ -311,6 +365,8 @@ class CreateInvoiceForm extends Component
             'acc1List' => $this->acc1List->map(fn($item) => ['value' => $item->id, 'text' => $item->aname])->toArray(),
             'currentBalance' => $this->currentBalance,
         ]);
+
+        $this->dispatch('refreshItems')->to('app::searchable-select');
     }
 
     // private function getFilteredItems()

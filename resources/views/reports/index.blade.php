@@ -1,7 +1,6 @@
 @extends('admin.dashboard')
 
 @section('sidebar')
-
 @endsection
 @section('content')
     <style>
@@ -330,11 +329,11 @@
                                 <span>تقرير المبيعات اصناف</span>
                             </a>
 
-
-                            <a href="{{ route('reports.general-sales-daily-report') }}" class="report-link">
+--}}
+                            <a href="{{ route('reports.sales.representative') }}" class="report-link">
                                 <i class="fas fa-calendar-day"></i>
-                                <span>تقرير المبيعات اليومية</span>
-                            </a> --}}
+                                <span>تقرير المبيعات حسب المندوب</span>
+                            </a>
 
                             <a href="{{ route('reports.general-sales-daily-report') }}" class="report-link">
                                 <i class="fas fa-calendar-day"></i>
@@ -346,10 +345,10 @@
                                 <span>تقرير المبيعات اجماليات</span>
                             </a>
 
-                            {{-- <a href="{{ route('reports.general-sales-items-report') }}" class="report-link">
+                            <a href="{{ route('reports.sales.items') }}" class="report-link">
                                 <i class="fas fa-box-open"></i>
                                 <span>تقرير المبيعات اصناف</span>
-                            </a> --}}
+                            </a>
 
                             <a href="{{ route('sales.invoice-report') }}" class="report-link">
                                 <i class="fas fa-box-open"></i>
