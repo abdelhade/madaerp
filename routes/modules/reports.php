@@ -41,7 +41,7 @@ Route::get('/reports/general-inventory-balances', [ReportController::class, 'gen
 Route::get('/reports/general-sales-report', [ReportController::class, 'generalSalesReport'])->name('reports.general-sales-report');
 
 // تقرير المبيعات اليومية
-Route::get('/reports/general-sales-daily-report', [ReportController::class, 'generalSalesDailyReport'])->name('reports.general-sales-daily-report');
+// Route::get('/reports/general-sales-daily-report', [ReportController::class, 'generalSalesDailyReport'])->name('reports.general-sales-daily-report');
 
 // تقريب المبيعات بالعنوان
 Route::get('/reports/general-sales-report-by-address', [ReportController::class, 'salesReportByAddress'])->name('reports.general-sales-report-by-address');
@@ -123,7 +123,7 @@ Route::get('/reports/general-profit-loss-report', [ReportController::class, 'gen
 Route::get('/reports/general-sales-report', [ReportController::class, 'generalSalesReport'])->name('reports.general-sales-report');
 
 // تقرير المبيعات اليومية
-Route::get('/reports/general-sales-daily-report', [ReportController::class, 'generalSalesDailyReport'])->name('reports.general-sales-daily-report');
+// Route::get('/reports/general-sales-daily-report', [ReportController::class, 'generalSalesDailyReport'])->name('reports.general-sales-daily-report');
 
 // تقارير النقدية والبنوك
 Route::get('/reports/general-cash-bank-report', [ReportController::class, 'generalCashBankReport'])->name('reports.general-cash-bank-report');

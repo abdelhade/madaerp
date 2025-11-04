@@ -335,7 +335,7 @@
                                 <span>تقرير المبيعات حسب المندوب</span>
                             </a>
 
-                            <a href="{{ route('reports.general-sales-daily-report') }}" class="report-link">
+                            <a href="{{ route('reports.sales.daily') }}" class="report-link">
                                 <i class="fas fa-calendar-day"></i>
                                 <span>تقرير المبيعات اليومية</span>
                             </a>

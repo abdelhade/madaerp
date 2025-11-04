@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReportController;
 use App\Livewire\Reports\BarcodePrintingReport;
 use App\Http\Controllers\Reports\InvoiceReportController;
+use Modules\Reports\Http\Controllers\salesReportController;
 
 Route::get('/billing/invoice-report', [InvoiceReportController::class, 'purchaseInvoices'])->name('billing.invoice-report');
 Route::get('/sales/invoice-report', [InvoiceReportController::class, 'salesInvoices'])->name('sales.invoice-report');
@@ -41,5 +42,7 @@ Route::get('/invoices/convert-to-sales/{id}', [InvoiceReportController::class, '
 Route::get(
     '/reports/customer-quotations-comparison',
     [InvoiceReportController::class, 'customerQuotationsComparisonReport']
-)
-    ->name('reports.customer-quotations-comparison');
+)->name('reports.customer-quotations-comparison');
+
+Route::get('/reports/sales/daily', [salesReportController::class, 'daily'])
+    ->name('reports.sales.daily');
