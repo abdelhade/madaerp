@@ -68,7 +68,8 @@
                     @endif
 
                     <!-- زر إنشاء عنصر جديد -->
-                    @if ($search && !collect($filteredItems)->contains('text', $search))
+                    <!-- زر إنشاء عنصر جديد -->
+                    @if ($allowCreate && $search && !collect($filteredItems)->contains('text', $search))
                         <button type="button" class="dropdown-item d-flex align-items-center border-top text-success"
                             wire:click="createNew">
                             <i class="fas fa-plus-circle me-2"></i>

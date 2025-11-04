@@ -14,6 +14,8 @@ class SearchableSelect extends Component
     public $items = [];
     public $filteredItems = [];
 
+    public $allowCreate = true;
+
     // الخصائص المطلوبة
     public $model; // اسم الموديل مثل: App\Models\Client
     public $labelField; // اسم الحقل المعروض مثل: cname
@@ -49,7 +51,10 @@ class SearchableSelect extends Component
 
         // تطبيق الشروط الإضافية
         foreach ($this->where as $field => $value) {
-            if (is_array($value)) {
+            if ($field === 'code_like') {
+                // دعم LIKE للبحث في الكود
+                $query->where('code', 'like', $value);
+            } elseif (is_array($value)) {
                 $query->whereIn($field, $value);
             } else {
                 $query->where($field, $value);
@@ -60,7 +65,7 @@ class SearchableSelect extends Component
             return [
                 'id' => $item->{$this->valueField},
                 'text' => $this->formatItemText($item),
-                'raw' => $item // حفظ الكائن الكامل للاستخدام في العرض
+                'raw' => $item
             ];
         })->toArray();
 

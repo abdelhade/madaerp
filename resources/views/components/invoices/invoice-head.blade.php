@@ -78,34 +78,27 @@
 
             {{-- الحساب المتغير acc1 --}}
             <div class="col-lg-2" wire:key="acc1-{{ $branch_id }}">
-                <label class="form-label" style="font-size: 1em;">{{ $acc1Role }}</label>
-                <div class="input-group">
+                <div class="d-flex align-items-end gap-2">
                     <div class="flex-grow-1">
-                        <select wire:model.live="acc1_id"
-                            class="form-control form-control-sm font-family-cairo fw-bold font-14 @error('acc1_id') is-invalid @enderror"
-                            style="font-size: 0.85em; height: 2em; padding: 2px 6px;">
-                            <option value="">اختر {{ $acc1Role }}</option>
-                            @foreach ($acc1List as $acc)
-                                <option value="{{ $acc->id }}">{{ $acc->aname }}</option>
-                            @endforeach
-                        </select>
+                        <livewire:app::searchable-select :model="'App\Models\AccHead'" :label="$acc1Role" :labelField="'aname'"
+                            :placeholder="'ابحث عن ' . $acc1Role . '...'" :wireModel="'acc1_id'" :selectedId="$acc1_id" :where="$this->getAcc1WhereConditions()" :searchFields="['code', 'aname']"
+                            :allowCreate="false" :key="'acc1-search-' . $type . '-' . $branch_id" />
+                        @error('acc1_id')
+                            <span class="text-danger small"><strong>{{ $message }}</strong></span>
+                        @enderror
                     </div>
-                    @if ($type != 21)
+
+                    @if ($type != 21 && setting('invoice_show_add_clients_suppliers'))
                         @php
                             $accountType = 'client';
                             if (in_array($type, [11, 13, 15, 17])) {
                                 $accountType = 'supplier';
                             }
                         @endphp
-                        @if (setting('invoice_show_add_clients_suppliers'))
-                            <livewire:accounts::account-creator :type="$accountType" :button-class="'btn btn-sm btn-success'" :button-text="$accountType === 'client' ? 'إضافة عميل' : 'إضافة مورد'"
-                                :key="'account-creator-' . $type . '-' . $branch_id" />
-                        @endif
+                        <livewire:accounts::account-creator :type="$accountType" :button-class="'btn btn-sm btn-success'" :button-text="$accountType === 'client' ? 'إضافة عميل' : 'إضافة مورد'"
+                            :key="'account-creator-' . $type . '-' . $branch_id" />
                     @endif
                 </div>
-                @error('acc1_id')
-                    <span class="text-danger small"><strong>{{ $message }}</strong></span>
-                @enderror
             </div>
 
             {{-- المخزن acc2 --}}
@@ -201,8 +194,7 @@
             @if ($type != 21)
                 {{-- S.N لا ينطبق على التحويلات --}}
                 <div class="col-lg-1">
-                    <label for="serial_number" class="form-label"
-                        style="font-size: 1em;">{{ __('S.N') }}</label>
+                    <label for="serial_number" class="form-label" style="font-size: 1em;">{{ __('S.N') }}</label>
                     <input type="text" wire:model="serial_number"
                         class="form-control form-control-sm font-family-cairo fw-bold font-14 @error('serial_number') is-invalid @enderror"
                         style="font-size: 0.85em; height: 2em; padding: 2px 6px;">
@@ -214,6 +206,7 @@
         </div>
     </div>
 </div>
+
 <script>
     // Initialize TomSelect only once
     document.addEventListener('DOMContentLoaded', () => {
@@ -242,7 +235,6 @@
 
     // Handle branch change event
     Livewire.on('branch-changed-completed', (event) => {
-        console.log('branch-changed-completed:', event);
         const select = document.getElementById('acc1-select');
         if (select) {
             const instance = select.tomselect;
@@ -261,7 +253,6 @@
 
                 // Set the selected value
                 const newValue = event.acc1_id;
-                console.log('Setting TomSelect value to:', newValue);
                 if (newValue) {
                     instance.setValue(newValue, true);
                 } else {
@@ -273,11 +264,7 @@
                 if (balanceElement) {
                     balanceElement.textContent = new Intl.NumberFormat().format(event.currentBalance);
                 }
-            } else {
-                console.error('TomSelect instance not found for acc1-select');
             }
-        } else {
-            console.error('Element with id acc1-select not found');
         }
     });
 </script>
