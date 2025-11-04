@@ -2,7 +2,9 @@
 
 namespace Modules\Reports\Http\Controllers;
 
+use App\Models\AccHead;
 use App\Models\OperHead;
+use Illuminate\Http\Request;
 use App\Models\OperationItems;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -268,6 +270,61 @@ class salesReportController extends Controller
             'averageInvoiceValue',
             'topRepName',
             'topRepSales'
+        ));
+    }
+    public function daily(Request $request)
+    {
+        $customers = AccHead::where('code', 'like', '1103%')
+            ->where('isdeleted', 0)
+            ->orderBy('aname')
+            ->get();
+
+        $fromDate = $request->input('from_date', today()->format('Y-m-d'));
+        $toDate = $request->input('to_date', today()->format('Y-m-d'));
+        $customerId = $request->input('customer_id');
+
+        // جلب الفواتير مع الأصناف
+        $sales = OperHead::where('pro_type', 10)
+            ->with(['acc1Head', 'operationItems'])
+            ->whereDate('pro_date', '>=', $fromDate)
+            ->whereDate('pro_date', '<=', $toDate)
+            ->when($customerId, fn($q) => $q->where('acc1', $customerId))
+            ->orderBy('pro_date', 'desc')
+            ->orderBy('pro_num', 'desc')
+            ->paginate(50)
+            ->appends($request->query());
+
+        // === الحسابات من الفواتير (OperHead) ===
+        $totalSales = $sales->sum('fat_total');
+        $totalDiscount = $sales->sum('fat_disc');
+        $totalNetSales = $sales->sum('fat_net');
+        $totalInvoices = $sales->count();
+        $averageInvoiceValue = $totalInvoices > 0 ? $totalNetSales / $totalInvoices : 0;
+
+        // === الحسابات من الأصناف (OperationItems) ===
+        $totalQuantity = 0;
+        $totalItemsCount = 0;
+
+        foreach ($sales as $sale) {
+            if ($sale->items) {
+                $totalQuantity += $sale->items->sum('fat_quantity'); // الكمية الفعلية
+                $totalItemsCount += $sale->items->count();
+            }
+        }
+
+        return view('reports.sales.daily', compact(
+            'customers',
+            'sales',
+            'fromDate',
+            'toDate',
+            'customerId',
+            'totalQuantity',
+            'totalSales',
+            'totalDiscount',
+            'totalNetSales',
+            'totalInvoices',
+            'averageInvoiceValue',
+            'totalItemsCount'
         ));
     }
 }
