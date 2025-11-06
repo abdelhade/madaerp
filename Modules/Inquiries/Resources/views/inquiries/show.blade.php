@@ -47,7 +47,7 @@
             <div class="col-xl-4 col-lg-6 mb-4">
                 <!-- Basic Info -->
                 <div class="card border-left-primary shadow mb-4">
-                    <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <div class="card-header d-flex align-items-center">
                         <i class="fas fa-info-circle me-2"></i>
                         <h5 class="mb-0">{{ __('Project Information') }}</h5>
                     </div>
@@ -101,25 +101,17 @@
 
                 <!-- Location -->
                 <div class="card border-left-info shadow mb-4">
-                    <div class="card-header bg-info text-white d-flex align-items-center">
+                    <div class="card-header d-flex align-items-center">
                         <i class="fas fa-map-marker-alt me-2"></i>
                         <h5 class="mb-0">{{ __('Location') }}</h5>
                     </div>
                     <div class="card-body">
-                        {{-- <div class="mb-3">
-                            <strong class="text-gray-700">{{ __('City') }}:</strong>
-                            <p class="mb-0">{{ $inquiry->city?->title ?? __('Not Specified') }}</p>
-                        </div>
-                        <div class="mb-3">
-                            <strong class="text-gray-700">{{ __('Town') }}:</strong>
-                            <p class="mb-0">{{ $inquiry->town?->title ?? __('Not Specified') }}</p>
-                        </div> --}}
                         <div class="mb-3">
                             <strong class="text-gray-700">{{ __('Distance From HQ') }}:</strong>
                             <p class="mb-0">
                                 {{-- @if ($inquiry->town_distance) --}}
-                                    <span class="badge bg-info text-white">{{ number_format($inquiry->town_distance, 2) }}
-                                        {{ __('KM') }}</span>
+                                <span class="badge bg-info text-white">{{ number_format($inquiry->town_distance, 2) }}
+                                    {{ __('KM') }}</span>
                                 {{-- @endif --}}
                             </p>
                         </div>
@@ -128,7 +120,7 @@
 
                 <!-- Priority -->
                 <div class="card border-left-warning shadow mb-4">
-                    <div class="card-header bg-warning text-dark d-flex align-items-center">
+                    <div class="card-header d-flex align-items-center">
                         <i class="fas fa-star me-2"></i>
                         <h5 class="mb-0">{{ __('Priority') }}</h5>
                     </div>
@@ -147,7 +139,7 @@
                             <strong class="text-gray-700">{{ __('KON Priority') }}:</strong>
                             <p class="mb-0">
                                 @if ($inquiry->kon_priority)
-                                    <span class="badge bg-danger text-white">{{ $inquiry->kon_priority }}</span>
+                                    <span class="badge text-white">{{ $inquiry->kon_priority }}</span>
                                 @else
                                     {{ __('Not Specified') }}
                                 @endif
@@ -162,7 +154,7 @@
 
                 <!-- Estimation -->
                 <div class="card border-left-secondary shadow mb-4">
-                    <div class="card-header bg-secondary text-white d-flex align-items-center">
+                    <div class="card-header d-flex align-items-center">
                         <i class="fas fa-calculator me-2"></i>
                         <h5 class="mb-0">{{ __('Estimation Details') }}</h5>
                     </div>
@@ -201,7 +193,7 @@
 
                 <!-- Quotation State -->
                 <div class="card border-left-danger shadow mb-4">
-                    <div class="card-header bg-danger text-white d-flex align-items-center">
+                    <div class="card-header d-flex align-items-center">
                         <i class="fas fa-file-invoice me-2"></i>
                         <h5 class="mb-0">{{ __('Quotation Status') }}</h5>
                     </div>
@@ -233,7 +225,7 @@
 
                 {{-- 1. Work Types --}}
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <div class="card-header d-flex align-items-center">
                         <i class="fas fa-sitemap me-2"></i>
                         <h5 class="mb-0">{{ __('Selected Work Types') }}</h5>
                     </div>
@@ -316,7 +308,7 @@
 
                 {{-- Inquiry Source Card --}}
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-success text-white d-flex align-items-center">
+                    <div class="card-header d-flex align-items-center">
                         <i class="fas fa-project-diagram me-2"></i>
                         <h5 class="mb-0">{{ __('Inquiry Source') }}</h5>
                     </div>
@@ -363,7 +355,7 @@
             <div class="col-xl-4 col-lg-12 mb-4">
                 <!-- Contacts -->
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <div class="card-header d-flex align-items-center">
                         <i class="fas fa-users me-2"></i>
                         <h5 class="mb-0">{{ __('Contacts') }}</h5>
                     </div>
@@ -419,7 +411,7 @@
                             <div class="alert alert-light small mt-3 mb-0 p-2">
                                 <i class="fas fa-calendar-check me-1"></i>
                                 <strong>{{ __('Engineer Assignment Date') }}:</strong>
-                                {{-- {{ $inquiry->assigned_engineer_date->format('Y-m-d') }} --}}
+                                <strong>{{ \Carbon\Carbon::parse($inquiry->assigned_engineer_date)->format('Y-m-d') }}</strong>
                             </div>
                         @endif
                     </div>
@@ -428,7 +420,7 @@
                 <!-- Quotation Types & Units -->
                 @if (!empty($quotationData))
                     <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-warning text-dark d-flex align-items-center">
+                        <div class="card-header d-flex align-items-center">
                             <i class="fas fa-list-ul me-2"></i>
                             <h5 class="mb-0">{{ __('Quotation Types & Units') }}</h5>
                         </div>
@@ -454,7 +446,7 @@
                 <!-- Type Note -->
                 @if ($inquiry->type_note)
                     <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-secondary text-white d-flex align-items-center">
+                        <div class="card-header d-flex align-items-center">
                             <i class="fas fa-sticky-note me-2"></i>
                             <h5 class="mb-0">{{ __('Type Note') }}</h5>
                         </div>
@@ -528,7 +520,7 @@
             @if ($inquiry->workConditions->isNotEmpty())
                 <div class="col-12 mb-4">
                     <div class="card shadow">
-                        <div class="card-header bg-warning text-dark d-flex align-items-center">
+                        <div class="card-header d-flex align-items-center">
                             <i class="fas fa-exclamation-triangle me-2"></i>
                             <h5 class="mb-0">{{ __('Working Conditions') }}</h5>
                         </div>
@@ -564,7 +556,7 @@
             @if ($inquiry->projectDocuments->isNotEmpty())
                 <div class="col-12 mb-4">
                     <div class="card shadow">
-                        <div class="card-header bg-primary text-white d-flex align-items-center">
+                        <div class="card-header d-flex align-items-center">
                             <i class="fas fa-file-alt me-2"></i>
                             <h5 class="mb-0">{{ __('Project Documents') }}</h5>
                         </div>
