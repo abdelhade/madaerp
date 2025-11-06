@@ -35,6 +35,12 @@ class InvoiceOptionsSeeder extends Seeder
                 'input_type' => 'boolean',
                 'value' => '1',
             ],
+            [
+                'key' => 'invoice_use_last_customer_price',
+                'label' => 'استخدام آخر سعر بيع للعميل في فواتير المبيعات',
+                'input_type' => 'boolean',
+                'value' => '0',
+            ],
         ];
 
         // حفظ أو تحديث الإعدادات

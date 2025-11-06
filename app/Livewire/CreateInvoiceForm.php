@@ -389,11 +389,19 @@ class CreateInvoiceForm extends Component
         }
 
         // جلب التوصيات لأكثر 5 أصناف تم شراؤها من قبل العميل
-        if ($this->type == 10 && $value) { // فقط لفواتير المبيعات
+        if ($this->type == 10 && $value) {
             $this->recommendedItems = $this->getRecommendedItems($value);
+
+            // تحديث الأسعار للأصناف الموجودة في الفاتورة
+            if ((setting('invoice_use_last_customer_price') ?? '0') == '1') {
+                foreach ($this->invoiceItems as $index => $item) {
+                    $this->updatePriceToLastCustomerPrice($index);
+                }
+            }
         } else {
             $this->recommendedItems = [];
         }
+
         $this->checkCashAccount($value);
     }
 
@@ -760,10 +768,30 @@ class CreateInvoiceForm extends Component
             if ($price == 0) {
                 $price = $item->average_cost ?? 0;
             }
-        } elseif ($this->type == 18) { // فاتورة توالف
+        } elseif ($this->type == 18) {
             $price = $item->average_cost ?? 0;
-        } else { // باقي أنواع الفواتير
+        } else {
             $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
+
+            // استخدام آخر سعر للعميل إذا كان مفعلاً (فقط للمبيعات)
+            if (
+                $this->type == 10 &&
+                (setting('invoice_use_last_customer_price') ?? '0') == '1' &&
+                $this->acc1_id
+            ) {
+                $lastCustomerPrice = OperationItems::whereHas('operhead', function ($query) {
+                    $query->where('pro_type', 10)
+                        ->where('acc1', $this->acc1_id);
+                })
+                    ->where('item_id', $itemId)
+                    ->where('unit_id', $unitId)
+                    ->orderBy('created_at', 'desc')
+                    ->value('item_price');
+
+                if ($lastCustomerPrice && $lastCustomerPrice > 0) {
+                    $price = $lastCustomerPrice;
+                }
+            }
         }
 
         // التحقق من منع السعر صفر
@@ -944,6 +972,26 @@ class CreateInvoiceForm extends Component
         } else { // باقي أنواع الفواتير
             $salePrices = $vm->getUnitSalePrices();
             $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
+
+            // استخدام آخر سعر للعميل إذا كان مفعلاً (فقط للمبيعات)
+            if (
+                $this->type == 10 &&
+                (setting('invoice_use_last_customer_price') ?? '0') == '1' &&
+                $this->acc1_id
+            ) {
+                $lastCustomerPrice = OperationItems::whereHas('operhead', function ($query) {
+                    $query->where('pro_type', 10)
+                        ->where('acc1', $this->acc1_id);
+                })
+                    ->where('item_id', $itemId)
+                    ->where('unit_id', $unitId)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                if ($lastCustomerPrice && $lastCustomerPrice->item_price > 0) {
+                    $price = $lastCustomerPrice->item_price;
+                }
+            }
         }
 
         if (($this->settings['allow_zero_price_in_invoice'] ?? '0') != '1' && $price == 0) {
@@ -1010,6 +1058,7 @@ class CreateInvoiceForm extends Component
             $this->calculateTotals();
         } elseif ($field === 'item_id') {
             $this->updateUnits($rowIndex);
+
             $itemId = $this->invoiceItems[$rowIndex]['item_id'];
             if ($itemId) {
                 $item = Item::with(['units', 'prices'])->find($itemId);
@@ -1091,6 +1140,33 @@ class CreateInvoiceForm extends Component
             $this->calculateTotals();
         }
         $this->calculateBalanceAfterInvoice();
+    }
+
+    private function updatePriceToLastCustomerPrice($index)
+    {
+        if (!isset($this->invoiceItems[$index])) return;
+
+        $itemId = $this->invoiceItems[$index]['item_id'];
+        $unitId = $this->invoiceItems[$index]['unit_id'];
+
+        if (!$itemId || !$unitId || !$this->acc1_id) return;
+
+        // البحث عن آخر سعر بيع لهذا العميل لهذا الصنف مع نفس الوحدة
+        $lastPrice = OperationItems::whereHas('operhead', function ($query) {
+            $query->where('pro_type', 10) // فواتير المبيعات فقط
+                ->where('acc1', $this->acc1_id);
+        })
+            ->where('item_id', $itemId)
+            ->where('unit_id', $unitId)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        // إذا وُجد سعر سابق، استخدمه
+        if ($lastPrice && $lastPrice->item_price > 0) {
+            $this->invoiceItems[$index]['price'] = $lastPrice->item_price;
+            $this->recalculateSubValues();
+            $this->calculateTotals();
+        }
     }
 
     public function updatedSelectedPriceType()
