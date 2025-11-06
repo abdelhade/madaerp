@@ -121,6 +121,7 @@ class CreateInvoiceForm extends Component
         22 => 'امر حجز',
         24 => 'فاتورة خدمه',
         25 => 'طلب احتياج',
+        26 => 'اتفاقية تسعير',
     ];
     protected $listeners = [
         'account-created' => 'handleAccountCreated',
@@ -214,7 +215,7 @@ class CreateInvoiceForm extends Component
         ];
 
         // تحديد نوع الحساب حسب نوع الفاتورة
-        if (in_array($this->type, [10, 12, 14, 16, 22])) {
+        if (in_array($this->type, [10, 12, 14, 16, 22, 26])) {
             // عملاء (Clients) - الكود يبدأ بـ 1103
             $conditions['code_like'] = '1103%';
         } elseif (in_array($this->type, [11, 13, 15, 17, 25])) {
@@ -389,13 +390,40 @@ class CreateInvoiceForm extends Component
         }
 
         // جلب التوصيات لأكثر 5 أصناف تم شراؤها من قبل العميل
-        if ($this->type == 10 && $value) {
+        if (in_array($this->type, [10, 26]) && $value) {
             $this->recommendedItems = $this->getRecommendedItems($value);
 
             // تحديث الأسعار للأصناف الموجودة في الفاتورة
-            if ((setting('invoice_use_last_customer_price') ?? '0') == '1') {
+            if ($this->type == 10) {
+                // فحص أي الأوبشنات مفعل
+                $usePricingAgreement = (setting('invoice_use_pricing_agreement') ?? '0') == '1';
+                $useLastCustomerPrice = (setting('invoice_use_last_customer_price') ?? '0') == '1';
+
+                // تحذير إذا كان الاثنين مفعلين
+                if ($usePricingAgreement && $useLastCustomerPrice) {
+                    $this->dispatch(
+                        'error',
+                        title: 'تحذير!',
+                        text: 'لا يمكن تفعيل "استخدام آخر سعر من اتفاقية تسعير" و "استخدام آخر سعر بيع" معاً. الرجاء إيقاف أحدهما من الإعدادات.',
+                        icon: 'warning'
+                    );
+                    return;
+                }
+
+                // تطبيق التسعير حسب الأوبشن المفعل
+                if ($usePricingAgreement) {
+                    foreach ($this->invoiceItems as $index => $item) {
+                        $this->updatePriceFromPricingAgreement($index);
+                    }
+                } elseif ($useLastCustomerPrice) {
+                    foreach ($this->invoiceItems as $index => $item) {
+                        $this->updatePriceToLastCustomerPrice($index);
+                    }
+                }
+            } elseif ($this->type == 26) {
+                // اتفاقية تسعير - دائماً تستخدم آخر سعر من الاتفاقيات
                 foreach ($this->invoiceItems as $index => $item) {
-                    $this->updatePriceToLastCustomerPrice($index);
+                    $this->updatePriceFromPricingAgreement($index);
                 }
             }
         } else {
@@ -413,8 +441,8 @@ class CreateInvoiceForm extends Component
 
         $isCashAccount = false;
 
-        // للعملاء في فواتير المبيعات ومردود المبيعات
-        if (in_array($this->type, [10, 12]) && in_array($accountId, $this->cashClientIds)) {
+        // للعملاء في فواتير المبيعات ومردود المبيعات واتفاقيات التسعير
+        if (in_array($this->type, [10, 12, 26]) && in_array($accountId, $this->cashClientIds)) {
             $isCashAccount = true;
         }
         // للموردين في فواتير المشتريات ومردود المشتريات
@@ -431,9 +459,12 @@ class CreateInvoiceForm extends Component
 
     private function getRecommendedItems($clientId)
     {
-        return OperationItems::whereHas('operhead', function ($query) use ($clientId) {
-            $query->where('pro_type', 10) // فواتير المبيعات فقط
-                ->where('acc1', $clientId); // العميل المحدد
+        // تحديد نوع الفاتورة المصدرية حسب النوع الحالي
+        $sourceType = $this->type == 26 ? 26 : 10; // اتفاقية تسعير أو مبيعات
+
+        return OperationItems::whereHas('operhead', function ($query) use ($clientId, $sourceType) {
+            $query->where('pro_type', $sourceType)
+                ->where('acc1', $clientId);
         })
             ->groupBy('item_id')
             ->selectRaw('item_id, SUM(qty_out) as total_quantity')
@@ -773,12 +804,38 @@ class CreateInvoiceForm extends Component
         } else {
             $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
 
-            // استخدام آخر سعر للعميل إذا كان مفعلاً (فقط للمبيعات)
-            if (
-                $this->type == 10 &&
-                (setting('invoice_use_last_customer_price') ?? '0') == '1' &&
-                $this->acc1_id
-            ) {
+            // فحص أي الأوبشنات مفعل
+            $usePricingAgreement = (setting('invoice_use_pricing_agreement') ?? '0') == '1';
+            $useLastCustomerPrice = (setting('invoice_use_last_customer_price') ?? '0') == '1';
+
+            // تحذير إذا كان الاثنين مفعلين
+            if ($usePricingAgreement && $useLastCustomerPrice) {
+                $this->dispatch(
+                    'error',
+                    title: 'تحذير!',
+                    text: 'لا يمكن تفعيل "استخدام آخر سعر من اتفاقية تسعير" و "استخدام آخر سعر بيع" معاً. الرجاء إيقاف أحدهما من الإعدادات.',
+                    icon: 'warning'
+                );
+                return $price; // استخدام السعر الافتراضي
+            }
+
+            // استخدام آخر سعر من اتفاقية التسعير (فقط للمبيعات)
+            if ($this->type == 10 && $usePricingAgreement && $this->acc1_id) {
+                $pricingAgreementPrice = OperationItems::whereHas('operhead', function ($query) {
+                    $query->where('pro_type', 26)
+                        ->where('acc1', $this->acc1_id);
+                })
+                    ->where('item_id', $itemId)
+                    ->where('unit_id', $unitId)
+                    ->orderBy('created_at', 'desc')
+                    ->value('item_price');
+
+                if ($pricingAgreementPrice && $pricingAgreementPrice > 0) {
+                    $price = $pricingAgreementPrice;
+                }
+            }
+            // استخدام آخر سعر للعميل إذا كان ممكناً (فقط للمبيعات)
+            elseif ($this->type == 10 && $useLastCustomerPrice && $this->acc1_id) {
                 $lastCustomerPrice = OperationItems::whereHas('operhead', function ($query) {
                     $query->where('pro_type', 10)
                         ->where('acc1', $this->acc1_id);
@@ -790,6 +847,21 @@ class CreateInvoiceForm extends Component
 
                 if ($lastCustomerPrice && $lastCustomerPrice > 0) {
                     $price = $lastCustomerPrice;
+                }
+            }
+            // استخدام آخر سعر من اتفاقية التسعير (دائماً لنوع 26)
+            elseif ($this->type == 26 && $this->acc1_id) {
+                $pricingAgreementPrice = OperationItems::whereHas('operhead', function ($query) {
+                    $query->where('pro_type', 26)
+                        ->where('acc1', $this->acc1_id);
+                })
+                    ->where('item_id', $itemId)
+                    ->where('unit_id', $unitId)
+                    ->orderBy('created_at', 'desc')
+                    ->value('item_price');
+
+                if ($pricingAgreementPrice && $pricingAgreementPrice > 0) {
+                    $price = $pricingAgreementPrice;
                 }
             }
         }
@@ -973,12 +1045,39 @@ class CreateInvoiceForm extends Component
             $salePrices = $vm->getUnitSalePrices();
             $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
 
-            // استخدام آخر سعر للعميل إذا كان مفعلاً (فقط للمبيعات)
-            if (
-                $this->type == 10 &&
-                (setting('invoice_use_last_customer_price') ?? '0') == '1' &&
-                $this->acc1_id
-            ) {
+            // فحص أي الأوبشنات مفعل
+            $usePricingAgreement = (setting('invoice_use_pricing_agreement') ?? '0') == '1';
+            $useLastCustomerPrice = (setting('invoice_use_last_customer_price') ?? '0') == '1';
+
+            // تحذير إذا كان الاثنين مفعلين
+            if ($usePricingAgreement && $useLastCustomerPrice) {
+                $this->dispatch(
+                    'error',
+                    title: 'تحذير!',
+                    text: 'لا يمكن تفعيل "استخدام آخر سعر من اتفاقية تسعير" و "استخدام آخر سعر بيع" معاً. الرجاء إيقاف أحدهما من الإعدادات.',
+                    icon: 'warning'
+                );
+                // استخدام السعر الافتراضي بدون تطبيق الأوبشنات
+                return $price;
+            }
+
+            // استخدام آخر سعر من اتفاقية التسعير (فقط للمبيعات)
+            if ($this->type == 10 && $usePricingAgreement && $this->acc1_id) {
+                $pricingAgreementPrice = OperationItems::whereHas('operhead', function ($query) {
+                    $query->where('pro_type', 26)
+                        ->where('acc1', $this->acc1_id);
+                })
+                    ->where('item_id', $itemId)
+                    ->where('unit_id', $unitId)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                if ($pricingAgreementPrice && $pricingAgreementPrice->item_price > 0) {
+                    $price = $pricingAgreementPrice->item_price;
+                }
+            }
+            // استخدام آخر سعر للعميل إذا كان ممكناً (فقط للمبيعات)
+            elseif ($this->type == 10 && $useLastCustomerPrice && $this->acc1_id) {
                 $lastCustomerPrice = OperationItems::whereHas('operhead', function ($query) {
                     $query->where('pro_type', 10)
                         ->where('acc1', $this->acc1_id);
@@ -1162,6 +1261,33 @@ class CreateInvoiceForm extends Component
             ->first();
 
         // إذا وُجد سعر سابق، استخدمه
+        if ($lastPrice && $lastPrice->item_price > 0) {
+            $this->invoiceItems[$index]['price'] = $lastPrice->item_price;
+            $this->recalculateSubValues();
+            $this->calculateTotals();
+        }
+    }
+
+    private function updatePriceFromPricingAgreement($index)
+    {
+        if (!isset($this->invoiceItems[$index])) return;
+
+        $itemId = $this->invoiceItems[$index]['item_id'];
+        $unitId = $this->invoiceItems[$index]['unit_id'];
+
+        if (!$itemId || !$unitId || !$this->acc1_id) return;
+
+        // البحث عن آخر سعر من اتفاقية التسعير لهذا العميل لهذا الصنف مع نفس الوحدة
+        $lastPrice = OperationItems::whereHas('operhead', function ($query) {
+            $query->where('pro_type', 26) // اتفاقيات التسعير فقط
+                ->where('acc1', $this->acc1_id);
+        })
+            ->where('item_id', $itemId)
+            ->where('unit_id', $unitId)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        // إذا وُجد سعر من اتفاقية، استخدمه
         if ($lastPrice && $lastPrice->item_price > 0) {
             $this->invoiceItems[$index]['price'] = $lastPrice->item_price;
             $this->recalculateSubValues();
