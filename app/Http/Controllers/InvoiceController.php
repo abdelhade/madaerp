@@ -351,7 +351,7 @@ class InvoiceController extends Controller
             19 => 'أمر صرف',
             20 => 'أمر إضافة',
             21 => 'تحويل من مخزن لمخزن',
-            22 => 'أمر حجز',
+            22 => 'امر حجز',
             26 => 'اتفاقية تسعير',
         ];
 
@@ -397,7 +397,10 @@ class InvoiceController extends Controller
 
     public function view($operationId)
     {
-        return view('invoices.view-invoice', compact('operationId'));
+        $operation = OperHead::findOrFail($operationId);
+        $type = $operation->pro_type;
+        
+        return view('invoices.view-invoice', compact('operationId', 'type'));
     }
 
     public function salesStatistics()
