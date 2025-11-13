@@ -11,11 +11,11 @@ use Illuminate\Routing\Controller;
 class VoucherController extends Controller
 {
 
-    // public function __construct()
-    // {
-    //     $this->middleware('can:عرض سند قبض')->only(['index', 'create', 'store']);
-    //     $this->middleware('can:عرض سند دفع')->only(['index', 'create', 'store']);
-    // }
+    public function __construct()
+    {
+        $this->middleware('can:view receipt vouchers')->only(['index', 'create', 'store']);
+        $this->middleware('can:view payment vouchers')->only(['index', 'create', 'store']);
+    }
 
     public function index(Request $request)
     {

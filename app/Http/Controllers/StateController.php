@@ -9,10 +9,10 @@ class StateController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:عرض المحافظات')->only(['index']);
-        $this->middleware('can:إضافة المحافظات')->only(['create', 'store']);
-        $this->middleware('can:تعديل المحافظات')->only(['update', 'edit']);
-        $this->middleware('can:حذف المحافظات')->only(['destroy']);
+        $this->middleware('can:view states')->only(['index']);
+        $this->middleware('can:create states')->only(['create', 'store']);
+        $this->middleware('can:edit states')->only(['update', 'edit']);
+        $this->middleware('can:delete states')->only(['destroy']);
     }
 
     public function index()

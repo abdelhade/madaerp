@@ -9,6 +9,10 @@
     <div class="card">
         <div class="card-head">
             <h2>{{ __('محلل العمل اليومي') }}</h2>
+            <div class="alert alert-info mb-3">
+                <i class="las la-info-circle"></i> 
+                {{ __('إجمالي العمليات المسجلة:') }} <strong>{{ $opers->total() }}</strong>
+            </div>
         <form method="GET" class="row g-3 align-items-end mb-3" style="font-family: 'Cairo', sans-serif; direction: rtl;">
             <div class="col-md-3">
                 <label for="user_id" class="form-label">{{ __('المستخدم') }}</label>
@@ -103,6 +107,11 @@
                     </tbody>
 
                 </table>
+            </div>
+
+            <!-- Pagination Links -->
+            <div class="d-flex justify-content-center mt-4">
+                {{ $opers->appends(request()->query())->links() }}
             </div>
         </div>
     </div>

@@ -11,10 +11,10 @@ class ContractController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:عرض العقود')->only(['index']);
-        $this->middleware('can:إنشاء العقود')->only(['create', 'store']);
-        $this->middleware('can:تعديل العقود')->only(['update', 'edit']);
-        $this->middleware('can:حذف العقود')->only(['destroy']);
+        $this->middleware('can:view contracts')->only(['index']);
+        $this->middleware('can:create contracts')->only(['create', 'store']);
+        $this->middleware('can:edit contracts')->only(['update', 'edit']);
+        $this->middleware('can:delete contracts')->only(['destroy']);
     }
 
     public function index()

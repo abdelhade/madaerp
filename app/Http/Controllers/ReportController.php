@@ -49,8 +49,7 @@ class ReportController extends Controller
         }
 
         $opers = $query->orderBy('created_at', 'desc')
-            ->take(100)
-            ->get();
+            ->paginate(100);
 
         // Get users for the filter dropdown
         $users = User::all();
@@ -105,47 +104,100 @@ class ReportController extends Controller
     {
         $asOfDate = request('as_of_date', now()->format('Y-m-d'));
 
-        // جميع الأصول الرئيسية (الحسابات التي ليس لديها parent)
+        // جميع الأصول الرئيسية (الحسابات التي ليس لديها parent) مع جميع الأطفال بشكل recursive
         $assets = AccHead::where('code', 'like', '1%')
             ->where('isdeleted', 0)
             ->whereNull('parent_id')
             ->with(['children' => function ($q) {
-                $q->where('isdeleted', 0)->orderBy('code');
-            }, 'children.children' => function ($q) {
-                $q->where('isdeleted', 0)->orderBy('code');
+                $q->where('isdeleted', 0)->orderBy('code')
+                    ->with(['children' => function ($q2) {
+                        $q2->where('isdeleted', 0)->orderBy('code')
+                            ->with(['children' => function ($q3) {
+                                $q3->where('isdeleted', 0)->orderBy('code')
+                                    ->with(['children' => function ($q4) {
+                                        $q4->where('isdeleted', 0)->orderBy('code');
+                                    }]);
+                            }]);
+                    }]);
             }])
             ->orderBy('code')
             ->get();
 
-        // نفس الشيء للخصوم وحقوق الملكية
+        // نفس الشيء للخصوم
         $liabilities = AccHead::where('code', 'like', '2%')
             ->where('isdeleted', 0)
             ->whereNull('parent_id')
             ->with(['children' => function ($q) {
-                $q->where('isdeleted', 0)->orderBy('code');
-            }, 'children.children' => function ($q) {
-                $q->where('isdeleted', 0)->orderBy('code');
+                $q->where('isdeleted', 0)->orderBy('code')
+                    ->with(['children' => function ($q2) {
+                        $q2->where('isdeleted', 0)->orderBy('code')
+                            ->with(['children' => function ($q3) {
+                                $q3->where('isdeleted', 0)->orderBy('code')
+                                    ->with(['children' => function ($q4) {
+                                        $q4->where('isdeleted', 0)->orderBy('code');
+                                    }]);
+                            }]);
+                    }]);
             }])
             ->orderBy('code')
             ->get();
 
+        // حقوق الملكية
         $equity = AccHead::where('code', 'like', '3%')
             ->where('isdeleted', 0)
             ->whereNull('parent_id')
             ->with(['children' => function ($q) {
-                $q->where('isdeleted', 0)->orderBy('code');
-            }, 'children.children' => function ($q) {
-                $q->where('isdeleted', 0)->orderBy('code');
+                $q->where('isdeleted', 0)->orderBy('code')
+                    ->with(['children' => function ($q2) {
+                        $q2->where('isdeleted', 0)->orderBy('code')
+                            ->with(['children' => function ($q3) {
+                                $q3->where('isdeleted', 0)->orderBy('code')
+                                    ->with(['children' => function ($q4) {
+                                        $q4->where('isdeleted', 0)->orderBy('code');
+                                    }]);
+                            }]);
+                    }]);
             }])
             ->orderBy('code')
             ->get();
+
+        // Calculate totals recursively
+        $totalAssets = $this->calculateTotalBalance($assets);
+        $totalLiabilities = $this->calculateTotalBalance($liabilities);
+        $totalEquity = $this->calculateTotalBalance($equity);
+
+        // Calculate net profit/loss (revenues - expenses)
+        // Assuming revenues start with 4 and expenses with 5
+        $revenues = AccHead::where('code', 'like', '4%')->where('isdeleted', 0)->sum('balance');
+        $expenses = AccHead::where('code', 'like', '5%')->where('isdeleted', 0)->sum('balance');
+        $netProfit = $revenues - $expenses;
+
+        $totalLiabilitiesEquity = $totalLiabilities + $totalEquity + $netProfit;
 
         return view('reports.general-balance-sheet', compact(
             'assets',
             'liabilities',
             'equity',
-            'asOfDate'
+            'asOfDate',
+            'totalAssets',
+            'totalLiabilities',
+            'totalEquity',
+            'netProfit',
+            'totalLiabilitiesEquity'
         ));
+    }
+
+    // Helper method to calculate total balance recursively
+    private function calculateTotalBalance($accounts)
+    {
+        $total = 0;
+        foreach ($accounts as $account) {
+            $total += $account->balance ?? 0;
+            if ($account->children && $account->children->count() > 0) {
+                $total += $this->calculateTotalBalance($account->children);
+            }
+        }
+        return $total;
     }
 
     // كشف حساب حساب

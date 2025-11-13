@@ -10,7 +10,7 @@
                 @livewire('language-switcher')
             </li>
 
-            @can('عرض التحكم في الاعدادات')
+            @can('view Settings Control')
                 <li>
                     <a title="{{ __('navigation.users') }}" href="{{ route('mysettings.index') }}" class="nav-link">
                         <i class="fas fa-cog fa-2x text-primary"></i>
@@ -49,14 +49,14 @@
             @endcan
 
 
-            @can('عرض التقارير')
+          
                 <li>
                     <a title="{{ __('navigation.reports') }}" href="{{ route('reports.index') }}" class="nav-link">
                         <i class="fas fa-chart-pie fa-2x text-primary"></i>
                     </a>
 
                 </li>
-            @endcan
+     
 
             <li>
                 <a title="{{ __('Branches') }}" href="{{ route('branches.index') }}" class="nav-link">

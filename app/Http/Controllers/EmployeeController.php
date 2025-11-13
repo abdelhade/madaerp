@@ -10,11 +10,11 @@ class EmployeeController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:عرض الموظفين')->only(['index']);
-        // $this->middleware('can:عرض تفاصيل موظف')->only(['show']);
-        $this->middleware('can:إنشاء الموظفين')->only(['create', 'store']);
-        $this->middleware('can:تعديل الموظفين')->only(['edit', 'update']);
-        $this->middleware('can:حذف الموظفين')->only(['destroy']);
+        $this->middleware('can:view Employees')->only(['index']);
+        // $this->middleware('can:view employee details')->only(['show']);
+        $this->middleware('can:create Employees')->only(['create', 'store']);
+        $this->middleware('can:edit Employees')->only(['edit', 'update']);
+        $this->middleware('can:delete Employees')->only(['destroy']);
     }
 
     public function index()

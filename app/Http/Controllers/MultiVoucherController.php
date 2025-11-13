@@ -16,11 +16,11 @@ use Illuminate\Routing\Controller;
 
 class MultiVoucherController extends Controller
 {
-    // public function __construct()
-    // {
-    //     $this->middleware('can:عرض سند قبض متعدد')->only(['index']);
-    //     $this->middleware('can:إضافة سند قبض متعدد')->only(['create', 'store']);
-    // }
+    public function __construct()
+    {
+        $this->middleware('can:view multi receipt vouchers')->only(['index']);
+        $this->middleware('can:create multi receipt vouchers')->only(['create', 'store']);
+    }
 
     public function index()
     {

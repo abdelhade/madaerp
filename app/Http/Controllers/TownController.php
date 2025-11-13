@@ -10,10 +10,10 @@ class TownController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:عرض المناطق')->only(['index']);
-        $this->middleware('can:إضافة المناطق')->only(['create', 'store']);
-        $this->middleware('can:تعديل المناطق')->only(['update', 'edit']);
-        $this->middleware('can:حذف المناطق')->only(['destroy']);
+        $this->middleware('can:view towns')->only(['index']);
+        $this->middleware('can:create towns')->only(['create', 'store']);
+        $this->middleware('can:edit towns')->only(['update', 'edit']);
+        $this->middleware('can:delete towns')->only(['destroy']);
     }
     public function index()
     {

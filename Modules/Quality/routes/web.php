@@ -46,7 +46,7 @@ Route::middleware(['auth', 'verified'])->prefix('quality')->name('quality.')->gr
     
     // Reports
     Route::get('/reports', function () {
-        return view('quality::reports.index');
+        return view('reports.index');
     })->name('reports');
 });
 
