@@ -12,10 +12,10 @@ class KpiController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:عرض المعدلات')->only(['index']);
-        $this->middleware('can:إنشاء المعدلات')->only(['create', 'store']);
-        $this->middleware('can:تعديل المعدلات')->only(['update', 'edit']);
-        $this->middleware('can:حذف المعدلات')->only(['destroy']);
+        $this->middleware('can:view kpis')->only(['index']);
+        $this->middleware('can:create kpis')->only(['create', 'store']);
+        $this->middleware('can:edit kpis')->only(['update', 'edit']);
+        $this->middleware('can:delete kpis')->only(['destroy']);
     }
 
     public function index()

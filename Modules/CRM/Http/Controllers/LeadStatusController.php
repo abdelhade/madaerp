@@ -12,10 +12,10 @@ class LeadStatusController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:عرض حالات الفرص')->only(['index']);
-        $this->middleware('can:إضافة حالات الفرص')->only(['create', 'store']);
-        $this->middleware('can:تعديل حالات الفرص')->only(['edit', 'update']);
-        $this->middleware('can:حذف حالات الفرص')->only(['destroy']);
+        $this->middleware('can:view lead statuses')->only(['index']);
+        $this->middleware('can:create lead statuses')->only(['create', 'store']);
+        $this->middleware('can:edit lead statuses')->only(['edit', 'update']);
+        $this->middleware('can:delete lead statuses')->only(['destroy']);
     }
     /**
      * Display a listing of the resource.

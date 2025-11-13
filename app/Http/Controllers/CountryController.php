@@ -10,10 +10,10 @@ class CountryController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:عرض الدول')->only(['index']);
-        $this->middleware('can:إضافة الدول')->only(['create', 'store']);
-        $this->middleware('can:تعديل الدول')->only(['update', 'edit']);
-        $this->middleware('can:حذف الدول')->only(['destroy']);
+        $this->middleware('can:view countries')->only(['index']);
+        $this->middleware('can:create countries')->only(['create', 'store']);
+        $this->middleware('can:edit countries')->only(['update', 'edit']);
+        $this->middleware('can:delete countries')->only(['destroy']);
     }
 
     public function index()

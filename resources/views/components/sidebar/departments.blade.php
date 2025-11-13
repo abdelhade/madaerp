@@ -1,46 +1,46 @@
-@can('عرض الادارات و الاقسام')
+@can('view departments')
     <li class="nav-item">
         <a class="nav-link" href="{{ route('departments.index') }}">
             <i class="ti-control-record"></i>{{ __('navigation.departments') }}
         </a>
     </li>
 @endcan
-@can('عرض الوظائف')
+@can('view jobs')
     <li class="nav-item">
         <a class="nav-link" href="{{ route('jobs.index') }}">
             <i class="ti-control-record"></i>{{ __('navigation.jobs') }}
         </a>
     </li>
 @endcan
-@canany(['عرض الدول', 'عرض المحافظات', 'عرض المدن', 'عرض المناطق'])
+@canany(['view countries', 'view states', 'view cities', 'view towns'])
     <li class="nav-item has-submenu">
         <a class="nav-link" href="javascript: void(0);">
             <i class="ti-control-record"></i>{{ __('navigation.addresses') }}
             <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
         </a>
         <ul class="sub-menu mm-collapse">
-            @can('عرض الدول')
+            @can('view countries')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('countries.index') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.countries') }}
                     </a>
                 </li>
             @endcan
-            @can('عرض المحافظات')
+            @can('view states')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('states.index') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.states') }}
                     </a>
                 </li>
             @endcan
-            @can('عرض المدن')
+            @can('view cities')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('cities.index') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.cities') }}
                     </a>
                 </li>
             @endcan
-            @can('عرض المناطق')
+            @can('view towns')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('towns.index') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.towns') }}
@@ -50,35 +50,35 @@
         </ul>
     </li>
 @endcanany
-@can('عرض الورديات')
+@can('view shifts')
     <li class="nav-item">
         <a class="nav-link" href="{{ route('shifts.index') }}">
             <i class="ti-control-record"></i>{{ __('navigation.shifts') }}
         </a>
     </li>
 @endcan
-@can('عرض الموظفيين')
+@can('view Employees')
     <li class="nav-item">
         <a class="nav-link" href="{{ route('employees.index') }}">
             <i class="ti-control-record"></i>{{ __('navigation.employees') }}
         </a>
     </li>
 @endcan
-@canany(['عرض المعدلات', 'عرض تقييم الموظفين'])
+@canany(['view kpis', 'view employee evaluations'])
     <li class="nav-item has-submenu">
         <a class="nav-link" href="javascript: void(0);">
             <i class="ti-control-record"></i>{{ __('navigation.performance_kpis') }}
             <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
         </a>
         <ul class="sub-menu mm-collapse">
-            @can('عرض المعدلات')
+            @can('view kpis')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('kpis.index') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.kpis') }}
                     </a>
                 </li>
             @endcan
-            @can(abilities: 'عرض معدلات اداء الموظفين')
+            @can(abilities: 'view employee evaluations')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('kpis.employeeEvaluation') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.employee_performance_kpis') }}
@@ -88,21 +88,21 @@
         </ul>
     </li>
 @endcanany
-@canany(['عرض انواع العقود', 'عرض العقود'])
+@canany(['view contract types', 'view contracts'])
     <li class="nav-item has-submenu">
         <a class="nav-link" href="javascript: void(0);">
             <i class="ti-control-record"></i>{{ __('navigation.contracts') }}
             <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
         </a>
         <ul class="sub-menu mm-collapse">
-            @can('عرض انواع العقود')
+            @can('view contract types')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('contract-types.index') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.contract_types') }}
                     </a>
                 </li>
             @endcan
-            @can('عرض العقود')
+            @can('view contracts')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('contracts.index') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.contracts') }}
@@ -112,21 +112,21 @@
         </ul>
     </li>
 @endcanany
-@canany(['عرض البصمات', 'عرض معالجه الحضور والانصراف'])
+@canany(['view attendances', 'view attendance processing'])
     <li class="nav-item has-submenu">
         <a class="nav-link" href="javascript: void(0);">
             <i class="ti-control-record"></i>{{ __('navigation.attendance') }}
             <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
         </a>
         <ul class="sub-menu mm-collapse">
-            @can('عرض البصمات')
+            @can('view attendances')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('attendances.index') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.attendance_records') }}
                     </a>
                 </li>
             @endcan
-            @can('عرض معالجه الحضور والانصرف')
+            @can('view attendance processing')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('attendance.processing') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.attendance_processing') }}
@@ -137,7 +137,7 @@
     </li>
 @endcanany
 {{-- إدارة الإجازات --}}
-@canany(['عرض رصيد الإجازات', 'عرض طلبات الإجازة'])
+@canany(['view leave balances', 'view leave requests'])
     <li class="nav-item has-submenu">
         <a class="nav-link" href="javascript: void(0);">
             <i class="ti-control-record"></i>{{ __('navigation.leave_management') }}
@@ -149,14 +149,14 @@
                     <i class="ti-control-record"></i>{{ __('navigation.leave_types') }}
                 </a>
             </li>
-            @can('عرض رصيد الإجازات')
+            @can('view leave balances')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('leaves.balances.index') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.leave_balances') }}
                     </a>
                 </li>
             @endcan
-            @can('عرض طلبات الإجازة')
+            @can('view leave requests')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('leaves.requests.index') }}">
                         <i class="ti-control-record"></i>{{ __('navigation.leave_requests') }}

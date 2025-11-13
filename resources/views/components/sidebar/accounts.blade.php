@@ -134,14 +134,6 @@
     </li>
 @endcan
 
-@can('create check-portfolios-incoming')
-    <li class="nav-item">
-        <a class="nav-link" href="{{ route('accounts.create', ['parent' => '1105']) }}">
-            <i class="ti-control-record"></i>{{ __('إضافة حافظة قبض') }}
-        </a>
-    </li>
-@endcan
-
 @can('view check-portfolios-outgoing')
     <li class="nav-item">
         <a class="nav-link" href="{{ route('accounts.index', ['type' => 'check-portfolios-outgoing']) }}">
@@ -150,11 +142,5 @@
     </li>
 @endcan
 
-@can('create check-portfolios-outgoing')
-    <li class="nav-item">
-        <a class="nav-link" href="{{ route('accounts.create', ['parent' => '2103']) }}">
-            <i class="ti-control-record"></i>{{ __('إضافة حافظة دفع') }}
-        </a>
-    </li>
-@endcan
+
 

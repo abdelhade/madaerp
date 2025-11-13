@@ -12,10 +12,10 @@ class ProjectController extends Controller
 
     public function __construct()
     {
-        $this->middleware('can:عرض المشاريع')->only(['index']);
-        $this->middleware('can:إضافة المشاريع')->only(['create', 'store']);
-        $this->middleware('can:تعديل المشاريع')->only(['update', 'edit']);
-        $this->middleware('can:حذف العملاء')->only(['destroy']);
+        $this->middleware('can:view projects')->only(['index']);
+        $this->middleware('can:create projects')->only(['create', 'store']);
+        $this->middleware('can:edit projects')->only(['update', 'edit']);
+        $this->middleware('can:delete projects')->only(['destroy']);
     }
 
     public function index()
