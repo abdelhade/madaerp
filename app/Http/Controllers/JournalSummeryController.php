@@ -10,9 +10,10 @@ use Illuminate\Routing\Controller;
 
 class JournalSummeryController extends Controller
 {
+
     public function index()
     {
-        $journalHeads = JournalHead::with(['dets' => function($query) {
+        $journalHeads = JournalHead::with(['dets' => function ($query) {
             $query->orderBy('debit', 'desc');
         }])->get();
 

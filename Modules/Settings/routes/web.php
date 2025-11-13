@@ -8,8 +8,12 @@ use Modules\Settings\Http\Controllers\{
 };
 
 // Route::middleware(['auth', 'verified'])->prefix('crm')->group(function () {
-Route::get('mysettings', [SettingsController::class, 'index'])->name('mysettings.index');
-Route::post('/mysettings/update', [SettingsController::class, 'update'])->name('mysettings.update');
+
+    Route::get('mysettings', [SettingsController::class, 'index'])->name('mysettings.index')->middleware('can:view settings');
+    Route::post('/mysettings/update', [SettingsController::class, 'update'])->name('mysettings.update')->middleware('can:edit settings');
+    Route::get('/test-setting', function () {
+        return config('public_settings.campany_name');
+    });
 
 
 Route::get('/test-setting', function () {
