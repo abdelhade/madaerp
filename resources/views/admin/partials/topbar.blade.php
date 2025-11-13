@@ -10,10 +10,10 @@
                 @livewire('language-switcher')
             </li>
 
-            @can('عرض التحكم في الاعدادات')
+            @can('view Settings Control')
                 <li>
                     <a title="{{ __('navigation.users') }}" href="{{ route('mysettings.index') }}" class="nav-link">
-                        <i data-feather="settings" class="text-primary fa-3x"></i>
+                        <i class="fas fa-cog fa-2x text-primary"></i>
                     </a>
                 </li>
             @endcan
@@ -22,7 +22,7 @@
                     @csrf
                     <button type="submit" class="btn btn-lg" title="{{ __('navigation.logout') }}"
                         style="background: none; border: none; ">
-                        <i class="fas fa-sign-out-alt fa-3x text-primary"></i>
+                        <i class="fas fa-sign-out-alt fa-2x text-primary"></i>
                     </button>
                 </form>
             </li>
@@ -32,7 +32,7 @@
 
             <li>
                 <button class="nav-link button-menu-mobile">
-                    <i data-feather="menu" class="align-self-center topbar-icon fa-2x text-primary"></i>
+                    <i class="fas fa-bars fa-2x text-primary align-self-center topbar-icon"></i>
                 </button>
             </li>
             <li>
@@ -49,14 +49,14 @@
             @endcan
 
 
-            @can('عرض التقارير')
+          
                 <li>
                     <a title="{{ __('navigation.reports') }}" href="{{ route('reports.index') }}" class="nav-link">
                         <i class="fas fa-chart-pie fa-2x text-primary"></i>
                     </a>
 
                 </li>
-            @endcan
+     
 
             <li>
                 <a title="{{ __('Branches') }}" href="{{ route('branches.index') }}" class="nav-link">

@@ -63,11 +63,9 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
-
-
-Route::view('dashboard', 'admin.index')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+Route::get('dashboard', function () {
+    return redirect()->route('admin.dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
 
@@ -144,8 +142,8 @@ Route::middleware(['auth'])->group(function () {
 
     // 📁 Items & Units & Prices & Notes
 
-    Route::resource('varibals', VaribalController::class)->names('varibals');
-    Route::get('varibalValues/{varibalId?}', [VaribalValueController::class, 'index'])->name('varibalValues.index');
+    Route::resource('varibals', VaribalController::class)->names('varibals')->middleware('can:view varibals');
+    Route::get('varibalValues/{varibalId?}', [VaribalValueController::class, 'index'])->name('varibalValues.index')->middleware('can:view varibalsValues');
     Route::resource('items', ItemController::class)->names('items')->only('index', 'create', 'edit');
     Route::get('items/{id}/json', [ItemController::class, 'getItemJson'])->name('items.json');
     Route::get('items/print', [ItemController::class, 'printItems'])->name('items.print');
@@ -169,7 +167,17 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('journals', JournalController::class)->names('journals');
 
     Route::resource('cost_centers', CostCenterController::class)->names('cost_centers');
+
+    // 📊 User Monitoring Routes (Must be BEFORE resource route to avoid conflicts)
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/login-history', [App\Http\Controllers\UserMonitoringController::class, 'loginHistory'])->name('login-history');
+        Route::get('/active-sessions', [App\Http\Controllers\UserMonitoringController::class, 'activeSessions'])->name('active-sessions');
+        Route::post('/terminate-session/{sessionId}', [App\Http\Controllers\UserMonitoringController::class, 'terminateSession'])->name('terminate-session');
+        Route::get('/activity-log', [App\Http\Controllers\UserMonitoringController::class, 'activityLog'])->name('activity-log');
+    });
+
     Route::resource('users', UserController::class)->names('users');
+
     // 📁 Invoice Route
     Route::resource('invoices', InvoiceController::class)->names('invoices');
 

@@ -13,8 +13,10 @@ class RoleAndPermissionSeeder extends Seeder
         $permissionCategories = [
             'Dashboard' => ['Dashboard'],
             'Accounts'=>['Clients','Suppliers' , 'Funds', 'Banks', 'Employees', 'warhouses', 'Expenses', 'Revenues','various_creditors', 'various_debtors', 'partners', 'current_partners', 'assets', 'rentables', 'check-portfolios-incoming', 'check-portfolios-outgoing', 'account-movement-report', 'balance-sheet','start-balance-management'],
-            'Home' => ['basicData-statistics','item-statistics','statistics'],
-            'Products' => ['Units', 'Categories', 'Products', 'Product Movements'],
+            'Home' => ['basicData-statistics','item-statistics','statistics', 'system-statistics'],
+            'items'=>['items', 'units','prices','notes-names','varibals' ,'varibalsValues'],
+            'permissions'=>['roles','branches','settings','login-history' , 'active-sessions' , 'activity-logs'],
+            'Products' => [ 'Categories', 'Products', 'Product Movements'],
             'Users' => ['Users'],
             'Sales' => ['Sales Invoice', 'Sales Return', 'Sales Order'],
             'Purchases' => ['Purchase Invoice', 'Purchase Return', 'Purchase Order'],

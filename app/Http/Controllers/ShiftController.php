@@ -9,10 +9,10 @@ class ShiftController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:عرض الورديات')->only(['index']);
-        $this->middleware('can:إضافة الورديات')->only(['create', 'store']);
-        $this->middleware('can:تعديل الورديات')->only(['update', 'edit']);
-        $this->middleware('can:حذف الورديات')->only(['destroy']);
+        $this->middleware('can:view shifts')->only(['index']);
+        $this->middleware('can:create shifts')->only(['create', 'store']);
+        $this->middleware('can:edit shifts')->only(['update', 'edit']);
+        $this->middleware('can:delete shifts')->only(['destroy']);
     }
 
     public function index()

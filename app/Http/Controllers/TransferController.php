@@ -15,8 +15,8 @@ class TransferController extends Controller
 
     public function __construct()
     {
-        $this->middleware('can:عرض التحويلات النقدية')->only(['index']);
-        $this->middleware('can:إضافة التحويلات النقدية')->only(['create', 'store']);
+        $this->middleware('can:view cash transfers')->only(['index']);
+        $this->middleware('can:create cash transfers')->only(['create', 'store']);
     }
 
     public function index()

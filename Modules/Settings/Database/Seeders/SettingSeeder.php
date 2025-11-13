@@ -17,9 +17,7 @@ class SettingSeeder extends Seeder
         $invoices = Category::create(['name' => ' الفواتير']);
         $accounts = Category::create(['name' => 'حساب الخصم المكتسب ']);
         $disc = Category::create(['name' => 'حساب فرق الجرد ']);
-
-        // ثوابت عامه
-
+        $expiry = Category::create(['name' => 'إعدادات تواريخ الصلاحية']);
 
         PublicSetting::create([
             'category_id' => $general->id,
@@ -318,6 +316,33 @@ class SettingSeeder extends Seeder
             'key' => 'show_inventory_difference_account',
             'input_type' => 'text',
             'value' => '',
+        ]);
+
+        // ❌ الوضع 1: معطل (افتراضياً معطل)
+        PublicSetting::create([
+            'category_id' => $expiry->id,
+            'label' => 'تعطيل نظام إدارة تواريخ الصلاحية بالكامل',
+            'key' => 'expiry_mode_disabled',
+            'input_type' => 'boolean',
+            'value' => '0',  // ❌ معطل
+        ]);
+
+        // ✅ الوضع 2: تلقائي - FIFO (افتراضياً مُفعَّل)
+        PublicSetting::create([
+            'category_id' => $expiry->id,
+            'label' => 'البيع التلقائي من أقرب تاريخ صلاحية (FIFO)',
+            'key' => 'expiry_mode_nearest_first',
+            'input_type' => 'boolean',
+            'value' => '1',  // ✅ مُفعَّل
+        ]);
+
+        // 🔵 الوضع 3: اختيار يدوي (افتراضياً معطل)
+        PublicSetting::create([
+            'category_id' => $expiry->id,
+            'label' => 'السماح باختيار تاريخ الصلاحية يدوياً في فاتورة البيع',
+            'key' => 'expiry_mode_show_all',
+            'input_type' => 'boolean',
+            'value' => '0',  // ❌ معطل
         ]);
     }
 }
