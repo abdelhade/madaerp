@@ -362,7 +362,7 @@
                     'icon' => 'git-branch',
                     'iconBg' => '#E8F5E9',
                     'iconColor' => '#2E7D32',
-                    'route' => route('accounts.tree'),
+                    'route' => route('reports.accounts-tree'),
                     'permission' => 'view Reports',
                 ],
                 [
