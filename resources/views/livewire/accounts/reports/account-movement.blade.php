@@ -4,7 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Modules\\Accounts\\Models\\AccHead;
+use Modules\Accounts\Models\AccHead;
 use App\Models\OperHead;
 use App\Models\JournalDetail;
 

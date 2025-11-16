@@ -4,7 +4,7 @@ use Livewire\Volt\Component;
 use App\Models\Unit;
 use App\Models\Price;
 use App\Models\Item;
-use Modules\\Accounts\\Models\\AccHead;
+use Modules\Accounts\Models\AccHead;
 use App\Models\Note;
 use App\Models\NoteDetails;
 use App\Models\Varibal;

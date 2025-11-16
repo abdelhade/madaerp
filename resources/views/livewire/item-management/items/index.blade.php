@@ -6,7 +6,7 @@ use App\Models\Price;
 use App\Models\Note;
 use App\Models\NoteDetails;
 use App\Support\ItemDataTransformer;
-use Modules\\Accounts\\Models\\AccHead;
+use Modules\Accounts\Models\AccHead;
 use App\Models\OperationItems;
 use Livewire\WithPagination;
 use Livewire\Attributes\Locked;

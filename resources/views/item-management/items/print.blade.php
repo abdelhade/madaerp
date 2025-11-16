@@ -767,7 +767,7 @@
                     @endif
                     @if ($selectedWarehouse)
                         @php
-                            $warehouse = \Modules\\Accounts\\Models\\AccHead::find($selectedWarehouse);
+                            $warehouse = \Modules\Accounts\Models\AccHead::find($selectedWarehouse);
                         @endphp
                         <span class="filter-item">Ø§Ù„Ù…Ø®Ø²Ù†: {{ $warehouse ? $warehouse->aname : 'ØºÙŠØ± Ù…Ø­Ø¯Ø¯' }}</span>
                     @endif

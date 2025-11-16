@@ -3,7 +3,7 @@
 use Livewire\Volt\Component;
 
 use Livewire\WithPagination;
-use Modules\\Accounts\\Models\\AccHead;
+use Modules\Accounts\Models\AccHead;
 use App\Models\OperHead;
 use Carbon\Carbon;
 
