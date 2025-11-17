@@ -15,10 +15,10 @@ class InquiriesController extends Controller
 
     public function __construct()
     {
-        $this->middleware('can:View Inquiries')->only(['index', 'show', 'drafts']);
-        $this->middleware('can:Create Inquiries')->only(['create', 'store']);
-        $this->middleware('can:Edit Inquiries')->only(['edit', 'update']);
-        $this->middleware('can:Delete Inquiries')->only('destroy');
+        $this->middleware('can:view Inquiries')->only(['index', 'show', 'drafts']);
+        $this->middleware('can:create Inquiries')->only(['create', 'store']);
+        $this->middleware('can:edit Inquiries')->only(['edit', 'update']);
+        $this->middleware('can:delete Inquiries')->only('destroy');
     }
     public function index(Request $request)
     {

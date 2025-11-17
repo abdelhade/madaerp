@@ -41,7 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('inquiries-roles', InquiriesRoleController::class)->names('inquiries-roles');
 
     Route::get('quotation-info/create', [QuotationInfoController::class, 'create'])->name('quotation-info.create')
-        ->middleware('permission:Create Quotation Info');
+        ->middleware('permission:create Quotation Info');
 
     Route::prefix('work-types')->name('work.types.')->group(function () {
         Route::post('/{id}/toggle-status', [WorkTypeController::class, 'toggleStatus'])->name('toggleStatus');
@@ -50,10 +50,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('/difficulty-matrix/create', [DifficultyMatrixController::class, 'create'])->name('difficulty-matrix.create')
-        ->middleware('permission:Create Difficulty Matrix');
+        ->middleware('permission:create Difficulty Matrix');
 
     Route::get('dashboard/statistics/workout', [InquiryStatisticsController::class, 'index'])
-        ->name('inquiries.dashboard.statistics')->middleware('permission:View Inquiries Statistics');
+        ->name('inquiries.dashboard.statistics')->middleware('permission:view Inquiries Statistics');
 
     Route::post('preferences/save', [InquiriesController::class, 'savePreferences'])->name('inquiries.preferences.save');
 
