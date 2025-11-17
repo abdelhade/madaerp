@@ -1,14 +1,13 @@
 @php
     $sales = [
-        10 => 'فاتورة مبيعات',
-        12 => 'مردود مبيعات',
-        14 => 'امر بيع',
-        16 => 'عرض سعر لعميل',
-        22 => 'امر حجز',
-        26 => 'اتفاقية تسعير',
+        10 => 'Sales Invoice',
+        12 => 'Sales Return',
+        14 => 'Sales Order',
+        16 => 'Quotation to Customer',
+        22 => 'Booking Order',
+        26 => 'Pricing Agreement',
     ];
 @endphp
-
 
 <li class="nav-item">
     <a class="nav-link" href="{{ route('discounts.general-statistics') }}">
@@ -16,7 +15,7 @@
     </a>
 </li>
 
-@can('view قائمة الخصومات المسموح بها')
+@can('view Allowed Discounts List')
     <li class="nav-item">
         <a class="nav-link" href="{{ route('discounts.index', ['type' => 30]) }}">
             <i class="ti-control-record"></i>{{ __('navigation.allowed_discounts') }}
@@ -24,7 +23,7 @@
     </li>
 @endcan
 
-@can('create خصم مسموح به')
+@can('create Allowed Discount')
     <li class="nav-item">
         <a class="nav-link" href="{{ route('discounts.create', ['type' => 30, 'q' => md5(30)]) }}">
             <i class="ti-control-record"></i>{{ __('navigation.allowed_discount') }}
@@ -34,13 +33,13 @@
 
 <li class="nav-item">
     <a class="nav-link" href="{{ route('sales.statistics') }}">
-        <i class="ti-control-record"></i>Sales Statistics
+        <i class="ti-control-record"></i>{{ __('Sales Statistics') }}
     </a>
 </li>
 
 <li class="nav-item">
     <a class="nav-link" href="{{ route('invoice-templates.index') }}">
-        <i class="ti-control-record"></i>نماذج الفواتير
+        <i class="ti-control-record"></i>{{ __('Invoice Templates') }}
     </a>
 </li>
 

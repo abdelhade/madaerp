@@ -1,22 +1,21 @@
 @php
     $inventory = [
-        18 => 'فاتورة توالف',
-        19 => 'امر صرف',
-        20 => 'امر اضافة',
-        21 => 'تحويل من مخزن لمخزن',
+        18 => 'Damaged Goods Invoice',
+        19 => 'Dispatch Order',
+        20 => 'Addition Order',
+        21 => 'Store-to-Store Transfer',
     ];
 @endphp
 
-
 <li class="nav-item">
     <a class="nav-link" href="{{ route('inventory.statistics') }}">
-        <i class="ti-control-record"></i>Inventory Statistics
+        <i class="ti-control-record"></i>{{ __('Inventory Statistics') }}
     </a>
 </li>
 
 <li class="nav-item">
     <a class="nav-link" href="{{ route('invoice-templates.index') }}">
-        <i class="ti-control-record"></i>نماذج الفواتير
+        <i class="ti-control-record"></i>{{ __('Invoice Templates') }}
     </a>
 </li>
 

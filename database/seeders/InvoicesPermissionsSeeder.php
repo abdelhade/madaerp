@@ -12,33 +12,33 @@ class InvoicesPermissionsSeeder extends Seeder
     {
         $groupedPermissions = [
             'Sales' => [
-                'فاتورة مبيعات',
-                'مردود مبيعات',
-                'امر بيع',
-                'عرض سعر لعميل',
-                'امر حجز',
-                'اتفاقية تسعير',
+                'Sales Invoice',
+                'Sales Return',
+                'Sales Order',
+                'Quotation to Customer',
+                'Booking Order',
+                'Pricing Agreement',
             ],
             'Purchases' => [
-                'فاتورة مشتريات',
-                'مردود مشتريات',
-                'امر شراء',
-                'عرض سعر من مورد',
-                'فاتورة خدمة',
-                'طلب احتياج',
+                'Purchase Invoice',
+                'Purchase Return',
+                'Purchase Order',
+                'Quotation from Supplier',
+                'Service Invoice',
+                'Requisition',
             ],
             'Inventory' => [
-                'فاتورة توالف',
-                'امر صرف',
-                'امر اضافة',
-                'تحويل من مخزن لمخزن',
+                'Damaged Goods Invoice',
+                'Dispatch Order',
+                'Addition Order',
+                'Store-to-Store Transfer',
             ],
         ];
 
-        // تعريف الأفعال القياسية لكل صلاحية
+        // Standard actions
         $actions = ['view', 'create', 'edit', 'delete', 'print'];
 
-        // إنشاء الصلاحيات
+        // Create permissions
         foreach ($groupedPermissions as $category => $permissions) {
             foreach ($permissions as $basePermission) {
                 foreach ($actions as $action) {
@@ -51,15 +51,15 @@ class InvoicesPermissionsSeeder extends Seeder
             }
         }
 
-        // البحث عن دور المدير والمستخدم، أو إنشاؤهم إذا لم يكونوا موجودين
+        // Find or create roles
         $adminRole = Role::firstOrCreate(['name' => 'admin'], ['guard_name' => 'web']);
         $userRole = Role::firstOrCreate(['name' => 'user'], ['guard_name' => 'web']);
 
-        // منح جميع صلاحيات الفواتير للمدير
-        $invoicePermissions = Permission::whereIn('category', ['Sales', 'Purchases', 'Inventory'])->get();
-        $adminRole->givePermissionTo($invoicePermissions);
+        // Grant all permissions to admin
+        $allInvoicePermissions = Permission::whereIn('category', ['Sales', 'Purchases', 'Inventory'])->get();
+        $adminRole->givePermissionTo($allInvoicePermissions);
 
-        // منح صلاحيات "view" فقط للمستخدم العادي
+        // Grant 'view' only permissions to user
         $userViewPermissions = Permission::whereIn('category', ['Sales', 'Purchases', 'Inventory'])
             ->where('name', 'like', 'view%')
             ->get();

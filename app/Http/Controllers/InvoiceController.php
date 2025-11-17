@@ -3,49 +3,50 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\Item;
+use App\Models\Employee;
+use App\Models\OperHead;
+use App\Models\JournalHead;
 use Illuminate\Http\Request;
+use App\Models\JournalDetail;
 use App\Models\OperationItems;
-use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Modules\Accounts\Models\AccHead;
 use RealRashid\SweetAlert\Facades\Alert;
-use App\Models\{OperHead, JournalHead, Employee, Item, JournalDetail};
 
 class InvoiceController extends Controller
 {
-    private $titles = [
-        10 => 'فاتورة مبيعات',
-        11 => 'فاتورة مشتريات',
-        12 => 'مردود مبيعات',
-        13 => 'مردود مشتريات',
-        14 => 'امر بيع',
-        15 => 'امر شراء',
-        16 => 'عرض سعر لعميل',
-        17 => 'عرض سعر من مورد',
-        18 => 'فاتورة توالف',
-        19 => 'امر صرف',
-        20 => 'امر اضافة',
-        21 => 'تحويل من مخزن لمخزن',
-        22 => 'امر حجز',
-        24 => 'فاتورة خدمة',
-        25 => 'طلب احتياج',
-        26 => 'اتفاقية تسعير',
+    public $titles = [
+        10 => 'Sales Invoice',
+        11 => 'Purchase Invoice',
+        12 => 'Sales Return',
+        13 => 'Purchase Return',
+        14 => 'Sales Order',
+        15 => 'Purchase Order',
+        16 => 'Quotation to Customer',
+        17 => 'Quotation from Supplier',
+        18 => 'Damaged Goods Invoice',
+        19 => 'Dispatch Order',
+        20 => 'Addition Order',
+        21 => 'Store-to-Store Transfer',
+        22 => 'Booking Order',
+        24 => 'Service Invoice',
+        25 => 'Requisition',
+        26 => 'Pricing Agreement',
     ];
-
 
     public function index(Request $request)
     {
         $invoiceType = $request->input('type');
 
         if (!$invoiceType || !array_key_exists($invoiceType, $this->titles)) {
-            return redirect()->route('admin.dashboard')->with('error', 'نوع الفاتورة غير صحيح');
+            return redirect()->route('admin.dashboard')->with('error', 'Invalid invoice type.');
         }
 
         $permissionName = 'view ' . $this->titles[$invoiceType];
         if (!auth()->user()->can($permissionName)) {
-            abort(403, 'ليس لديك صلاحية لعرض ' . $this->titles[$invoiceType]);
+            abort(403, 'You do not have permission to view ' . $this->titles[$invoiceType]);
         }
 
         $startDate = $request->input('start_date', Carbon::today()->toDateString());
@@ -60,9 +61,9 @@ class InvoiceController extends Controller
         $invoiceTitle = $this->titles[$invoiceType];
 
         $sections = [
-            'ادارة المبيعات' => [10, 12, 14, 16, 22, 26],
-            'ادارة المشتريات' => [11, 13, 15, 17, 24, 25],
-            'ادارة المخزون' => [18, 19, 20, 21],
+            'Sales Management' => [10, 12, 14, 16, 22, 26],
+            'Purchases Management' => [11, 13, 15, 17, 24, 25],
+            'Inventory Management' => [18, 19, 20, 21],
         ];
 
         $currentSection = '';
@@ -83,30 +84,34 @@ class InvoiceController extends Controller
         ));
     }
 
-
+    /**
+     * Generate the route for creating a new invoice.
+     */
     public function getCreateRoute($type)
     {
         return url('/invoices/create?type=' . $type . '&q=' . md5($type));
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create(Request $request)
     {
         $type = (int) $request->get('type');
-
         if (!isset($this->titles[$type])) {
-            abort(404, 'نوع الفاتورة غير معروف');
+            abort(404, 'Unknown invoice type.');
         }
 
         $permissionName = 'create ' . $this->titles[$type];
         if (!auth()->user()->can($permissionName)) {
-            abort(403, 'ليس لديك صلاحية لإنشاء ' . $this->titles[$type]);
+            abort(403, 'You do not have permission to create ' . $this->titles[$type]);
         }
 
         $expectedHash = md5($type);
         $providedHash = $request->get('q');
 
         if ($providedHash !== $expectedHash) {
-            abort(403, 'الطلب غير موثوق.');
+            abort(403, 'Untrusted request.');
         }
 
         return view('invoices.create', [
@@ -125,34 +130,26 @@ class InvoiceController extends Controller
     public function edit(OperHead $invoice)
     {
         if (!$invoice || ($invoice->isdeleted ?? false)) {
-            abort(404, 'الفاتورة غير موجودة أو محذوفة');
+            abort(404, 'Invoice not found or has been deleted.');
         }
 
         $type = $invoice->pro_type;
-
         if (!isset($this->titles[$type])) {
-            abort(404, 'نوع العملية غير معروف');
+            abort(404, 'Unknown operation type.');
         }
 
         $permissionName = 'edit ' . $this->titles[$type];
         if (!Auth::user()->can($permissionName)) {
-            abort(403, 'ليس لديك صلاحية لتعديل ' . $this->titles[$type]);
+            abort(403, 'You do not have permission to edit ' . $this->titles[$type]);
         }
 
         if ($invoice->is_posted ?? false) {
-            Alert::toast('لا يمكن تعديل الفاتورة بعد ترحيلها', 'warning');
+            Alert::toast('Cannot edit a posted invoice.', 'warning');
             return redirect()->route('invoices.index');
         }
 
         $invoice->load(['operationItems.item.units', 'operationItems.item.prices', 'acc1Head', 'acc2Head', 'employee']);
 
-        Log::info('Invoice edit accessed', [
-            'invoice_id' => $invoice->id,
-            'invoice_type' => $type,
-            'user_id' => Auth::id(),
-            'user_name' => Auth::user()->name,
-            'accessed_at' => now(),
-        ]);
 
         return view('invoices.edit', compact('invoice'));
     }
@@ -168,12 +165,12 @@ class InvoiceController extends Controller
         $type = $operation->pro_type;
 
         if (!isset($this->titles[$type])) {
-            abort(404, 'نوع العملية غير معروف');
+            abort(404, 'Unknown operation type.');
         }
 
         $permissionName = 'delete ' . $this->titles[$type];
         if (!Auth::user()->can($permissionName)) {
-            abort(403, 'ليس لديك صلاحية لحذف ' . $this->titles[$type]);
+            abort(403, 'You do not have permission to delete ' . $this->titles[$type]);
         }
 
         try {
@@ -189,68 +186,38 @@ class InvoiceController extends Controller
             }
 
             $operation->delete();
-            Alert::toast('تم حذف العملية وسنداتها بنجاح.', 'success');
+
+            Alert::toast('Operation and its vouchers deleted successfully.', 'success');
             return redirect()->back();
         } catch (\Exception $e) {
-            Alert::toast('حدث خطأ أثناء حذف العملية: ' . $e->getMessage(), 'error');
+            Alert::toast('An error occurred while deleting the operation: ' . $e->getMessage(), 'error');
             return redirect()->back();
         }
     }
 
-
+    /**
+     * Print the specified resource.
+     */
     public function print(Request $request, $operation_id)
     {
         $operation = OperHead::with('operationItems')->findOrFail($operation_id);
-
         $type = $operation->pro_type;
 
-        $permissions = [
-            10 => 'طباعة فاتورة مبيعات',
-            11 => 'طباعة فاتورة مشتريات',
-            12 => 'طباعة مردود مبيعات',
-            13 => 'طباعة مردود مشتريات',
-            14 => 'طباعة أمر بيع',
-            15 => 'طباعة أمر شراء',
-            16 => 'طباعة عرض سعر لعميل',
-            17 => 'طباعة عرض سعر من مورد',
-            18 => 'طباعة فاتورة تالف',
-            19 => 'طباعة أمر صرف',
-            20 => 'طباعة أمر إضافة',
-            21 => 'طباعة تحويل من مخزن لمخزن',
-            22 => 'طباعة أمر حجز',
-        ];
-
-        if (!isset($permissions[$type])) {
-            abort(404, 'نوع العملية غير معروف');
+        if (!isset($this->titles[$type])) {
+            abort(404, 'Unknown operation type.');
         }
 
-        if (!Auth::user()->can($permissions[$type])) {
-            abort(403, 'ليس لديك صلاحية لطباعة هذا النوع.');
+        $permissionName = 'print ' . $this->titles[$type];
+        if (!Auth::user()->can($permissionName)) {
+            abort(403, 'You do not have permission to print this type.');
         }
 
         $acc1List = AccHead::where('id', $operation->acc1)->get();
-        $acc2List = AccHead::where('id', $operation->acc2)->get();
+        $acc2List = AccHead::where('id', 'like', $operation->acc2)->get();
         $employees = Employee::where('id', $operation->emp_id)->get();
         $items = Item::whereIn('id', $operation->operationItems->pluck('item_id'))->get();
 
-        $titles = [
-            10 => 'فاتورة مبيعات',
-            11 => 'فاتورة مشتريات',
-            12 => 'مردود مبيعات',
-            13 => 'مردود مشتريات',
-            14 => 'أمر بيع',
-            15 => 'أمر شراء',
-            16 => 'عرض سعر لعميل',
-            17 => 'عرض سعر من مورد',
-            18 => 'فاتورة توالف',
-            19 => 'أمر صرف',
-            20 => 'أمر إضافة',
-            21 => 'تحويل من مخزن لمخزن',
-            22 => 'امر حجز',
-            26 => 'اتفاقية تسعير',
-        ];
-
-        $acc1Role = in_array($operation->pro_type, [10, 12, 14, 16, 22, 26]) ? 'مدين' : (in_array($operation->pro_type, [11, 13, 15, 17]) ? 'دائن' : (in_array($operation->pro_type, [18, 19, 20, 21]) ? 'مدين' : 'غير محدد'));
+        $acc1Role = in_array($operation->pro_type, [10, 12, 14, 16, 22, 26]) ? 'Debitor' : (in_array($operation->pro_type, [11, 13, 15, 17]) ? 'Creditor' : (in_array($operation->pro_type, [18, 19, 20, 21]) ? 'Debitor' : 'Undefined'));
 
         return view('invoices.print-invoice-2', [
             'pro_id' => $operation->pro_id,
@@ -261,7 +228,7 @@ class InvoiceController extends Controller
             'acc2_id' => $operation->acc2,
             'emp_id' => $operation->emp_id,
             'type' => $operation->pro_type,
-            'titles' => $titles,
+            'titles' => $this->titles,
             'acc1Role' => $acc1Role,
             'acc1List' => $acc1List,
             'acc2List' => $acc2List,
@@ -275,18 +242,8 @@ class InvoiceController extends Controller
                     'quantity' => $item->qty_in ?: $item->qty_out,
                     'price' => $item->item_price,
                     'discount' => $item->item_discount,
-                    'sub_value' => $item->detail_value,
-                    'available_units' => collect([$unit]),
                 ];
-            })->toArray(),
-            'subtotal' => $operation->fat_total,
-            'discount_percentage' => $operation->fat_disc_per,
-            'discount_value' => $operation->fat_disc,
-            'additional_percentage' => $operation->fat_plus_per,
-            'additional_value' => $operation->fat_plus,
-            'total_after_additional' => $operation->fat_net,
-            'received_from_client' => $operation->pro_value,
-            'notes' => $operation->info,
+            }),
         ]);
     }
 
