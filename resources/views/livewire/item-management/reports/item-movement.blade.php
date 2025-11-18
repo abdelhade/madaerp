@@ -5,7 +5,7 @@ use Livewire\WithPagination;
 use App\Models\Item;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Models\AccHead;
+use Modules\Accounts\Models\AccHead;
 use App\Models\OperationItems;
 
 new class extends Component {
@@ -115,26 +115,26 @@ new class extends Component {
     {
         $baseId = $referenceId;
         $translations = [
-            '10' => 'فاتورة مبيعات',
-            '11' => 'فاتورة مشتريات',
-            '12' => 'مردود مبيعات',
-            '13' => 'مردود مشتريات',
-            '14' => 'امر بيع',
-            '15' => 'امر شراء',
-            '16' => 'عرض سعر لعميل',
-            '17' => 'عرض سعر من مورد',
-            '18' => 'فاتورة توالف',
-            '19' => 'امر صرف',
-            '20' => 'امر اضافة',
-            '21' => 'تحويل من مخزن لمخزن',
-            '22' => 'امر حجز',
-            '23' => 'تحويل بين فروع',
-            '35' => 'سند إتلاف مخزون',
-            '56' => 'نموذج تصنيع',
-            '57' => 'امر تشغيل',
-            '58' => 'تصنيع معياري',
-            '59' => 'تصنيع حر',
-            '60' => 'تسجيل الارصده الافتتاحيه للمخازن',
+            '10' => 'ÙØ§ØªÙˆØ±Ø© Ù…Ø¨ÙŠØ¹Ø§Øª',
+            '11' => 'ÙØ§ØªÙˆØ±Ø© Ù…Ø´ØªØ±ÙŠØ§Øª',
+            '12' => 'Ù…Ø±Ø¯ÙˆØ¯ Ù…Ø¨ÙŠØ¹Ø§Øª',
+            '13' => 'Ù…Ø±Ø¯ÙˆØ¯ Ù…Ø´ØªØ±ÙŠØ§Øª',
+            '14' => 'Ø§Ù…Ø± Ø¨ÙŠØ¹',
+            '15' => 'Ø§Ù…Ø± Ø´Ø±Ø§Ø¡',
+            '16' => 'Ø¹Ø±Ø¶ Ø³Ø¹Ø± Ù„Ø¹Ù…ÙŠÙ„',
+            '17' => 'Ø¹Ø±Ø¶ Ø³Ø¹Ø± Ù…Ù† Ù…ÙˆØ±Ø¯',
+            '18' => 'ÙØ§ØªÙˆØ±Ø© ØªÙˆØ§Ù„Ù',
+            '19' => 'Ø§Ù…Ø± ØµØ±Ù',
+            '20' => 'Ø§Ù…Ø± Ø§Ø¶Ø§ÙØ©',
+            '21' => 'ØªØ­ÙˆÙŠÙ„ Ù…Ù† Ù…Ø®Ø²Ù† Ù„Ù…Ø®Ø²Ù†',
+            '22' => 'Ø§Ù…Ø± Ø­Ø¬Ø²',
+            '23' => 'ØªØ­ÙˆÙŠÙ„ Ø¨ÙŠÙ† ÙØ±ÙˆØ¹',
+            '35' => 'Ø³Ù†Ø¯ Ø¥ØªÙ„Ø§Ù Ù…Ø®Ø²ÙˆÙ†',
+            '56' => 'Ù†Ù…ÙˆØ°Ø¬ ØªØµÙ†ÙŠØ¹',
+            '57' => 'Ø§Ù…Ø± ØªØ´ØºÙŠÙ„',
+            '58' => 'ØªØµÙ†ÙŠØ¹ Ù…Ø¹ÙŠØ§Ø±ÙŠ',
+            '59' => 'ØªØµÙ†ÙŠØ¹ Ø­Ø±',
+            '60' => 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø§Ø±ØµØ¯Ù‡ Ø§Ù„Ø§ÙØªØªØ§Ø­ÙŠÙ‡ Ù„Ù„Ù…Ø®Ø§Ø²Ù†',
         ];
 
         return $translations[$baseId] ?? 'N/A';
@@ -206,7 +206,7 @@ new class extends Component {
     <div class="row">
         <div class="col-12">
             <div class="page-title-box">
-                <h4 class="page-title font-family-cairo fw-bold">تقرير حركه صنف</h4>
+                <h4 class="page-title font-family-cairo fw-bold">{{ __('items.item_movement_report') }}</h4>
             </div>
         </div>
     </div>
@@ -222,7 +222,7 @@ new class extends Component {
                         'toDate' => $toDate
                     ]) }}" target="_blank" class="btn btn-primary font-family-cairo fw-bold" style="text-decoration: none;">
                         <i class="fas fa-print"></i>
-                        طباعة التقرير
+                        {{ __('items.print_report') }}
                     </a>
                 </div>
             </div>
@@ -231,11 +231,10 @@ new class extends Component {
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="font-family-cairo fw-bold">فلاتر البحث</h4>
+            <h4 class="font-family-cairo fw-bold">{{ __('items.search_filters') }}</h4>
             @if ($itemId)
                 <div class="d-flex align-items-center">
-                    <span class="font-family-cairo fw-bold me-2">الرصيد الحالي للصنف {{ $itemName }} فى المخازن
-                        المحددة:</span>
+                    <span class="font-family-cairo fw-bold me-2">{{ __('items.current_balance_for_item', ['item' => $itemName]) }}:</span>
                     <span
                         class="bg-soft-primary font-family-cairo fw-bold font-16">{{ number_format($this->totalQuantity) }}
                         {{ Item::find($this->itemId)->units->first()->name }}</span>
@@ -246,10 +245,10 @@ new class extends Component {
             <div class="row">
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="item" class="form-label font-family-cairo fw-bold">الصنف</label>
+                        <label for="item" class="form-label font-family-cairo fw-bold">{{ __('items.item') }}</label>
                         <div class="dropdown" wire:click.outside="hideDropdown">
                             <input type="text" class="form-control font-family-cairo fw-bold"
-                                placeholder="ابحث عن صنف..." wire:model.live.debounce.300ms="searchTerm"
+                                placeholder="{{ __('items.search_for_item') }}" wire:model.live.debounce.300ms="searchTerm"
                                 wire:keydown.arrow-down.prevent="arrowDown" wire:keydown.arrow-up.prevent="arrowUp"
                                 wire:keydown.enter.prevent="selectHighlightedItem" wire:focus="showResults"
                                 onclick="this.select()">
@@ -267,8 +266,7 @@ new class extends Component {
                                 </ul>
                             @elseif($showDropdown && strlen($searchTerm) >= 2 && $searchTerm !== $itemName)
                                 <ul class="dropdown-menu show" style="width: 100%;">
-                                    <li><span class="dropdown-item-text font-family-cairo fw-bold text-danger">لا يوجد
-                                            نتائج لهذا البحث</span></li>
+                                    <li><span class="dropdown-item-text font-family-cairo fw-bold text-danger">{{ __('items.no_results_for_search') }}</span></li>
                                 </ul>
                             @endif
                         </div>
@@ -276,10 +274,10 @@ new class extends Component {
                 </div>
                 <div class="col-md-3">
                     <div class="mb-3">
-                        <label for="warehouse" class="form-label font-family-cairo fw-bold">المخزن</label>
+                        <label for="warehouse" class="form-label font-family-cairo fw-bold">{{ __('items.warehouse') }}</label>
                         <select wire:model.live="warehouseId" id="warehouse"
                             class="form-select font-family-cairo fw-bold" style = "height: 50px;">
-                            <option class="font-family-cairo fw-bold" value="all">جميع المخازن</option>
+                            <option class="font-family-cairo fw-bold" value="all">{{ __('items.all_warehouses') }}</option>
                             @foreach ($warehouses as $id => $name)
                                 <option class="font-family-cairo fw-bold" value="{{ $id }}">
                                     {{ $name }}</option>
@@ -289,14 +287,14 @@ new class extends Component {
                 </div>
                 <div class="col-md-2">
                     <div class="mb-3">
-                        <label for="fromDate" class="form-label font-family-cairo fw-bold">من تاريخ</label>
+                        <label for="fromDate" class="form-label font-family-cairo fw-bold">{{ __('items.from_date') }}</label>
                         <input type="date" wire:model.live="fromDate" id="fromDate"
                             class="form-control font-family-cairo fw-bold">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="mb-3">
-                        <label for="toDate" class="form-label font-family-cairo fw-bold">إلى تاريخ</label>
+                        <label for="toDate" class="form-label font-family-cairo fw-bold">{{ __('items.to_date') }}</label>
                         <input type="date" wire:model.live="toDate" id="toDate"
                             class="form-control font-family-cairo fw-bold">
                     </div>
@@ -313,15 +311,15 @@ new class extends Component {
                     <table class="table table-striped table-centered mb-0">
                         <thead>
                             <tr>
-                                <th class="font-family-cairo fw-bold">التاريخ</th>
-                                <th class="font-family-cairo fw-bold">مصدر العملية</th>
-                                <th class="font-family-cairo fw-bold">نوع الحركة</th>
-                                <th class="font-family-cairo fw-bold">المخزن</th>
-                                <th class="font-family-cairo fw-bold">الوحده</th>
-                                <th class="font-family-cairo fw-bold">الرصيد قبل الحركة</th>
-                                <th class="font-family-cairo fw-bold">الكمية</th>
-                                <th class="font-family-cairo fw-bold">الرصيد بعد الحركة</th>
-                                <th class="font-family-cairo fw-bold">الإجرائات</th>
+                                <th class="font-family-cairo fw-bold">{{ __('common.date') }}</th>
+                                <th class="font-family-cairo fw-bold">{{ __('items.operation_source') }}</th>
+                                <th class="font-family-cairo fw-bold">{{ __('items.movement_type') }}</th>
+                                <th class="font-family-cairo fw-bold">{{ __('items.warehouse') }}</th>
+                                <th class="font-family-cairo fw-bold">{{ __('items.unit') }}</th>
+                                <th class="font-family-cairo fw-bold">{{ __('items.balance_before_movement') }}</th>
+                                <th class="font-family-cairo fw-bold">{{ __('common.quantity') }}</th>
+                                <th class="font-family-cairo fw-bold">{{ __('items.balance_after_movement') }}</th>
+                                <th class="font-family-cairo fw-bold">{{ __('common.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -357,7 +355,7 @@ new class extends Component {
                                     <td class="font-family-cairo fw-bold">
                                         <span
                                             class="badge {{ $movement->qty_in != 0 ? 'badge-soft-success' : 'badge-soft-danger' }} font-family-cairo fw-bold">
-                                            {{ $movement->qty_in != 0 ? 'in' : 'out' }}
+                                            {{ $movement->qty_in != 0 ? __('items.in') : __('items.out') }}
                                         </span>
                                     </td>
                                     <td class="font-family-cairo fw-bold">
@@ -378,7 +376,7 @@ new class extends Component {
                                     <td class="font-family-cairo fw-bold">{{ $balanceAfter }}</td>
                                     <td class="font-family-cairo fw-bold">
                                         <a href="{{ route('invoice.view', $movement->pro_id) }}" class="btn btn-xs btn-info" target="_blank">
-                                            <i class="fas fa-eye"></i> عرض
+                                            <i class="fas fa-eye"></i> {{ __('common.view') }}
                                         </a>
                                 </td>
                                 </tr>
@@ -387,8 +385,7 @@ new class extends Component {
                                 @endphp
                             @empty
                                 <tr>
-                                    <td colspan="12" class="text-center font-family-cairo fw-bold">لا يوجد حركات
-                                        للمعايير المحددة.</td>
+                                    <td colspan="12" class="text-center font-family-cairo fw-bold">{{ __('items.no_movements_for_criteria') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -406,7 +403,7 @@ new class extends Component {
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title font-family-cairo fw-bold" id="referenceModalLabel">تفاصيل المرجع</h5>
+                    <h5 class="modal-title font-family-cairo fw-bold" id="referenceModalLabel">ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ù…Ø±Ø¬Ø¹</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" wire:click="closeModal"></button>
                 </div>
                 <div class="modal-body">
@@ -427,11 +424,11 @@ new class extends Component {
                             @endforeach
                         </table>
                     @else
-                        <p class="font-family-cairo fw-bold">لا يوجد تفاصيل.</p>
+                        <p class="font-family-cairo fw-bold">Ù„Ø§ ÙŠÙˆØ¬Ø¯ ØªÙØ§ØµÙŠÙ„.</p>
                     @endif
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary font-family-cairo fw-bold" data-bs-dismiss="modal" wire:click="closeModal">إغلاق</button>
+                    <button type="button" class="btn btn-secondary font-family-cairo fw-bold" data-bs-dismiss="modal" wire:click="closeModal">Ø¥ØºÙ„Ø§Ù‚</button>
                 </div>
             </div>
         </div>
@@ -456,3 +453,4 @@ new class extends Component {
         </script>
     @endpush
 </div>
+

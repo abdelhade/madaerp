@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طباعة قائمة الأصناف - MASAR</title>
+    <title>{{ __('items.print_items_list_title') }} - MASAR</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -19,8 +19,8 @@
 
         body {
             font-family: 'Cairo', sans-serif;
-            direction: rtl;
-            text-align: right;
+            direction: @if(app()->getLocale() === 'ar') rtl @else ltr @endif;
+            text-align: @if(app()->getLocale() === 'ar') right @else left @endif;
             font-size: 12px;
             font-weight: bold;
             line-height: 1.2;
@@ -641,52 +641,52 @@
         <div class="controls-header" onclick="toggleControls()">
             <h3>
                 <i class="fas fa-cog"></i>
-                <span>إعدادات الطباعة</span>
+                <span>{{ __('items.print_settings') }}</span>
             </h3>
             <button class="toggle-btn" id="toggleBtn">
-                <i class="fas fa-chevron-left" id="toggleIcon"></i>
+                <i class="fas fa-chevron-{{ app()->getLocale() === 'ar' ? 'left' : 'right' }}" id="toggleIcon"></i>
             </button>
         </div>
         
         <div class="controls-content">
             <div class="column-filters">
-                <h4><i class="fas fa-columns"></i> اختر الأعمدة المراد طباعتها:</h4>
+                <h4><i class="fas fa-columns"></i> {{ __('items.select_columns_to_print') }}</h4>
                 <div class="column-grid">
                     <div class="column-item">
                         <input type="checkbox" id="col-index" checked>
-                        <label for="col-index">#</label>
+                        <label for="col-index">{{ __('items.index') }}</label>
                     </div>
                     <div class="column-item">
                         <input type="checkbox" id="col-code" checked>
-                        <label for="col-code">الكود</label>
+                        <label for="col-code">{{ __('common.code') }}</label>
                     </div>
                     <div class="column-item">
                         <input type="checkbox" id="col-name" checked>
-                        <label for="col-name">الاسم</label>
+                        <label for="col-name">{{ __('common.name') }}</label>
                     </div>
                     <div class="column-item">
                         <input type="checkbox" id="col-units" checked>
-                        <label for="col-units">الوحدات</label>
+                        <label for="col-units">{{ __('items.units') }}</label>
                     </div>
                     <div class="column-item">
                         <input type="checkbox" id="col-quantity" checked>
-                        <label for="col-quantity">الكمية</label>
+                        <label for="col-quantity">{{ __('common.quantity') }}</label>
                     </div>
                     <div class="column-item">
                         <input type="checkbox" id="col-avg-cost" checked>
-                        <label for="col-avg-cost">متوسط التكلفة</label>
+                        <label for="col-avg-cost">{{ __('items.average_cost') }}</label>
                     </div>
                     <div class="column-item">
                         <input type="checkbox" id="col-avg-cost-qty" checked>
-                        <label for="col-avg-cost-qty">تكلفة المتوسطة للكمية</label>
+                        <label for="col-avg-cost-qty">{{ __('items.average_cost_quantity') }}</label>
                     </div>
                     <div class="column-item">
                         <input type="checkbox" id="col-last-cost" checked>
-                        <label for="col-last-cost">التكلفة الأخيرة</label>
+                        <label for="col-last-cost">{{ __('items.last_cost') }}</label>
                     </div>
                     <div class="column-item">
                         <input type="checkbox" id="col-cost-qty" checked>
-                        <label for="col-cost-qty">تكلفة الكمية</label>
+                        <label for="col-cost-qty">{{ __('items.cost_quantity') }}</label>
                     </div>
                     @php
                         $priceTypes = \App\Models\Price::all();
@@ -699,7 +699,7 @@
                     @endforeach
                     <div class="column-item">
                         <input type="checkbox" id="col-barcode" checked>
-                        <label for="col-barcode">الباركود</label>
+                        <label for="col-barcode">{{ __('items.barcode') }}</label>
                     </div>
                     @php
                         $noteTypes = \App\Models\Note::all();
@@ -716,11 +716,11 @@
             <div class="print-actions">
                 <button type="button" class="select-all-btn" onclick="toggleAllColumns()">
                     <i class="fas fa-check-double"></i>
-                    تحديد الكل
+                    {{ __('items.select_all') }}
                 </button>
                 <button type="button" class="print-btn" onclick="printReport()">
                     <i class="fas fa-print"></i>
-                    طباعة التقرير
+                    {{ __('items.print_report') }}
                 </button>
             </div>
         </div>
@@ -729,7 +729,7 @@
     <!-- Orientation Indicator -->
     <div class="orientation-indicator" id="orientationIndicator">
         <i class="fas fa-info-circle"></i>
-        <span id="orientationText">سيتم الطباعة بالعرض</span>
+        <span id="orientationText">{{ __('items.print_will_be_landscape') }}</span>
     </div>
 
     <div class="print-container" id="printContainer">
@@ -740,15 +740,15 @@
                     <div class="company-logo">M</div>
                     <div class="company-details">
                         <h1>MASAR</h1>
-                        <p>نظام إدارة المخزون والمبيعات</p>
+                        <p>{{ __('items.inventory_management_system') }}</p>
                     </div>
                 </div>
                 <div class="report-info">
-                    <div class="report-title">قائمة الأصناف مع الأرصدة</div>
+                    <div class="report-title">{{ __('items.items_list_with_balances') }}</div>
                     <div class="report-date">{{ now()->format('Y-m-d H:i:s') }}</div>
                 </div>
                 <div class="page-info">
-                    صفحة <span class="page-number">1</span>
+                    {{ __('items.page') }} <span class="page-number">1</span>
                 </div>
             </div>
         </div>
@@ -760,28 +760,28 @@
                 <div class="filters-section">
                     <div class="filters-title">
                         <i class="fas fa-filter"></i>
-                        الفلاتر المطبقة:
+                        {{ __('items.applied_filters') }}
                     </div>
                     @if ($search)
-                        <span class="filter-item">البحث: {{ $search }}</span>
+                        <span class="filter-item">{{ __('items.search') }}: {{ $search }}</span>
                     @endif
                     @if ($selectedWarehouse)
                         @php
-                            $warehouse = \App\Models\AccHead::find($selectedWarehouse);
+                            $warehouse = \Modules\Accounts\Models\AccHead::find($selectedWarehouse);
                         @endphp
-                        <span class="filter-item">المخزن: {{ $warehouse ? $warehouse->aname : 'غير محدد' }}</span>
+                        <span class="filter-item">{{ __('items.warehouse') }}: {{ $warehouse ? $warehouse->aname : __('items.not_specified') }}</span>
                     @endif
                     @if ($selectedGroup)
                         @php
                             $group = \App\Models\NoteDetails::find($selectedGroup);
                         @endphp
-                        <span class="filter-item">المجموعة: {{ $group ? $group->name : 'غير محدد' }}</span>
+                        <span class="filter-item">{{ __('items.group') }}: {{ $group ? $group->name : __('items.not_specified') }}</span>
                     @endif
                     @if ($selectedCategory)
                         @php
                             $category = \App\Models\NoteDetails::find($selectedCategory);
                         @endphp
-                        <span class="filter-item">الفئة: {{ $category ? $category->name : 'غير محدد' }}</span>
+                        <span class="filter-item">{{ __('items.category') }}: {{ $category ? $category->name : __('items.not_specified') }}</span>
                     @endif
                 </div>
             @endif
@@ -790,19 +790,19 @@
             <table class="items-table" id="itemsTable">
                 <thead>
                     <tr>
-                        <th class="col-index">#</th>
-                        <th class="col-code">الكود</th>
-                        <th class="col-name">الاسم</th>
-                        <th class="col-units">الوحدات</th>
-                        <th class="col-quantity">الكمية</th>
-                        <th class="col-avg-cost">متوسط التكلفة</th>
-                        <th class="col-avg-cost-qty">تكلفة المتوسطة للكمية</th>
-                        <th class="col-last-cost">التكلفة الأخيرة</th>
-                        <th class="col-cost-qty">تكلفة الكمية</th>
+                        <th class="col-index">{{ __('items.index') }}</th>
+                        <th class="col-code">{{ __('common.code') }}</th>
+                        <th class="col-name">{{ __('common.name') }}</th>
+                        <th class="col-units">{{ __('items.units') }}</th>
+                        <th class="col-quantity">{{ __('common.quantity') }}</th>
+                        <th class="col-avg-cost">{{ __('items.average_cost') }}</th>
+                        <th class="col-avg-cost-qty">{{ __('items.average_cost_quantity') }}</th>
+                        <th class="col-last-cost">{{ __('items.last_cost') }}</th>
+                        <th class="col-cost-qty">{{ __('items.cost_quantity') }}</th>
                         @foreach ($priceTypes as $priceType)
                             <th class="col-price-{{ $priceType->id }}">{{ $priceType->name }}</th>
                         @endforeach
-                        <th class="col-barcode">الباركود</th>
+                        <th class="col-barcode">{{ __('items.barcode') }}</th>
                         @foreach ($noteTypes as $noteType)
                             <th class="col-note-{{ $noteType->id }}">{{ $noteType->name }}</th>
                         @endforeach
@@ -892,7 +892,7 @@
 
                             // Get first barcode
                             $firstBarcode = $item->barcodes->first();
-                            $barcodeText = $firstBarcode ? formatBarcode($firstBarcode->barcode) : 'لا يوجد';
+                            $barcodeText = $firstBarcode ? formatBarcode($firstBarcode->barcode) : __('items.not_found');
 
                             // Get notes
                             $itemNotes = $item->notes->mapWithKeys(function ($note) {
@@ -904,7 +904,7 @@
                             <td class="col-index">{{ $index + 1 }}</td>
                             <td class="col-code">{{ $item->code }}</td>
                             <td class="col-name">{{ $item->name }}</td>
-                            <td class="col-units">{{ $selectedUnitName ?: 'لا يوجد وحدات' }}</td>
+                            <td class="col-units">{{ $selectedUnitName ?: __('items.no_units_found') }}</td>
                             <td class="col-quantity">
                                 {{ $quantity }}
                                 @if (isset($formattedQuantity['quantity']['remainder']) && 
@@ -941,15 +941,15 @@
                 <div class="totals-section">
                     <div class="totals-grid">
                         <div class="total-item">
-                            <div class="total-label">إجمالي الكمية</div>
+                            <div class="total-label">{{ __('items.total_quantity') }}</div>
                             <div class="total-value">{{ $totalQuantity }}</div>
                         </div>
                         <div class="total-item">
-                            <div class="total-label">إجمالي القيمة</div>
+                            <div class="total-label">{{ __('items.total_value') }}</div>
                             <div class="total-value">{{ formatCurrency($totalAmount) }}</div>
                         </div>
                         <div class="total-item">
-                            <div class="total-label">عدد الأصناف</div>
+                            <div class="total-label">{{ __('items.items_count') }}</div>
                             <div class="total-value">{{ $totalItems }}</div>
                         </div>
                     </div>
@@ -961,18 +961,26 @@
         <div class="print-footer">
             <div class="footer-content">
                 <div class="footer-left">
-                    <div>تم إنشاء هذا التقرير بواسطة نظام MASAR</div>
-                    <div>تاريخ الطباعة: {{ now()->format('Y-m-d H:i:s') }}</div>
+                    <div>{{ __('items.report_generated_by') }}</div>
+                    <div>{{ __('items.print_date') }}: {{ now()->format('Y-m-d H:i:s') }}</div>
                 </div>
                 <div class="footer-right">
-                    <div>إجمالي السجلات: {{ $allItems->count() }}</div>
-                    <div>صفحة 1 من 1</div>
+                    <div>{{ __('items.total_records') }}: {{ $allItems->count() }}</div>
+                    <div>{{ __('items.page') }} 1 {{ __('items.of') }} 1</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Store locale and translations in JavaScript
+        const currentLocale = '{{ app()->getLocale() }}';
+        const translations = {
+            printWillBeLandscape: '{{ __('items.print_will_be_landscape') }}',
+            printWillBePortrait: '{{ __('items.print_will_be_portrait') }}'
+        };
+        const chevronDirection = currentLocale === 'ar' ? 'left' : 'right';
+
         // Toggle controls panel
         function toggleControls() {
             const controls = document.getElementById('printControls');
@@ -988,7 +996,7 @@
                     indicator.style.right = '90px';
                 }
             } else {
-                toggleIcon.className = 'fas fa-chevron-left';
+                toggleIcon.className = 'fas fa-chevron-' + chevronDirection;
                 // Adjust indicator position for expanded state
                 if (indicator.classList.contains('show')) {
                     indicator.style.right = '20px';
@@ -1009,7 +1017,7 @@
                 container.classList.remove('portrait');
                 container.classList.add('landscape');
                 indicator.classList.add('show');
-                orientationText.textContent = 'سيتم الطباعة بالعرض (Landscape)';
+                orientationText.textContent = translations.printWillBeLandscape;
                 
                 // Adjust indicator position based on controls state
                 if (controls.classList.contains('collapsed')) {
@@ -1075,3 +1083,4 @@
     </script>
 </body>
 </html>
+

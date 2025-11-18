@@ -1,7 +1,11 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\AccHead;
+
+use Modules\Accounts\Models\AccHead;
+use Illuminate\Support\Facades\DB;
+use App\Models\MultiVoucher;
+use App\Models\JournalHead;
 use App\Models\JournalDetail;
 use App\Models\JournalHead;
 use App\Models\MultiVoucher;
@@ -494,7 +498,7 @@ class MultiVoucherController extends Controller
         }
 
         // الموظفين
-        $employees = \App\Models\AccHead::where('isdeleted', 0)
+        $employees = AccHead::where('isdeleted', 0)
             ->where('is_basic', 0)
             ->where('code', 'like', '2102%')
             ->get();

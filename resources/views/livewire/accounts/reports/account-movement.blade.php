@@ -4,7 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Models\AccHead;
+use Modules\Accounts\Models\AccHead;
 use App\Models\OperHead;
 use App\Models\JournalDetail;
 
@@ -108,27 +108,27 @@ new class extends Component {
     {
         $baseId = $referenceId;
         $translations = [
-            '10' => 'فاتورة مبيعات',
-            '11' => 'فاتورة مشتريات',
-            '12' => 'مردود مبيعات',
-            '13' => 'مردود مشتريات',
+            '10' => 'ÙØ§ØªÙˆØ±Ø© Ù…Ø¨ÙŠØ¹Ø§Øª',
+            '11' => 'ÙØ§ØªÙˆØ±Ø© Ù…Ø´ØªØ±ÙŠØ§Øª',
+            '12' => 'مرتجع مبيعات',
+            '13' => 'مرتجع مشتريات',
             '14' => 'امر بيع',
             '15' => 'امر شراء',
             '16' => 'عرض سعر لعميل',
             '17' => 'عرض سعر من مورد',
-            '18' => 'فاتورة توالف',
-            '19' => 'امر صرف',
-            '20' => 'امر اضافة',
+            '18' => 'ÙØ§ØªÙˆØ±Ø© ØªÙˆØ§Ù„Ù',
+            '19' => 'Ø§Ù…Ø± ØµØ±Ù',
+            '20' => 'Ø§Ù…Ø± Ø§Ø¶Ø§ÙØ©',
             '21' => 'تحويل من مخزن لمخزن',
             '22' => 'امر حجز',
-            '23' => 'تحويل بين فروع',
-            '35' => 'سند إتلاف مخزون',
+            '23' => 'ØªØ­ÙˆÙŠÙ„ Ø¨ÙŠÙ† ÙØ±ÙˆØ¹',
+            '35' => 'Ø³Ù†Ø¯ Ø¥ØªÙ„Ø§Ù Ù…Ø®Ø²ÙˆÙ†',
             '56' => 'نموذج تصنيع',
             '57' => 'امر تشغيل',
             '58' => 'تصنيع معياري',
             '59' => 'تصنيع حر',
-            '60' => 'تسجيل الارصده الافتتاحيه للمخازن',
-            '61' => 'تسجيل الارصده الافتتاحيه للحسابات',
+            '60' => 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø§Ø±ØµØ¯Ù‡ Ø§Ù„Ø§ÙØªØªØ§Ø­ÙŠÙ‡ Ù„Ù„Ù…Ø®Ø§Ø²Ù†',
+            '61' => 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø§Ø±ØµØ¯Ù‡ Ø§Ù„Ø§ÙØªØªØ§Ø­ÙŠÙ‡ Ù„Ù„Ø­Ø³Ø§Ø¨Ø§Øª',
         ];
 
         return $translations[$baseId] ?? 'N/A';
@@ -182,14 +182,14 @@ new class extends Component {
     <div class="row">
         <div class="col-12">
             <div class="page-title-box">
-                <h4 class="page-title font-family-cairo fw-bold">تقرير حركه حساب</h4>
+                <h4 class="page-title font-family-cairo fw-bold">تقرير حركة حساب</h4>
             </div>
         </div>
     </div>
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="font-family-cairo fw-bold">فلاتر البحث</h4>
+            <h4 class="font-family-cairo fw-bold">تقرير حركة حساب</h4>
             @if ($accountId)
                 <div class="d-flex align-items-center">
                     <span class="font-family-cairo fw-bold me-2">الرصيد الحالي للحساب {{ $accountName }}:</span>
@@ -313,7 +313,7 @@ new class extends Component {
                                         @if ($operation && in_array($operation->pro_type, [10, 11, 12, 13]))
                                             <a href="{{ route('invoice.view', $movement->op_id) }}"
                                                 class="btn btn-xs btn-info" target="_blank">
-                                                <i class="fas fa-eye"></i> عرض
+                                                <i class="fas fa-eye"></i> Ø¹Ø±Ø¶
                                             </a>
                                         @endif
                                     </td>
@@ -356,3 +356,4 @@ new class extends Component {
         </script>
     @endpush
 </div>
+
