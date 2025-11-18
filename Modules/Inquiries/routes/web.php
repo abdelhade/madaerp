@@ -15,7 +15,19 @@ use Modules\Inquiries\Http\Controllers\{
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::resource('inquiries', InquiriesController::class)->names('inquiries');
+    // الروتات العامة (بدون middleware المهندسين)
+    Route::get('inquiries', [InquiriesController::class, 'index'])->name('inquiries.index');
+    Route::get('inquiries/create', [InquiriesController::class, 'create'])->name('inquiries.create');
+    Route::post('inquiries', [InquiriesController::class, 'store'])->name('inquiries.store');
+    Route::get('/drafts/list', [InquiriesController::class, 'drafts'])->name('inquiries.drafts');
+
+    // الروتات المحمية (بس المهندسين المكلفين)
+    Route::middleware('engineer.access')->group(function () {
+        Route::get('inquiries/{inquiry}', [InquiriesController::class, 'show'])->name('inquiries.show');
+        Route::get('inquiries/{inquiry}/edit', [InquiriesController::class, 'edit'])->name('inquiries.edit');
+        Route::put('inquiries/{inquiry}', [InquiriesController::class, 'update'])->name('inquiries.update');
+        Route::delete('inquiries/{inquiry}', [InquiriesController::class, 'destroy'])->name('inquiries.destroy');
+    });
 
     Route::resource('inquiry-documents', InquiryDocumentController::class)->names([
         'index'   => 'inquiry.documents.index',
@@ -58,6 +70,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('preferences/save', [InquiriesController::class, 'savePreferences'])->name('inquiries.preferences.save');
 
     Route::post('preferences/reset', [InquiriesController::class, 'resetPreferences'])->name('inquiries.preferences.reset');
-
-    Route::get('/drafts/list', [InquiriesController::class, 'drafts'])->name('inquiries.drafts');
 });

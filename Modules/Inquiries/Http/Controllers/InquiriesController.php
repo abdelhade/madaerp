@@ -40,8 +40,10 @@ class InquiriesController extends Controller
             'town',
             'contacts.roles',
             'workType',
-            'inquirySource'
+            'inquirySource',
+            'assignedEngineers'
         ]);
+        $query->assignedToUser($user->id);
 
         // تطبيق الفلاتر
         $filters = $request->get('filters', $preferences->filters ?? []);
@@ -292,7 +294,8 @@ class InquiriesController extends Controller
             'media',
             'projectSize',
             'quotationUnits.type',
-            'creator'
+            'creator',
+            'assignedEngineers'
         ])
             ->withCount('comments')
             ->findOrFail($id);
