@@ -38,9 +38,9 @@ class AccHeadController extends Controller
     {
         // حماية صفحة الإحصائيات
         $this->middleware('can:view basicData-statistics')->only(['basicDataStatistics']);
-        
+
         // ملاحظة: صلاحيات index يتم فحصها في IndexAccountRequest::authorize()
-        
+
         // حماية صفحات التعديل والحذف حسب نوع الحساب
         $this->middleware(function ($request, $next) {
             $id = $request->route('account') ?? $request->route('id');
@@ -62,7 +62,7 @@ class AccHeadController extends Controller
         // حماية صفحة الإضافة حسب الـ parent
         $this->middleware(function ($request, $next) {
             $parentId = null;
-            
+
             // في create: parent يأتي من query string (كود الـ parent)
             if ($request->routeIs('accounts.create')) {
                 $parentCode = $request->query('parent');
@@ -73,7 +73,7 @@ class AccHeadController extends Controller
                     }
                 }
             }
-            
+
             // في store: parent_id يأتي من form body (id الـ parent)
             if ($request->routeIs('accounts.store')) {
                 $parentId = $request->input('parent_id');
@@ -113,24 +113,24 @@ class AccHeadController extends Controller
         }
     }
 
- private function getActionName($request)
-{
-    $route = $request->route();
-    if ($route) {
-        $action = $request->route()->getActionMethod();
+    private function getActionName($request)
+    {
+        $route = $request->route();
+        if ($route) {
+            $action = $request->route()->getActionMethod();
 
-        if (in_array($action, ['edit', 'update'])) {
-            return 'edit';
-        } elseif (in_array($action, ['create', 'store'])) {
-            return 'create';
-        } elseif ($action === 'destroy') {
-            return 'delete';
-        } elseif ($action === 'show') {
-            return 'view';
+            if (in_array($action, ['edit', 'update'])) {
+                return 'edit';
+            } elseif (in_array($action, ['create', 'store'])) {
+                return 'create';
+            } elseif ($action === 'destroy') {
+                return 'delete';
+            } elseif ($action === 'show') {
+                return 'view';
+            }
         }
+        return 'view';
     }
-    return 'view';
-}
 
     private function getPermissionNameByType($type): string
     {
@@ -158,7 +158,7 @@ class AccHeadController extends Controller
 
     public function index(\Modules\Accounts\Http\Requests\IndexAccountRequest $request)
     {
-        
+
         $type = $request->getType();
 
         // Build query using scopes
@@ -183,7 +183,7 @@ class AccHeadController extends Controller
     {
         $branches = userBranches();
         $parent   = $request->query('parent', 0);
-        
+
         $last_id      = '';
         $resacs       = [];
         $accountTypes = AccountsType::all();
@@ -484,7 +484,7 @@ class AccHeadController extends Controller
     public function edit($id)
     {
         $account = AccHead::findOrFail($id);
-        
+
         $parent = substr($account->code, 0, -3);
         $resacs = DB::table('acc_head')
             ->where('is_basic', 1)
@@ -715,4 +715,3 @@ class AccHeadController extends Controller
         return view('accounts::statistics.basic-data-statistics', compact('stats'));
     }
 }
-
