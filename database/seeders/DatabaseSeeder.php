@@ -9,6 +9,7 @@ use Modules\Authorization\Database\Seeders\PermissionSeeder;
 use Modules\Rentals\database\seeders\RentalsPermissionsSeeder;
 use Modules\Shipping\Database\Seeders\ShippingPermissionsSeeder;
 use Modules\Authorization\Database\Seeders\RoleAndPermissionSeeder;
+use Modules\Inquiries\database\seeders\PricingStatusPermissionsSeeder;
 use Modules\Installments\database\seeders\InstallmentsPermissionsSeeder;
 use Modules\Manufacturing\database\seeders\ManufacturingPermissionsSeeder;
 use Modules\Accounts\database\seeders\{AccHeadSeeder, AccountsTypesSeeder};
@@ -18,7 +19,7 @@ use Modules\Branches\database\seeders\{AttachUserToDefaultBranchSeeder, BranchSe
 use Modules\Invoices\database\seeders\{InvoiceTemplatesSeeder, InvoiceDimensionsSeeder};
 use Modules\Settings\Database\Seeders\{SettingSeeder, InvoiceOptionsSeeder, SystemSettingsSeeder};
 use Modules\Inquiries\database\seeders\{InquiriesRolesSeeder, DiffcultyMatrixSeeder, InquiriesPermissionsSeeder};
-
+use Modules\Authorization\Database\Seeders\HRPermissionsSeeder;
 
 
 class DatabaseSeeder extends Seeder
@@ -70,11 +71,13 @@ class DatabaseSeeder extends Seeder
             RentalsPermissionsSeeder::class,
             InstallmentsPermissionsSeeder::class,
             PermissionSeeder::class,
+            HRPermissionsSeeder::class,
             PermissionSelectiveOptionsSeeder::class,
             InvoicesPermissionsSeeder::class,
             InvoiceTemplatesDiscountsPermissionsSeeder::class,
             ManufacturingPermissionsSeeder::class,
             ShippingPermissionsSeeder::class,
+            PricingStatusPermissionsSeeder::class,
         ]);
     }
 }

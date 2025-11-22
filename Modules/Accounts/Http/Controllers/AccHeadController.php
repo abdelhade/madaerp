@@ -12,6 +12,7 @@ use App\Models\Town;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AccHeadController extends Controller
 {
@@ -216,6 +217,12 @@ class AccHeadController extends Controller
 
     public function store(Request $request)
     {
+        // Debug log for client/supplier submissions to inspect missing inputs
+        $parentCode = $request->query('parent') ?? $request->input('parent_id');
+        if (in_array($parentCode, ['1103', '2101'])) {
+            Log::info('AccHeadController.store - incoming_request', $request->all());
+        }
+
         $validated = $request->validate([
             'code'                => 'required|string|max:9|unique:acc_head,code',
             'aname'               => 'required|string|max:100|unique:acc_head,aname',
@@ -453,7 +460,13 @@ class AccHeadController extends Controller
      */
     private function determineAccountType(string $code): ?string
     {
-        foreach (self::ACCOUNT_TYPE_MAP as $prefix => $type) {
+        // ترتيب الفحص من الأطول للأقصر لتجنب التداخل
+        $sortedMap = self::ACCOUNT_TYPE_MAP;
+        uksort($sortedMap, function($a, $b) {
+            return strlen($b) - strlen($a);
+        });
+        
+        foreach ($sortedMap as $prefix => $type) {
             if (str_starts_with($code, $prefix)) {
                 return $type;
             }
@@ -503,6 +516,12 @@ class AccHeadController extends Controller
     public function update(Request $request, $id)
     {
         $account = AccHead::findOrFail($id);
+
+        // Debug log for client/supplier updates to inspect missing inputs
+        $parentCode = substr($account->code, 0, -3);
+        if (in_array($parentCode, ['1103', '2101'])) {
+            Log::info('AccHeadController.update - incoming_request', $request->all());
+        }
 
         $validated = $request->validate([
             'aname'               => 'required|string|max:100|unique:acc_head,aname,' . $id,

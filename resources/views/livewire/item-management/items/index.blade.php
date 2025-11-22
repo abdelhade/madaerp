@@ -66,6 +66,13 @@ new class extends Component {
     // Individual price visibility settings
     public $visiblePrices = [];
 
+    // Check if we're in a reports context
+    public function isReportsPage(): bool
+    {
+        $url = request()->fullUrl() ?? url()->current() ?? '';
+        return str_contains($url, 'reports');
+    }
+
     public function mount()
     {
         // Cache static data for 60 minutes
@@ -461,14 +468,16 @@ new class extends Component {
                 <div class="card-header">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                         {{-- Primary Action Button --}}
-                        @if(Auth::user() && Auth::user()->hasDirectPermission('create items'))
+                        {{-- @if(Auth::user() && Auth::user()->hasDirectPermission('create items')) --}}
+                        @can('create items')
                             <a href="{{ route('items.create') }}"
                                 class="btn btn-outline-primary btn-lg font-family-cairo fw-bold mt-4 d-flex justify-content-center align-items-center text-center"
                                 style="min-height: 50px;">
                                 <i class="fas fa-plus me-2"></i>
                                 <span class="w-100 text-center">{{ __('items.add_new_item') }}</span>
                             </a>
-                        @endif
+                        @endcan
+                        {{-- @endif --}}
 
                         {{-- Print Button --}}
                         @can('print items')
