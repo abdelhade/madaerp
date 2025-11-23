@@ -13,15 +13,18 @@ use Modules\Inquiries\database\seeders\PricingStatusPermissionsSeeder;
 use Modules\Installments\database\seeders\InstallmentsPermissionsSeeder;
 use Modules\Manufacturing\database\seeders\ManufacturingPermissionsSeeder;
 use Modules\Accounts\database\seeders\{AccHeadSeeder, AccountsTypesSeeder};
-use Modules\Authorization\Database\Seeders\PermissionSelectiveOptionsSeeder;
 use Modules\Invoices\database\seeders\InvoiceTemplatesDiscountsPermissionsSeeder;
 use Modules\Branches\database\seeders\{AttachUserToDefaultBranchSeeder, BranchSeeder};
 use Modules\Invoices\database\seeders\{InvoiceTemplatesSeeder, InvoiceDimensionsSeeder};
 use Modules\Settings\Database\Seeders\{SettingSeeder, InvoiceOptionsSeeder, SystemSettingsSeeder};
 use Modules\Inquiries\database\seeders\{InquiriesRolesSeeder, DiffcultyMatrixSeeder, InquiriesPermissionsSeeder};
+
+use Modules\Authorization\Database\Seeders\PermissionSelectiveOptionsSeeder;
+
 use Modules\Authorization\Database\Seeders\HRPermissionsSeeder;
 use Modules\Checks\database\seeders\{ChecksPermissionsSeeder, CheckPortfoliosPermissionsSeeder};
 use Modules\POS\Database\Seeders\POSPermissionsSeeder;
+
 
 
 class DatabaseSeeder extends Seeder
