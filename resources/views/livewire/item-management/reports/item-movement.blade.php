@@ -305,97 +305,211 @@ new class extends Component {
     </div>
 
     @if ($itemId)
+        @php
+            $currentItem = Item::find($this->itemId);
+            $defaultUnitName = optional($currentItem?->units?->first())->name ?? '';
+            $movementsCollection = $movements instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($movements->items()) : collect($movements);
+            $incomingMovements = $movementsCollection->filter(fn($movement) => $movement->qty_in > 0);
+            $outgoingMovements = $movementsCollection->filter(fn($movement) => $movement->qty_out > 0);
 
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-centered mb-0">
-                        <thead>
-                            <tr>
-                                <th class="font-family-cairo fw-bold">{{ __('common.date') }}</th>
-                                <th class="font-family-cairo fw-bold">{{ __('items.operation_source') }}</th>
-                                <th class="font-family-cairo fw-bold">{{ __('items.movement_type') }}</th>
-                                <th class="font-family-cairo fw-bold">{{ __('items.warehouse') }}</th>
-                                <th class="font-family-cairo fw-bold">{{ __('items.unit') }}</th>
-                                <th class="font-family-cairo fw-bold">{{ __('items.balance_before_movement') }}</th>
-                                <th class="font-family-cairo fw-bold">{{ __('common.quantity') }}</th>
-                                <th class="font-family-cairo fw-bold">{{ __('items.balance_after_movement') }}</th>
-                                <th class="font-family-cairo fw-bold">{{ __('common.actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php
-                                if ($this->warehouseId === 'all' || empty($this->warehouseId)) {
-                                    $balanceBefore =
-                                        OperationItems::where('item_id', $this->itemId)
-                                            ->where('created_at', '<', $this->fromDate)
-                                            ->sum('qty_in') -
-                                        OperationItems::where('item_id', $this->itemId)
-                                            ->where('created_at', '<', $this->fromDate)
-                                            ->sum('qty_out');
-                                } else {
-                                    $balanceBefore =
-                                        OperationItems::where('item_id', $this->itemId)
-                                            ->where('detail_store', $this->warehouseId)
-                                            ->where('created_at', '<', $this->fromDate)
-                                            ->sum('qty_in') -
-                                        OperationItems::where('item_id', $this->itemId)
-                                            ->where('detail_store', $this->warehouseId)
-                                            ->where('created_at', '<', $this->fromDate)
-                                            ->sum('qty_out');
-                                }
-                                $balanceAfter = 0;
-                            @endphp
-                            @forelse($movements as $movement)
-                                <tr>
-                                    <td class="font-family-cairo fw-bold">{{ $movement->created_at->format('Y-m-d') }}
-                                    </td>
-                                    <td class="font-family-cairo fw-bold">
-                                        {{ $movement->pro_id }}#_{{ $this->getArabicReferenceName($movement->pro_tybe) }}
-                                    </td>
-                                    <td class="font-family-cairo fw-bold">
-                                        <span
-                                            class="badge {{ $movement->qty_in != 0 ? 'badge-soft-success' : 'badge-soft-danger' }} font-family-cairo fw-bold">
-                                            {{ $movement->qty_in != 0 ? __('items.in') : __('items.out') }}
-                                        </span>
-                                    </td>
-                                    <td class="font-family-cairo fw-bold">
-                                        {{ AccHead::find($movement->detail_store)->aname ?? 'N/A' }}</td>
-                                    <td class="font-family-cairo fw-bold">
-                                        {{ Item::find($this->itemId)->units->first()->name }}</td>
-                                    <td class="font-family-cairo fw-bold">{{ $balanceBefore }}</td>
-                                    <td
-                                        class="font-family-cairo fw-bold {{ $movement->qty_in != 0 ? 'bg-soft-success' : 'bg-soft-danger' }}">
-                                        {{ $movement->qty_in != 0 ? $movement->qty_in : $movement->qty_out }}</td>
-                                    @php
-                                        if ($movement->qty_in != 0) {
-                                            $balanceAfter = $balanceBefore + $movement->qty_in;
-                                        } elseif ($movement->qty_out != 0) {
-                                            $balanceAfter = $balanceBefore - $movement->qty_out;
-                                        }
-                                    @endphp
-                                    <td class="font-family-cairo fw-bold">{{ $balanceAfter }}</td>
-                                    <td class="font-family-cairo fw-bold">
-                                        <a href="{{ route('invoice.view', $movement->pro_id) }}" class="btn btn-xs btn-info" target="_blank">
-                                            <i class="fas fa-eye"></i> {{ __('common.view') }}
-                                        </a>
-                                </td>
-                                </tr>
-                                @php
-                                    $balanceBefore = $balanceAfter;
-                                @endphp
-                            @empty
-                                <tr>
-                                    <td colspan="12" class="text-center font-family-cairo fw-bold">{{ __('items.no_movements_for_criteria') }}</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <div class="mt-3 d-flex justify-content-center">
-                    {{ $movements->links() }}
+            if ($this->warehouseId === 'all' || empty($this->warehouseId)) {
+                $balanceBefore =
+                    OperationItems::where('item_id', $this->itemId)
+                        ->where('created_at', '<', $this->fromDate)
+                        ->sum('qty_in') -
+                    OperationItems::where('item_id', $this->itemId)
+                        ->where('created_at', '<', $this->fromDate)
+                        ->sum('qty_out');
+            } else {
+                $balanceBefore =
+                    OperationItems::where('item_id', $this->itemId)
+                        ->where('detail_store', $this->warehouseId)
+                        ->where('created_at', '<', $this->fromDate)
+                        ->sum('qty_in') -
+                    OperationItems::where('item_id', $this->itemId)
+                        ->where('detail_store', $this->warehouseId)
+                        ->where('created_at', '<', $this->fromDate)
+                        ->sum('qty_out');
+            }
+
+            $runningBalance = $balanceBefore;
+            $movementBalances = [];
+            foreach ($movementsCollection->sortBy('created_at') as $entry) {
+                $movementBalances[$entry->id]['before'] = $runningBalance;
+                if ($entry->qty_in > 0) {
+                    $runningBalance += $entry->qty_in;
+                } elseif ($entry->qty_out > 0) {
+                    $runningBalance -= $entry->qty_out;
+                }
+                $movementBalances[$entry->id]['after'] = $runningBalance;
+            }
+        @endphp
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1 font-family-cairo">{{ __('items.in') }} {{ __('items.movement_type') }}</p>
+                            <h3 class="mb-0 font-family-cairo fw-bold text-success">{{ number_format($incomingMovements->count()) }}</h3>
+                        </div>
+                        <span class="avatar-sm rounded-circle bg-soft-success d-inline-flex align-items-center justify-content-center">
+                            <i class="fas fa-arrow-down text-success"></i>
+                        </span>
+                    </div>
                 </div>
             </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1 font-family-cairo">{{ __('items.out') }} {{ __('items.movement_type') }}</p>
+                            <h3 class="mb-0 font-family-cairo fw-bold text-danger">{{ number_format($outgoingMovements->count()) }}</h3>
+                        </div>
+                        <span class="avatar-sm rounded-circle bg-soft-danger d-inline-flex align-items-center justify-content-center">
+                            <i class="fas fa-arrow-up text-danger"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-soft-success border-0 d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="mb-0 font-family-cairo fw-bold text-success">
+                                <i class="fas fa-arrow-down me-2"></i>{{ __('items.in') }} - {{ __('items.movement_type') }}
+                            </h5>
+                            <small class="text-muted font-family-cairo">{{ __('items.stock_received_details') }}</small>
+                        </div>
+                        <span class="badge bg-success-subtle text-success font-family-cairo fw-bold">
+                            {{ number_format($incomingMovements->sum('qty_in')) }} {{ $defaultUnitName }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table mb-0 table-centered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="font-family-cairo fw-bold">{{ __('common.date') }}</th>
+                                        <th class="font-family-cairo fw-bold">{{ __('items.operation_source') }}</th>
+                                        <th class="font-family-cairo fw-bold">{{ __('items.warehouse') }}</th>
+                                        <th class="font-family-cairo fw-bold">{{ __('items.unit') }}</th>
+                                        <th class="font-family-cairo fw-bold">{{ __('common.quantity') }}</th>
+                                        <th class="font-family-cairo fw-bold">{{ __('items.balance_after_movement') }}</th>
+                                        <th class="font-family-cairo fw-bold text-center">{{ __('common.actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($incomingMovements as $movement)
+                                        <tr>
+                                            <td class="font-family-cairo fw-bold">{{ $movement->created_at->format('Y-m-d') }}</td>
+                                            <td class="font-family-cairo fw-bold">
+                                                {{ $movement->pro_id }}#_{{ $this->getArabicReferenceName($movement->pro_tybe) }}
+                                            </td>
+                                            <td class="font-family-cairo fw-bold">
+                                                {{ AccHead::find($movement->detail_store)->aname ?? 'N/A' }}
+                                            </td>
+                                            <td class="font-family-cairo fw-bold">
+                                                {{ optional(App\Models\Unit::find($movement->unit_id))->name ?? $defaultUnitName }}
+                                            </td>
+                                            <td class="font-family-cairo fw-bold text-success">
+                                                {{ $movement->fat_quantity ?? $movement->qty_in }}
+                                            </td>
+                                            <td class="font-family-cairo fw-bold">
+                                                {{ number_format($movementBalances[$movement->id]['after'] ?? 0) }}
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="{{ route('invoice.view', $movement->pro_id) }}" class="btn btn-soft-success btn-sm font-family-cairo fw-bold" target="_blank">
+                                                    <i class="fas fa-eye me-1"></i>{{ __('common.view') }}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center font-family-cairo fw-bold text-muted">
+                                                {{ __('items.no_movements_for_criteria') }}
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-soft-danger border-0 d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="mb-0 font-family-cairo fw-bold text-danger">
+                                <i class="fas fa-arrow-up me-2"></i>{{ __('items.out') }} - {{ __('items.movement_type') }}
+                            </h5>
+                            <small class="text-muted font-family-cairo">{{ __('items.stock_issued_details') }}</small>
+                        </div>
+                        <span class="badge bg-danger-subtle text-danger font-family-cairo fw-bold">
+                            {{ number_format($outgoingMovements->sum('qty_out')) }} {{ $defaultUnitName }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table mb-0 table-centered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="font-family-cairo fw-bold">{{ __('common.date') }}</th>
+                                        <th class="font-family-cairo fw-bold">{{ __('items.operation_source') }}</th>
+                                        <th class="font-family-cairo fw-bold">{{ __('items.warehouse') }}</th>
+                                        <th class="font-family-cairo fw-bold">{{ __('items.unit') }}</th>
+                                        <th class="font-family-cairo fw-bold">{{ __('common.quantity') }}</th>
+                                        <th class="font-family-cairo fw-bold">{{ __('items.balance_after_movement') }}</th>
+                                        <th class="font-family-cairo fw-bold text-center">{{ __('common.actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($outgoingMovements as $movement)
+                                        <tr>
+                                            <td class="font-family-cairo fw-bold">{{ $movement->created_at->format('Y-m-d') }}</td>
+                                            <td class="font-family-cairo fw-bold">
+                                                {{ $movement->pro_id }}#_{{ $this->getArabicReferenceName($movement->pro_tybe) }}
+                                            </td>
+                                            <td class="font-family-cairo fw-bold">
+                                                {{ AccHead::find($movement->detail_store)->aname ?? 'N/A' }}
+                                            </td>
+                                            <td class="font-family-cairo fw-bold">
+                                                {{ optional(App\Models\Unit::find($movement->unit_id))->name ?? $defaultUnitName }}
+                                            </td>
+                                            <td class="font-family-cairo fw-bold text-danger">
+                                                {{ $movement->fat_quantity ?? $movement->qty_out }}
+                                            </td>
+                                            <td class="font-family-cairo fw-bold">
+                                                {{ number_format($movementBalances[$movement->id]['after'] ?? 0) }}
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="{{ route('invoice.view', $movement->pro_id) }}" class="btn btn-soft-danger btn-sm font-family-cairo fw-bold" target="_blank">
+                                                    <i class="fas fa-eye me-1"></i>{{ __('common.view') }}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center font-family-cairo fw-bold text-muted">
+                                                {{ __('items.no_movements_for_criteria') }}
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-center">
+            {{ $movements->links() }}
         </div>
     @endif
 
