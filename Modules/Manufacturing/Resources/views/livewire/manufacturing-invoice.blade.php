@@ -609,7 +609,7 @@
                                                                                                 </td>
                                                                                                 <td>
                                                                                                     <select
-                                                                                                        wire:model="selectedRawMaterials.{{ $index }}.unit_id"
+                                                                                                        wire:model.live="selectedRawMaterials.{{ $index }}.unit_id"
                                                                                                         class="form-control form-control-sm unit-select"
                                                                                                         style="padding:2px;height:30px;font-size: 0.9em;"
                                                                                                         data-item-id="{{ $material['id'] ?? '' }}">

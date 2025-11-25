@@ -431,7 +431,8 @@ class ManufacturingInvoice extends Component
             'available_quantity' => $firstUnit['available_qty'] ?? 0,
             'total_cost' => $initialTotalCost,
             'unitsList' => $unitsList,
-            'average_cost' => $averageCost // ✅ هذا ما سيُستخدم في الحساب
+            'base_cost' => $averageCost, // ✅ تخزين التكلفة الأساسية (للوحدة الصغرى)
+            'average_cost' => $averageCost * ($firstUnit['available_qty'] ?? 1) // ✅ حساب التكلفة بناءً على الوحدة المختارة
         ];
 
         // إعادة تعيين حقول البحث
@@ -550,6 +551,14 @@ class ManufacturingInvoice extends Component
                 // ✅ تحديث unit_cost و available_quantity عند تغيير الوحدة
                 $this->selectedRawMaterials[$index]['unit_cost'] = round($unit['cost'] ?? 0, 2);
                 $this->selectedRawMaterials[$index]['available_quantity'] = $unit['available_qty'] ?? 0;
+
+                // ✅ حساب التكلفة الجديدة بناءً على معامل التحويل وال cost الأساسي
+                $baseCost = $this->selectedRawMaterials[$index]['base_cost'] ?? 0;
+                $conversionFactor = $unit['available_qty'] ?? 1; // u_val هو معامل التحويل
+                
+                $newAverageCost = $baseCost * $conversionFactor;
+                $this->selectedRawMaterials[$index]['average_cost'] = $newAverageCost;
+                $this->selectedRawMaterials[$index]['unit_cost'] = round($newAverageCost, 2);
 
                 // ✅ إعادة حساب التكلفة الإجمالية فوراً
                 $this->updateRawMaterialTotal($index);

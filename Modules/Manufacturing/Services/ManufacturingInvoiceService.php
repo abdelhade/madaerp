@@ -205,18 +205,38 @@ class ManufacturingInvoiceService
             ]);
 
             foreach ($component->selectedRawMaterials as $raw) {
+                // 1. Get unit factor
+                $unitId = $raw['unit_id'] ?? null;
+                $unitFactor = 1;
+                if ($unitId) {
+                    $unitFactor = DB::table('item_units')
+                        ->where('item_id', $raw['item_id'])
+                        ->where('unit_id', $unitId)
+                        ->value('u_val') ?? 1;
+                }
+
+                // 2. Calculate base quantity
+                $originalQty = $raw['quantity'];
+                $baseQty = $originalQty * $unitFactor;
+
+                // 3. Calculate base price
+                $originalPrice = $raw['unit_cost'];
+                $basePrice = $unitFactor > 0 ? $originalPrice / $unitFactor : $originalPrice;
+
                 OperationItems::create([
                     'pro_tybe' => 59,
                     'detail_store' => $component->rawAccount,
                     'pro_id' => $operation->id,
                     'item_id' => $raw['item_id'],
-                    'unit_id' => $raw['unit_id'] ?? null,
+                    'unit_id' => $unitId,
                     'qty_in' => 0,
-                    'qty_out' => $isTemplate ? 0 : $raw['quantity'], // 0 للنموذج
-                    'item_price' => $raw['unit_cost'],
-                    'cost_price' => $raw['unit_cost'],
+                    'qty_out' => $isTemplate ? 0 : $baseQty, // ✅ Store base quantity
+                    'fat_quantity' => $originalQty, // ✅ Store original quantity
+                    'fat_price' => $originalPrice, // ✅ Store original price
+                    'item_price' => $basePrice, // ✅ Store base price
+                    'cost_price' => $basePrice,
                     'detail_value' => $raw['total_cost'],
-                    'is_stock' => $isTemplate ? 0 : 1, // 0 للنموذج
+                    'is_stock' => $isTemplate ? 0 : 1,
                     'branch_id' => $component->branch_id
                 ]);
             }
@@ -224,16 +244,69 @@ class ManufacturingInvoiceService
             foreach ($component->selectedProducts as $product) {
 
                 $item = Item::find($product['product_id']);
-                if ($item) {
-                    // حساب المتوسط الجديد
-                    $oldQuantity = $item->inventory->quantity ?? 0;
-                    $oldAverage = $item->average_cost ?? 0;
-                    $newQuantity = $product['quantity'];
-                    $newCost = $product['average_cost'];
+                
+                // 1. Ensure unit_id is set (default to first unit if null)
+                $unitId = $product['unit_id'] ?? null;
+                $unitFactor = 1;
+                
+                if (!$unitId && $item) {
+                     // Try to find a default unit (e.g., smallest u_val)
+                     $defaultUnit = $item->units()->orderBy('pivot_u_val', 'asc')->first();
+                     if ($defaultUnit) {
+                         $unitId = $defaultUnit->id;
+                         $unitFactor = $defaultUnit->pivot->u_val;
+                     }
+                } elseif ($unitId) {
+                     $unitFactor = DB::table('item_units')
+                        ->where('item_id', $product['product_id'])
+                        ->where('unit_id', $unitId)
+                        ->value('u_val') ?? 1;
+                }
 
-                    // الصيغة: (الكمية القديمة * المتوسط القديم) + (الكمية الجديدة * التكلفة الجديدة) / (الكمية القديمة + الجديدة)
-                    $totalCost = ($oldQuantity * $oldAverage) + ($newQuantity * $newCost);
-                    $totalQuantity = $oldQuantity + $newQuantity;
+                // 2. Calculate base quantity
+                $originalQty = $product['quantity'];
+                $baseQty = $originalQty * $unitFactor;
+
+                // 3. Calculate base price
+                $originalPrice = $product['unit_cost'];
+                $basePrice = $unitFactor > 0 ? $originalPrice / $unitFactor : $originalPrice;
+
+                // Create OperationItems entry
+                OperationItems::create([
+                    'pro_tybe' => 59,
+                    'detail_store' => $component->productAccount,
+                    'pro_id' => $operation->id,
+                    'item_id' => $product['product_id'],
+                    'unit_id' => $unitId, // ✅ Set unit_id
+                    'qty_in' => $isTemplate ? 0 : $baseQty, // ✅ Store base quantity
+                    'qty_out' => 0,
+                    'fat_quantity' => $originalQty, // ✅ Store original quantity
+                    'fat_price' => $originalPrice, // ✅ Store original price
+                    'item_price' => $basePrice, // ✅ Store base price
+                    'cost_price' => $basePrice,
+                    'detail_value' => $product['total_cost'],
+                    'is_stock' => $isTemplate ? 0 : 1,
+                    'branch_id' => $component->branch_id
+                ]);
+
+                // Update average cost for products (using base units)
+                if (!$isTemplate && $item) {
+                    $oldQtyInBase = OperationItems::where('operation_items.item_id', $product['product_id'])
+                        ->where('operation_items.is_stock', 1)
+                        ->leftJoin('item_units', function ($join) {
+                            $join->on('operation_items.item_id', '=', 'item_units.item_id')
+                                ->on('operation_items.unit_id', '=', 'item_units.unit_id');
+                        })
+                        // ->selectRaw('SUM((qty_in - qty_out) * COALESCE(item_units.u_val, 1)) as total')
+                        // ✅ الكميات مخزنة بالفعل بالوحدة الأساسية
+                        ->selectRaw('SUM(qty_in - qty_out) as total')
+                        ->value('total') ?? 0;
+
+                    $oldAverage = $item->average_cost ?? 0;
+                    
+                    // Calculate total cost and quantity in base units
+                    $totalCost = ($oldQtyInBase * $oldAverage) + ($baseQty * $basePrice);
+                    $totalQuantity = $oldQtyInBase + $baseQty;
 
                     $newAverage = $totalQuantity > 0 ? $totalCost / $totalQuantity : 0;
 
@@ -242,20 +315,6 @@ class ManufacturingInvoiceService
                         'average_cost' => $newAverage
                     ]);
                 }
-                OperationItems::create([
-                    'pro_tybe' => 59,
-                    'detail_store' => $component->productAccount,
-                    'pro_id' => $operation->id,
-                    'item_id' => $product['product_id'],
-                    'unit_id' => $product['unit_id'] ?? null,
-                    'qty_in' => $isTemplate ? 0 : $product['quantity'], // 0 للنموذج
-                    'qty_out' => 0,
-                    'item_price' => $product['average_cost'],
-                    'cost_price' => $product['average_cost'],
-                    'detail_value' => $product['total_cost'],
-                    'is_stock' => $isTemplate ? 0 : 1, // 0 للنموذج
-                    'branch_id' => $component->branch_id
-                ]);
             }
 
             if (!$isTemplate) {

@@ -59,6 +59,19 @@ class SaveInvoiceService
         // التحقق من الكميات المتاحة فقط للمبيعات والصرف
         foreach ($component->invoiceItems as $index => $item) {
             if (in_array($component->type, [10, 12, 18, 19, 21])) {
+                // ✅ 1. Get unit factor for the item
+                $unitFactor = 1;
+                if ($item['unit_id']) {
+                    $unitFactor = DB::table('item_units')
+                        ->where('item_id', $item['item_id'])
+                        ->where('unit_id', $item['unit_id'])
+                        ->value('u_val') ?? 1;
+                }
+
+                // ✅ 2. Convert input quantity to base units
+                $quantityInBaseUnits = $item['quantity'] * $unitFactor;
+
+                // ✅ 3. Get available quantity in base units
                 $availableQty = OperationItems::where('item_id', $item['item_id'])
                     ->where('detail_store', $component->type == 21 ? $component->acc1_id : $component->acc2_id)
                     ->selectRaw('SUM(qty_in - qty_out) as total')
@@ -74,7 +87,8 @@ class SaveInvoiceService
                 // استبدل شرط التحقق بهذا الكود:
                 $allowNegative = (setting('invoice_allow_negative_quantity') ?? '0') == '1' && $component->type == 10;
 
-                if (!$allowNegative && $availableQty < $item['quantity']) {
+                // ✅ 4. Compare base quantities
+                if (!$allowNegative && $availableQty < $quantityInBaseUnits) {
                     $itemName = Item::find($item['item_id'])->name;
                     $component->dispatch(
                         'error',
@@ -228,7 +242,7 @@ class SaveInvoiceService
                         'item_id'       => $itemId,
                         'unit_id'       => $unitId,
                         'qty_in'        => 0,
-                        'qty_out'       => $quantity,
+                        'qty_out'       => $baseQty, // ✅ Store base quantity
                         'item_price'    => $price,
                         'cost_price'    => $itemCost,
                         'item_discount' => $discount,
@@ -252,7 +266,7 @@ class SaveInvoiceService
                         'pro_id'        => $operation->id,
                         'item_id'       => $itemId,
                         'unit_id'       => $unitId,
-                        'qty_in'        => $quantity,
+                        'qty_in'        => $baseQty, // ✅ Store base quantity
                         'qty_out'       => 0,
                         'item_price'    => $price,
                         'cost_price'    => $itemCost,
@@ -271,13 +285,43 @@ class SaveInvoiceService
                     ]);
                 }
 
+                // 1. Get unit factor
+                $unitFactor = 1;
+                if ($unitId) {
+                    $unitFactor = DB::table('item_units')
+                        ->where('item_id', $itemId)
+                        ->where('unit_id', $unitId)
+                        ->value('u_val') ?? 1;
+                }
+
+                // 2. Calculate base quantity
+                $originalQty = $quantity; // This is the quantity entered by user
+                $baseQty = $originalQty * $unitFactor;
+
+                // 3. Calculate base price (price per base unit)
+                // If user enters: 1 Ton @ 100,000 EGP, and 1 Ton = 1000 Kg
+                // Then base price = 100,000 / 1000 = 100 EGP/Kg
+                $originalPrice = $price; // Price entered by user (per selected unit)
+                $basePrice = $unitFactor > 0 ? $originalPrice / $unitFactor : $originalPrice;
+
+                // 4. Get base unit ID (u_val = 1)
+                $baseUnitId = DB::table('item_units')
+                    ->where('item_id', $itemId)
+                    ->where('u_val', 1)
+                    ->value('unit_id');
+
+                // If no base unit found, use the selected unit as fallback
+                if (!$baseUnitId) {
+                    $baseUnitId = $unitId;
+                }
+
                 $qty_in = $qty_out = 0;
-                if (in_array($component->type, [11, 12, 20])) $qty_in = $quantity;
-                if (in_array($component->type, [10, 13, 18, 19])) $qty_out = $quantity;
+                if (in_array($component->type, [11, 12, 20])) $qty_in = $baseQty; // ✅ Store base quantity
+                if (in_array($component->type, [10, 13, 18, 19])) $qty_out = $baseQty; // ✅ Store base quantity
 
                 // تحديث متوسط التكلفة للمشتريات
                 if (in_array($component->type, [11, 12, 20])) {
-                    $this->updateAverageCost($itemId, $quantity, $subValue, $itemCost);
+                    $this->updateAverageCost($itemId, $originalQty, $subValue, $itemCost, $unitId);
                 }
 
                 // حساب الربح للمبيعات
@@ -286,7 +330,7 @@ class SaveInvoiceService
                         ? ($component->discount_value * $subValue / $component->subtotal)
                         : 0;
 
-                    $itemCostTotal = $itemCost * $quantity;
+                    $itemCostTotal = $itemCost * $baseQty; // Cost is per base unit, so multiply by base qty
                     $profit = ($subValue - $discountItem) - $itemCostTotal;
                     $totalProfit += $profit;
                 } else {
@@ -297,7 +341,7 @@ class SaveInvoiceService
                 if ($component->type != 21) {
                     // معالجة خاصة لطلب الاحتياج - يجب أن نضع الكمية في qty_in
                     if ($component->type == 25) {
-                        $qty_in = $quantity;
+                        $qty_in = $baseQty;
                         $qty_out = 0;
                     }
 
@@ -306,10 +350,13 @@ class SaveInvoiceService
                         'detail_store'  => $component->acc2_id,
                         'pro_id'        => $operation->id,
                         'item_id'       => $itemId,
-                        'unit_id'       => $unitId,
+                        'unit_id'       => $baseUnitId, // ✅ Store base unit ID instead of selected unit
                         'qty_in'        => $qty_in,
                         'qty_out'       => $qty_out,
-                        'item_price'    => $price,
+                        'fat_quantity'  => $originalQty, // ✅ Store original quantity
+                        'fat_price'     => $originalPrice, // ✅ Store original price (per selected unit)
+                        'fat_unit_id'   => $unitId, // ✅ Store original unit for reference
+                        'item_price'    => $basePrice, // ✅ Store base price (per base unit)
                         'cost_price'    => $itemCost,
                         'item_discount' => $discount,
                         'detail_value'  => $subValue,
@@ -353,13 +400,14 @@ class SaveInvoiceService
             );
 
             return $operation->id;
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             DB::rollBack();
-            logger()->error('خطأ أثناء حفظ الفاتورة: ');
+            logger()->error('خطأ أثناء حفظ الفاتورة: ' . $e->getMessage());
+            logger()->error($e->getTraceAsString());
             $component->dispatch(
                 'error',
                 title: 'خطأ!',
-                text: 'فشل في حفظ الفاتورة: ',
+                text: 'فشل في حفظ الفاتورة: ' . $e->getMessage(),
                 icon: 'error'
             );
             return false;
@@ -379,19 +427,42 @@ class SaveInvoiceService
         return $states[$proType] ?? 0;
     }
 
-    private function updateAverageCost($itemId, $quantity, $subValue, $currentCost)
+    private function updateAverageCost($itemId, $quantity, $subValue, $currentCost, $unitId)
     {
-        $oldQty = OperationItems::where('item_id', $itemId)
-            ->where('is_stock', 1)
+        // 1. حساب الرصيد السابق بالوحدة الأساسية
+        // نضرب الكمية (qty_in - qty_out) في معامل التحويل (u_val) لكل عملية
+        $oldQtyInBase = OperationItems::where('operation_items.item_id', $itemId)
+            ->where('operation_items.is_stock', 1)
+            ->leftJoin('item_units', function ($join) {
+                $join->on('operation_items.item_id', '=', 'item_units.item_id')
+                    ->on('operation_items.unit_id', '=', 'item_units.unit_id');
+            })
+            // ->selectRaw('SUM((qty_in - qty_out) * COALESCE(item_units.u_val, 1)) as total')
+            // ✅ الكميات مخزنة بالفعل بالوحدة الأساسية
             ->selectRaw('SUM(qty_in - qty_out) as total')
             ->value('total') ?? 0;
 
-        $newQty = $oldQty + $quantity;
+        // 2. الحصول على معامل التحويل للوحدة الحالية
+        $currentUnitFactor = DB::table('item_units')
+            ->where('item_id', $itemId)
+            ->where('unit_id', $unitId)
+            ->value('u_val') ?? 1;
 
-        if ($oldQty == 0 && $currentCost == 0) {
-            $newCost = $subValue / $quantity;
+        // 3. تحويل الكمية الحالية للوحدة الأساسية
+        $quantityInBase = $quantity * $currentUnitFactor;
+
+        // 4. حساب الكمية الجديدة بالوحدة الأساسية
+        $newQtyInBase = $oldQtyInBase + $quantityInBase;
+
+        // 5. حساب متوسط التكلفة الجديد
+        // التكلفة الحالية ($currentCost) هي للوحدة الأساسية
+        // القيمة الحالية ($subValue) هي القيمة الإجمالية للكمية المضافة
+        if ($oldQtyInBase == 0 && $currentCost == 0) {
+            $newCost = $quantityInBase > 0 ? $subValue / $quantityInBase : 0;
         } else {
-            $newCost = $newQty > 0 ? (($oldQty * $currentCost) + $subValue) / $newQty : $currentCost;
+            $oldValue = $oldQtyInBase * $currentCost;
+            $totalValue = $oldValue + $subValue;
+            $newCost = $newQtyInBase > 0 ? $totalValue / $newQtyInBase : $currentCost;
         }
 
         Item::where('id', $itemId)->update(['average_cost' => $newCost]);

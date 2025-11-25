@@ -59,7 +59,30 @@ trait HandlesInvoiceData
                 continue;
             }
 
-            $price = $item->item_price;
+            $displayUnitId = $item->fat_unit_id ?? $item->unit_id;
+
+            // 1. Fetch the u_val (conversion factor)
+            $unit = $item->item->units->where('id', $displayUnitId)->first();
+            $uVal = 1;
+
+            if ($unit && $unit->pivot) {
+                $uVal = $unit->pivot->u_val ?? 1;
+            } else {
+                // Fallback: fetch directly from database if not found in relation
+                $pivotData = \Illuminate\Support\Facades\DB::table('item_units')
+                    ->where('item_id', $item->item_id)
+                    ->where('unit_id', $displayUnitId)
+                    ->first();
+                if ($pivotData) {
+                    $uVal = $pivotData->u_val ?? 1;
+                }
+            }
+
+            $baseQty = $item->qty_in ?: $item->qty_out;
+
+            // القسمة على المعامل لترجع لأصلها (مثلاً 1000 كجم ÷ 1000 = 1 طن)
+            $quantity = ($uVal > 0) ? ($baseQty / $uVal) : $baseQty;
+            $price = $item->fat_price ?? $item->item_price;
 
             // ✅ جلب آخر سعر شراء إذا كان التحويل من طلب احتياج لأمر شراء
             if ($isFromRequestOrder && $this->type == 15) {
@@ -77,11 +100,11 @@ trait HandlesInvoiceData
             $this->invoiceItems[] = [
                 'item_id' => $item->item_id,
                 'name' => $item->item->name,
-                'unit_id' => $item->unit_id,
-                'quantity' => $item->qty_in ?: $item->qty_out,
+                'unit_id' => $displayUnitId,
+                'quantity' => $quantity,
                 'price' => $price,
                 'discount' => $item->item_discount ?? 0,
-                'sub_value' => $price * ($item->qty_in ?: $item->qty_out),
+                'sub_value' => $item->detail_value ?? ($price * $quantity),
                 'available_units' => $item->item->units->map(fn($unit) => (object)[
                     'id' => $unit->id,
                     'name' => $unit->name
@@ -421,5 +444,119 @@ trait HandlesInvoiceData
             ->where('code', 'like', $code)
             ->select('id', 'aname')
             ->get();
+    }
+
+    /**
+     * حساب سعر الصنف بناءً على نوع الفاتورة والوحدة المختارة
+     */
+    protected function calculateItemPrice($item, $unitId, $priceTypeId = 1, $currentPrice = 0, $oldUnitId = null)
+    {
+        if (!$item || !$unitId) {
+            return 0;
+        }
+
+        // ✅ منطق التحويل الديناميكي: إذا كان هناك سعر مكتوب ووحدة سابقة، قم بالتحويل
+        if ($currentPrice > 0 && $oldUnitId && $oldUnitId != $unitId) {
+            $oldUnit = $item->units->where('id', $oldUnitId)->first();
+            $newUnit = $item->units->where('id', $unitId)->first();
+
+            if ($oldUnit && $newUnit) {
+                $oldUVal = $oldUnit->pivot->u_val ?? 1;
+                $newUVal = $newUnit->pivot->u_val ?? 1;
+
+                // السعر الأساسي (للوحدة الصغرى)
+                $basePrice = $currentPrice / $oldUVal;
+
+                // السعر الجديد (للوحدة الجديدة)
+                return $basePrice * $newUVal;
+            }
+        }
+
+        $price = 0;
+
+        // 1. منطق فواتير المشتريات وأوامر الشراء (11, 15)
+        if (in_array($this->type, [11, 15])) {
+            // محاولة جلب آخر سعر شراء لنفس الصنف ونفس الوحدة
+            $lastPurchasePrice = OperationItems::where('item_id', $item->id)
+                ->where('unit_id', $unitId) // ✅ تصفية حسب الوحدة
+                ->where('is_stock', 1)
+                ->whereIn('pro_tybe', [11, 20]) // عمليات الشراء والإضافة للمخزن
+                ->where('qty_in', '>', 0)
+                ->orderBy('created_at', 'desc')
+                ->value('item_price');
+
+            if ($lastPurchasePrice && $lastPurchasePrice > 0) {
+                $price = $lastPurchasePrice;
+            } else {
+                // إذا لم يوجد سعر سابق لهذه الوحدة، نحسب بناءً على التكلفة المتوسطة ومعامل التحويل
+                $unit = $item->units->where('id', $unitId)->first();
+                $uVal = $unit->pivot->u_val ?? 1;
+                $averageCost = $item->average_cost ?? 0;
+                $price = $averageCost * $uVal;
+            }
+        }
+        // 2. منطق فواتير التوالف (18)
+        elseif ($this->type == 18) {
+            $unit = $item->units->where('id', $unitId)->first();
+            $uVal = $unit->pivot->u_val ?? 1;
+            $averageCost = $item->average_cost ?? 0;
+            $price = $averageCost * $uVal;
+        }
+        // 3. منطق فواتير المبيعات وغيرها
+        else {
+            $vm = new ItemViewModel(null, $item, $unitId);
+            $salePrices = $vm->getUnitSalePrices();
+            $price = $salePrices[$priceTypeId]['price'] ?? 0;
+
+            // تطبيق منطق اتفاقيات التسعير وآخر سعر للعميل (فقط للمبيعات)
+            if ($this->type == 10 && $this->acc1_id) {
+                $usePricingAgreement = (setting('invoice_use_pricing_agreement') ?? '0') == '1';
+                $useLastCustomerPrice = (setting('invoice_use_last_customer_price') ?? '0') == '1';
+
+                if (!($usePricingAgreement && $useLastCustomerPrice)) {
+                    if ($usePricingAgreement) {
+                        $pricingAgreementPrice = OperationItems::whereHas('operhead', function ($query) {
+                            $query->where('pro_type', 26)->where('acc1', $this->acc1_id);
+                        })
+                            ->where('item_id', $item->id)
+                            ->where('unit_id', $unitId)
+                            ->orderBy('created_at', 'desc')
+                            ->value('item_price');
+
+                        if ($pricingAgreementPrice && $pricingAgreementPrice > 0) {
+                            $price = $pricingAgreementPrice;
+                        }
+                    } elseif ($useLastCustomerPrice) {
+                        $lastCustomerPrice = OperationItems::whereHas('operhead', function ($query) {
+                            $query->where('pro_type', 10)->where('acc1', $this->acc1_id);
+                        })
+                            ->where('item_id', $item->id)
+                            ->where('unit_id', $unitId)
+                            ->orderBy('created_at', 'desc')
+                            ->value('item_price');
+
+                        if ($lastCustomerPrice && $lastCustomerPrice > 0) {
+                            $price = $lastCustomerPrice;
+                        }
+                    }
+                }
+            }
+            // اتفاقيات التسعير (26)
+            elseif ($this->type == 26 && $this->acc1_id) {
+                $pricingAgreementPrice = OperationItems::whereHas('operhead', function ($query) {
+                    $query->where('pro_type', 26)->where('acc1', $this->acc1_id);
+                })
+                    ->where('item_id', $item->id)
+                    ->where('unit_id', $unitId)
+                    ->orderBy('created_at', 'desc')
+                    ->value('item_price');
+
+                if ($pricingAgreementPrice && $pricingAgreementPrice > 0) {
+                    $price = $pricingAgreementPrice;
+                }
+            }
+        }
+
+        return $price;
     }
 }

@@ -8,6 +8,7 @@ use App\Enums\InvoiceStatus;
 use App\Models\JournalDetail;
 use App\Helpers\ItemViewModel;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Models\AccHead;
 use RealRashid\SweetAlert\Facades\Alert;
 use Modules\Invoices\Models\InvoiceTemplate;
@@ -96,12 +97,28 @@ class EditInvoiceForm extends Component
         'unit_name' => '',
         'price' => 0,
         'cost' => 0,
+        'batch-selected' => 'selectBatch',
         'barcode' => '',
         'category' => '',
         'description' => '',
         'average_cost' => '',
         'last_purchase_price' => 0
     ];
+
+    public $oldUnitId = null;
+
+    public function updatingInvoiceItems($value, $key)
+    {
+        $parts = explode('.', $key);
+        if (count($parts) >= 2 && $parts[1] === 'unit_id') {
+            $index = (int) $parts[0];
+            if (isset($this->invoiceItems[$index]['unit_id'])) {
+                $this->oldUnitId = $this->invoiceItems[$index]['unit_id'];
+            }
+        }
+    }
+
+
 
     public $titles = [
         10 => 'فاتوره مبيعات',
@@ -330,20 +347,41 @@ class EditInvoiceForm extends Component
         $this->invoiceItems = [];
         foreach ($this->operation->operationItems as $operationItem) {
             $item = $operationItem->item;
-            if (!$item) continue;
-            $availableUnits = $item->units->map(fn($unit) => (object)[
-                'id' => $unit->id,
-                'name' => $unit->name,
-            ]);
-            $quantity = $operationItem->qty_in > 0 ? $operationItem->qty_in : $operationItem->qty_out;
+            if (!$item) {
+                continue;
+            }
+
+            $availableUnits = $item->units->map(
+                fn($unit) => (object)[
+                    'id' => $unit->id,
+                    'name' => $unit->name,
+                ]
+            );
+
+            $displayUnitId = $operationItem->fat_unit_id ?: $operationItem->unit_id;
+
+            // 1. Fetch the u_val (conversion factor)
+            $unit = $item->units->firstWhere('id', $displayUnitId);
+            $uVal = $unit?->pivot?->u_val ?? DB::table('item_units')
+                ->where('item_id', $item->id)
+                ->where('unit_id', $displayUnitId)
+                ->value('u_val') ?? 1;
+
+            // 2. Get the stored base quantity (operation always stores base units)
+            $baseQty = $operationItem->qty_in > 0 ? $operationItem->qty_in : $operationItem->qty_out;
+
+            // 3. Divide by u_val to get display quantity
+            $quantity = $uVal > 0 ? $baseQty / $uVal : $baseQty;
+            $price = $operationItem->fat_price ?? $operationItem->item_price;
+
             $this->invoiceItems[] = [
                 'operation_item_id' => $operationItem->id,
                 'item_id' => $item->id,
-                'unit_id' => $operationItem->unit_id,
+                'unit_id' => $displayUnitId,
                 'name' => $item->name,
                 'quantity' => $quantity,
-                'price' => $operationItem->item_price,
-                'sub_value' => $operationItem->detail_value,
+                'price' => $price,
+                'sub_value' => $operationItem->detail_value ?? ($price * $quantity) - ($operationItem->item_discount ?? 0),
                 'discount' => $operationItem->item_discount ?? 0,
                 'available_units' => $availableUnits,
                 'notes' => $operationItem->notes ?? '',
@@ -639,12 +677,8 @@ class EditInvoiceForm extends Component
 
         $firstUnit = $item->units->first();
         $unitId = $firstUnit?->id;
+        $price = $this->calculateItemPrice($item, $unitId, $this->selectedPriceType);
         $vm = new ItemViewModel(null, $item, $unitId);
-        $salePrices = $vm->getUnitSalePrices();
-        $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
-        if ($this->type == 18) {
-            $price = $item->average_cost ?? 0;
-        }
         $unitOptions = $vm->getUnitOptions();
         $availableUnits = collect($unitOptions)->map(function ($unit) {
             return (object) [
@@ -733,6 +767,42 @@ class EditInvoiceForm extends Component
         $this->updatePriceForUnit($index);
     }
 
+    public function updateQuantityForUnit($index)
+    {
+        if (!isset($this->invoiceItems[$index])) return;
+
+        $itemId = $this->invoiceItems[$index]['item_id'];
+        $unitId = $this->invoiceItems[$index]['unit_id'];
+        $oldUnitId = $this->oldUnitId;
+
+        if (!$itemId || !$unitId || !$oldUnitId || $unitId == $oldUnitId) return;
+
+        $item = $this->items->firstWhere('id', $itemId);
+        // ✅ إذا لم يتم العثور على الصنف في القائمة المحملة، قم بجلبه من قاعدة البيانات
+        if (!$item) {
+            $item = Item::with(['units'])->find($itemId);
+        }
+        if (!$item) return;
+
+        $oldUnit = $item->units->where('id', $oldUnitId)->first();
+        $newUnit = $item->units->where('id', $unitId)->first();
+
+        if ($oldUnit && $newUnit) {
+            $oldUVal = $oldUnit->pivot->u_val ?? 1;
+            $newUVal = $newUnit->pivot->u_val ?? 1;
+
+            if ($newUVal == 0) return; // Avoid division by zero
+
+            // Calculate conversion factor: old / new
+            $conversionFactor = $oldUVal / $newUVal;
+
+            $currentQty = (float)($this->invoiceItems[$index]['quantity'] ?? 0);
+            $newQty = $currentQty * $conversionFactor;
+
+            $this->invoiceItems[$index]['quantity'] = round($newQty, 4);
+        }
+    }
+
     public function updatePriceForUnit($index)
     {
         if (!isset($this->invoiceItems[$index])) return;
@@ -740,10 +810,18 @@ class EditInvoiceForm extends Component
         $unitId = $this->invoiceItems[$index]['unit_id'];
         if (!$itemId || !$unitId) return;
         $item = $this->items->firstWhere('id', $itemId);
+
+        // ✅ إذا لم يتم العثور على الصنف في القائمة المحملة، قم بجلبه من قاعدة البيانات
+        if (!$item) {
+            $item = Item::with(['units', 'prices'])->find($itemId);
+        }
+
         if (!$item) return;
-        $vm = new ItemViewModel(null, $item, $unitId);
-        $salePrices = $vm->getUnitSalePrices();
-        $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
+        $currentPrice = (float) ($this->invoiceItems[$index]['price'] ?? 0);
+        $price = $this->calculateItemPrice($item, $unitId, $this->selectedPriceType, $currentPrice, $this->oldUnitId);
+
+        // إعادة تعيين الوحدة القديمة بعد الاستخدام
+        $this->oldUnitId = null;
         $this->invoiceItems[$index]['price'] = $price;
         $this->recalculateSubValues();
         $this->calculateTotals();
@@ -772,7 +850,13 @@ class EditInvoiceForm extends Component
                 }
             }
         } elseif ($field === 'unit_id') {
+            // ✅ حفظ الوحدة القديمة قبل التغيير لتحويل السعر تلقائياً
+            // $this->oldUnitId = $this->invoiceItems[$rowIndex]['unit_id'] ?? null;
+
+            // عند تغيير الوحدة، قم بتحديث السعر فقط (الكمية تبقى كما هي)
             $this->updatePriceForUnit($rowIndex);
+
+            // تحديث بيانات الصنف مع الوحدة الجديدة
             $itemId = $this->invoiceItems[$rowIndex]['item_id'];
             if ($itemId) {
                 $item = Item::with(['units', 'prices'])->find($itemId);
@@ -985,33 +1069,33 @@ class EditInvoiceForm extends Component
         return false;
     }
 
-        public function getPaymentBadgeClass()
-        {
-            $totalAmount = $this->total_after_additional;
-            $paidAmount = $this->received_from_client;
+    public function getPaymentBadgeClass()
+    {
+        $totalAmount = $this->total_after_additional;
+        $paidAmount = $this->received_from_client;
 
-            if ($paidAmount == 0) {
-                return 'unpaid'; // غير مدفوع
-            } elseif ($paidAmount >= $totalAmount) {
-                return 'full'; // مدفوع كامل
-            } else {
-                return 'partial'; // مدفوع جزئي
-            }
+        if ($paidAmount == 0) {
+            return 'unpaid'; // غير مدفوع
+        } elseif ($paidAmount >= $totalAmount) {
+            return 'full'; // مدفوع كامل
+        } else {
+            return 'partial'; // مدفوع جزئي
         }
+    }
 
-        public function getPaymentBadgeText()
-        {
-            $totalAmount = $this->total_after_additional;
-            $paidAmount = $this->received_from_client;
+    public function getPaymentBadgeText()
+    {
+        $totalAmount = $this->total_after_additional;
+        $paidAmount = $this->received_from_client;
 
-            if ($paidAmount == 0) {
-                return 'غير مدفوع';
-            } elseif ($paidAmount >= $totalAmount) {
-                return 'مدفوع';
-            } else {
-                return 'جزئي';
-            }
+        if ($paidAmount == 0) {
+            return 'غير مدفوع';
+        } elseif ($paidAmount >= $totalAmount) {
+            return 'مدفوع';
+        } else {
+            return 'جزئي';
         }
+    }
 
     public function cancelUpdate()
     {
@@ -1075,12 +1159,7 @@ class EditInvoiceForm extends Component
             $unitId = $item['unit_id'];
             $foundItem = Item::find($itemId);
             if ($foundItem) {
-                $vm = new ItemViewModel(null, $foundItem, $unitId);
-                $salePrices = $vm->getUnitSalePrices();
-                $newPrice = $salePrices[$this->selectedPriceType]['price'] ?? 0;
-                if ($this->type == 18) {
-                    $newPrice = $foundItem->average_cost ?? 0;
-                }
+                $newPrice = $this->calculateItemPrice($foundItem, $unitId, $this->selectedPriceType);
                 $this->invoiceItems[$index]['price'] = $newPrice;
                 $this->invoiceItems[$index]['sub_value'] = $newPrice * $item['quantity'];
             }

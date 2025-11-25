@@ -50,8 +50,9 @@ class ItemViewModel
         $totalBaseQty = 0;
         foreach ($itemRows as $row) {
             $unit = $this->item->units->firstWhere('id', $row->unit_id);
-            $u_val = $unit && isset($unit->pivot) ? $unit->pivot->u_val : 1;
-            $qty = ($row->qty_in - $row->qty_out) * $u_val;
+            // $u_val = $unit && isset($unit->pivot) ? $unit->pivot->u_val : 1;
+            // الكميات مخزنة بالفعل بالوحدة الأساسية، لذا لا داعي للضرب في معامل التحويل مرة أخرى
+            $qty = ($row->qty_in - $row->qty_out);
             $totalBaseQty += $qty;
         }
 

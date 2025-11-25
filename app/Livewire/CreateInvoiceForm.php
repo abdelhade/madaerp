@@ -134,6 +134,19 @@ class CreateInvoiceForm extends Component
         'batch-selected' => 'selectBatch',
     ];
 
+    public $oldUnitId = null;
+
+    public function updatingInvoiceItems($value, $key)
+    {
+        $parts = explode('.', $key);
+        if (count($parts) >= 2 && $parts[1] === 'unit_id') {
+            $index = (int) $parts[0];
+            if (isset($this->invoiceItems[$index]['unit_id'])) {
+                $this->oldUnitId = $this->invoiceItems[$index]['unit_id'];
+            }
+        }
+    }
+
     public function mount($type, $hash)
     {
         $permissionName = 'create ' . ($this->titles[$type] ?? 'Unknown');
@@ -798,92 +811,7 @@ class CreateInvoiceForm extends Component
         $firstUnit = $item->units->first();
         $unitId = $firstUnit?->id;
 
-        $vm = new ItemViewModel(null, $item, $unitId);
-        $salePrices = $vm->getUnitSalePrices();
-        $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
-
-        // إذا كان نوع الفاتورة 18، استخدم average_cost كسعر
-        if (in_array($this->type, [11, 15])) { // فاتورة مشتريات أو أمر شراء
-            // استخدام آخر سعر شراء
-            $lastPurchasePrice = OperationItems::where('item_id', $item->id)
-                ->where('is_stock', 1)
-                ->whereIn('pro_tybe', [11, 20]) // عمليات الشراء والإضافة للمخزن
-                ->where('qty_in', '>', 0)
-                ->orderBy('created_at', 'desc')
-                ->value('item_price') ?? 0;
-
-            $price = $lastPurchasePrice;
-
-            // إذا لم يكن هناك سعر شراء سابق، استخدم التكلفة المتوسطة
-            if ($price == 0) {
-                $price = $item->average_cost ?? 0;
-            }
-        } elseif ($this->type == 18) {
-            $price = $item->average_cost ?? 0;
-        } else {
-            $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
-
-            // فحص أي الأوبشنات مفعل
-            $usePricingAgreement = (setting('invoice_use_pricing_agreement') ?? '0') == '1';
-            $useLastCustomerPrice = (setting('invoice_use_last_customer_price') ?? '0') == '1';
-
-            // تحذير إذا كان الاثنين مفعلين
-            if ($usePricingAgreement && $useLastCustomerPrice) {
-                $this->dispatch(
-                    'error',
-                    title: 'تحذير!',
-                    text: 'لا يمكن تفعيل "استخدام آخر سعر من اتفاقية تسعير" و "استخدام آخر سعر بيع" معاً. الرجاء إيقاف أحدهما من الإعدادات.',
-                    icon: 'warning'
-                );
-                return $price; // استخدام السعر الافتراضي
-            }
-
-            // استخدام آخر سعر من اتفاقية التسعير (فقط للمبيعات)
-            if ($this->type == 10 && $usePricingAgreement && $this->acc1_id) {
-                $pricingAgreementPrice = OperationItems::whereHas('operhead', function ($query) {
-                    $query->where('pro_type', 26)
-                        ->where('acc1', $this->acc1_id);
-                })
-                    ->where('item_id', $itemId)
-                    ->where('unit_id', $unitId)
-                    ->orderBy('created_at', 'desc')
-                    ->value('item_price');
-
-                if ($pricingAgreementPrice && $pricingAgreementPrice > 0) {
-                    $price = $pricingAgreementPrice;
-                }
-            }
-            // استخدام آخر سعر للعميل إذا كان ممكناً (فقط للمبيعات)
-            elseif ($this->type == 10 && $useLastCustomerPrice && $this->acc1_id) {
-                $lastCustomerPrice = OperationItems::whereHas('operhead', function ($query) {
-                    $query->where('pro_type', 10)
-                        ->where('acc1', $this->acc1_id);
-                })
-                    ->where('item_id', $itemId)
-                    ->where('unit_id', $unitId)
-                    ->orderBy('created_at', 'desc')
-                    ->value('item_price');
-
-                if ($lastCustomerPrice && $lastCustomerPrice > 0) {
-                    $price = $lastCustomerPrice;
-                }
-            }
-            // استخدام آخر سعر من اتفاقية التسعير (دائماً لنوع 26)
-            elseif ($this->type == 26 && $this->acc1_id) {
-                $pricingAgreementPrice = OperationItems::whereHas('operhead', function ($query) {
-                    $query->where('pro_type', 26)
-                        ->where('acc1', $this->acc1_id);
-                })
-                    ->where('item_id', $itemId)
-                    ->where('unit_id', $unitId)
-                    ->orderBy('created_at', 'desc')
-                    ->value('item_price');
-
-                if ($pricingAgreementPrice && $pricingAgreementPrice > 0) {
-                    $price = $pricingAgreementPrice;
-                }
-            }
-        }
+        $price = $this->calculateItemPrice($item, $unitId, $this->selectedPriceType);
 
         // التحقق من منع السعر صفر
         // if ((!setting('allow_purchase_price_change')) && $price == 0) {
@@ -907,6 +835,7 @@ class CreateInvoiceForm extends Component
             return;
         }
 
+        $vm = new ItemViewModel(null, $item, $unitId);
         $unitOptions = $vm->getUnitOptions();
 
         $availableUnits = collect($unitOptions)->map(function ($unit) {
@@ -1041,6 +970,42 @@ class CreateInvoiceForm extends Component
         $this->updatePriceForUnit($index);
     }
 
+    public function updateQuantityForUnit($index)
+    {
+        if (!isset($this->invoiceItems[$index])) return;
+
+        $itemId = $this->invoiceItems[$index]['item_id'];
+        $unitId = $this->invoiceItems[$index]['unit_id'];
+        $oldUnitId = $this->oldUnitId;
+
+        if (!$itemId || !$unitId || !$oldUnitId || $unitId == $oldUnitId) return;
+
+        $item = $this->items->firstWhere('id', $itemId);
+        // ✅ إذا لم يتم العثور على الصنف في القائمة المحملة، قم بجلبه من قاعدة البيانات
+        if (!$item) {
+            $item = Item::with(['units'])->find($itemId);
+        }
+        if (!$item) return;
+
+        $oldUnit = $item->units->where('id', $oldUnitId)->first();
+        $newUnit = $item->units->where('id', $unitId)->first();
+
+        if ($oldUnit && $newUnit) {
+            $oldUVal = $oldUnit->pivot->u_val ?? 1;
+            $newUVal = $newUnit->pivot->u_val ?? 1;
+            
+            if ($newUVal == 0) return; // Avoid division by zero
+
+            // Calculate conversion factor: old / new
+            $conversionFactor = $oldUVal / $newUVal;
+            
+            $currentQty = (float)($this->invoiceItems[$index]['quantity'] ?? 0);
+            $newQty = $currentQty * $conversionFactor;
+            
+            $this->invoiceItems[$index]['quantity'] = round($newQty, 4);
+        }
+    }
+
     public function updatePriceForUnit($index)
     {
         if (!isset($this->invoiceItems[$index])) return;
@@ -1051,6 +1016,12 @@ class CreateInvoiceForm extends Component
         if (!$itemId || !$unitId) return;
 
         $item = $this->items->firstWhere('id', $itemId);
+        
+        // ✅ إذا لم يتم العثور على الصنف في القائمة المحملة (لأنه تم البحث عنه وإضافته)، قم بجلبه من قاعدة البيانات
+        if (!$item) {
+            $item = Item::with(['units', 'prices'])->find($itemId);
+        }
+
         if (!$item) return;
 
         if ($this->type == 11 && (!setting('allow_purchase_price_change'))) {
@@ -1063,75 +1034,11 @@ class CreateInvoiceForm extends Component
             return;
         }
         // حساب السعر للوحدة المختارة
-        $vm = new ItemViewModel(null, $item, $unitId);
-        if (in_array($this->type, [11, 15])) { // فاتورة مشتريات أو أمر شراء
-            // استخدام آخر سعر شراء
-            $lastPurchasePrice = OperationItems::where('item_id', $item->id)
-                ->where('is_stock', 1)
-                ->whereIn('pro_tybe', [11, 20]) // عمليات الشراء والإضافة للمخزن
-                ->where('qty_in', '>', 0)
-                ->orderBy('created_at', 'desc')
-                ->value('item_price') ?? 0;
-
-            $price = $lastPurchasePrice;
-
-            // إذا لم يكن هناك سعر شراء سابق، استخدم التكلفة المتوسطة
-            if ($price == 0) {
-                $price = $item->average_cost ?? 0;
-            }
-        } elseif ($this->type == 18) { // فاتورة توالف
-            $price = $item->average_cost ?? 0;
-        } else { // باقي أنواع الفواتير
-            $salePrices = $vm->getUnitSalePrices();
-            $price = $salePrices[$this->selectedPriceType]['price'] ?? 0;
-
-            // فحص أي الأوبشنات مفعل
-            $usePricingAgreement = (setting('invoice_use_pricing_agreement') ?? '0') == '1';
-            $useLastCustomerPrice = (setting('invoice_use_last_customer_price') ?? '0') == '1';
-
-            // تحذير إذا كان الاثنين مفعلين
-            if ($usePricingAgreement && $useLastCustomerPrice) {
-                $this->dispatch(
-                    'error',
-                    title: 'تحذير!',
-                    text: 'لا يمكن تفعيل "استخدام آخر سعر من اتفاقية تسعير" و "استخدام آخر سعر بيع" معاً. الرجاء إيقاف أحدهما من الإعدادات.',
-                    icon: 'warning'
-                );
-                // استخدام السعر الافتراضي بدون تطبيق الأوبشنات
-                return $price;
-            }
-
-            // استخدام آخر سعر من اتفاقية التسعير (فقط للمبيعات)
-            if ($this->type == 10 && $usePricingAgreement && $this->acc1_id) {
-                $pricingAgreementPrice = OperationItems::whereHas('operhead', function ($query) {
-                    $query->where('pro_type', 26)
-                        ->where('acc1', $this->acc1_id);
-                })
-                    ->where('item_id', $itemId)
-                    ->where('unit_id', $unitId)
-                    ->orderBy('created_at', 'desc')
-                    ->first();
-
-                if ($pricingAgreementPrice && $pricingAgreementPrice->item_price > 0) {
-                    $price = $pricingAgreementPrice->item_price;
-                }
-            }
-            // استخدام آخر سعر للعميل إذا كان ممكناً (فقط للمبيعات)
-            elseif ($this->type == 10 && $useLastCustomerPrice && $this->acc1_id) {
-                $lastCustomerPrice = OperationItems::whereHas('operhead', function ($query) {
-                    $query->where('pro_type', 10)
-                        ->where('acc1', $this->acc1_id);
-                })
-                    ->where('item_id', $itemId)
-                    ->where('unit_id', $unitId)
-                    ->orderBy('created_at', 'desc')
-                    ->first();
-
-                if ($lastCustomerPrice && $lastCustomerPrice->item_price > 0) {
-                    $price = $lastCustomerPrice->item_price;
-                }
-            }
-        }
+        $currentPrice = (float) ($this->invoiceItems[$index]['price'] ?? 0);
+        $price = $this->calculateItemPrice($item, $unitId, $this->selectedPriceType, $currentPrice, $this->oldUnitId);
+        
+        // إعادة تعيين الوحدة القديمة بعد الاستخدام
+        $this->oldUnitId = null;
 
         if (($this->settings['allow_zero_price_in_invoice'] ?? '0') != '1' && $price == 0) {
             $this->dispatch(
@@ -1238,19 +1145,22 @@ class CreateInvoiceForm extends Component
                 }
             }
         } elseif ($field === 'unit_id') {
-            // عند تغيير الوحدة، قم بتحديث السعر
-            $this->updatePriceForUnit($rowIndex);
+        // ✅ حفظ الوحدة القديمة قبل التغيير لتحويل السعر تلقائياً
+        // $this->oldUnitId = $this->invoiceItems[$rowIndex]['unit_id'] ?? null;
+        
+        // عند تغيير الوحدة، قم بتحديث السعر فقط (الكمية تبقى كما هي)
+        $this->updatePriceForUnit($rowIndex);
 
-            // تحديث بيانات الصنف مع الوحدة الجديدة
-            $itemId = $this->invoiceItems[$rowIndex]['item_id'];
-            if ($itemId) {
-                $item = Item::with(['units', 'prices'])->find($itemId);
-                if ($item) {
-                    $unitId = $this->invoiceItems[$rowIndex]['unit_id'];
-                    $price = $this->invoiceItems[$rowIndex]['price'];
-                    $this->updateSelectedItemData($item, $unitId, $price);
-                }
+        // تحديث بيانات الصنف مع الوحدة الجديدة
+        $itemId = $this->invoiceItems[$rowIndex]['item_id'];
+        if ($itemId) {
+            $item = Item::with(['units', 'prices'])->find($itemId);
+            if ($item) {
+                $unitId = $this->invoiceItems[$rowIndex]['unit_id'];
+                $price = $this->invoiceItems[$rowIndex]['price'];
+                $this->updateSelectedItemData($item, $unitId, $price);
             }
+        }
         } elseif ($field === 'sub_value') {
             // حساب عكسي: حساب الكمية من القيمة الفرعية
             if (($this->settings['allow_edit_invoice_value'] ?? '0') != '1') {
