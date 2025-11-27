@@ -53,7 +53,7 @@
 {{-- الرصيد الافتتاحى للحسابات --}}
 @can('view opening-balance-accounts')
 <li class="nav-item">
-    <a class="nav-link font-family-cairo fw-bold" href="{{ route('accounts.startBalance') }}">
+    <a class="nav-link font-hold fw-bold" href="{{ route('accounts.startBalance') }}">
         <i class="ti-control-record"></i>{{ __('navigation.opening_balance_accounts') }}
     </a>
 </li>
@@ -71,7 +71,7 @@
 {{-- balance sheet --}}
 @can('view balance-sheet')
 <li class="nav-item">
-    <a class="nav-link font-family-cairo fw-bold" href="{{ route('accounts.balanceSheet') }}">
+    <a class="nav-link font-hold fw-bold" href="{{ route('accounts.balanceSheet') }}">
         <i class="ti-control-record"></i>{{ __('navigation.balance_sheet') }}
     </a>
 </li>

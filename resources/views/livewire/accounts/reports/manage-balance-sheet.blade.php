@@ -292,7 +292,7 @@ new class extends Component {
     <div class="row">
         <div class="col-12">
             <div class="page-title-box">
-                <h4 class="page-title font-family-cairo fw-bold">الميزانية العمومية</h4>
+                <h4 class="page-title fw-bold">الميزانية العمومية</h4>
             </div>
         </div>
     </div>
@@ -305,24 +305,24 @@ new class extends Component {
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="font-family-cairo fw-bold">اسم الشركة:</label>
+                                <label class="fw-bold">اسم الشركة:</label>
                                 <input type="text" wire:model="companyName" class="form-control"
                                     placeholder="أدخل اسم الشركة">
                             </div>
                         </div>
                         {{-- <div class="col-md-6">
                             <div class="form-group">
-                                <label class="font-family-cairo fw-bold">تاريخ الميزانية العمومية:</label>
+                                <label class="fw-bold">تاريخ الميزانية العمومية:</label>
                                 <input type="date" wire:model="balanceSheetDate" class="form-control">
                             </div>
                         </div> --}}
                     </div>
                     <div class="row mt-3">
                         <div class="col-12">
-                            <button wire:click="refreshBalanceSheet" class="btn btn-main font-family-cairo">
+                            <button wire:click="refreshBalanceSheet" class="btn btn-main">
                                 <i class="fas fa-sync-alt"></i> تحديث الميزانية
                             </button>
-                            <button wire:click="exportBalanceSheet" class="btn btn-success font-family-cairo ms-2">
+                            <button wire:click="exportBalanceSheet" class="btn btn-success ms-2">
                                 <i class="fas fa-download"></i> تصدير الميزانية
                             </button>
                         </div>
@@ -337,9 +337,9 @@ new class extends Component {
         <div class="col-9 mx-auto">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title font-family-cairo fw-bold">الميزانية العمومية -
+                    <h5 class="card-title fw-bold">الميزانية العمومية -
                         {{ $companyName ?: 'اسم الشركة' }}</h5>
-                    <p class="text-muted font-family-cairo">تاريخ الميزانية:
+                    <p class="text-muted">تاريخ الميزانية:
                         {{ \Carbon\Carbon::parse($balanceSheetDate)->format('Y-m-d') }}</p>
                     <p class="text-muted font-family-cairo">(جميع المبالغ بالعملة المحلية)</p>
                 </div>
@@ -348,81 +348,81 @@ new class extends Component {
                         <table class="table table-bordered table-striped">
                             <thead class="table-dark">
                                 <tr>
-                                    <th class="font-family-cairo fw-bold text-center text-white" style="width: 60%">البند</th>
-                                    <th class="font-family-cairo fw-bold text-center text-white" style="width: 40%">المبلغ</th>
+                                    <th class="fw-bold text-center text-white" style="width: 60%">البند</th>
+                                    <th class="fw-bold text-center text-white" style="width: 40%">المبلغ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <!-- الأصول (Assets) -->
                                 <tr class="table-primary">
-                                    <td colspan="2" class="font-family-cairo fw-bold fs-5">الأصول (Assets)</td>
+                                    <td colspan="2" class="fw-bold fs-5">الأصول (Assets)</td>
                                 </tr>
                                 
                                 <!-- الأصول المتداولة -->
                                 <tr class="table-info">
-                                    <td class="font-family-cairo fw-bold">الأصول المتداولة (Current Assets)</td>
+                                    <td class="fw-bold">الأصول المتداولة (Current Assets)</td>
                                     <td></td>
                                 </tr>
                                 
                                 @foreach ($currentAssets as $asset)
                                     <tr>
-                                        <td class="font-family-cairo fw-bold" style="padding-right: 30px;">{{ $asset['name'] }}
+                                        <td class="font-hold fw-bold" style="padding-right: 30px;">{{ $asset['name'] }}
                                         </td>
-                                        <td class="text-end font-family-cairo fw-bold">{{ number_format($asset['balance'], 2) }}
+                                        <td class="text-end font-hold fw-bold">{{ number_format($asset['balance'], 2) }}
                                         </td>
                                     </tr>
                                 @endforeach
                                 
                                 <tr class="table-warning">
-                                    <td class="font-family-cairo fw-bold">إجمالي الأصول المتداولة</td>
+                                    <td class="fw-bold">إجمالي الأصول المتداولة</td>
                                     <td class="text-end font-family-cairo fw-bold">
                                         {{ number_format($currentAssetsTotal, 2) }}</td>
                                 </tr>
                                 
                                 <!-- الأصول غير المتداولة -->
                                 <tr class="table-info">
-                                    <td class="font-family-cairo fw-bold">الأصول غير المتداولة (Non-Current Assets)</td>
+                                    <td class="fw-bold">الأصول غير المتداولة (Non-Current Assets)</td>
                                     <td></td>
                                 </tr>
                                 
                                 @foreach ($nonCurrentAssets as $asset)
                                     <tr>
-                                        <td class="font-family-cairo" style="padding-right: 30px;">{{ $asset['name'] }}
+                                        <td class="font-hold" style="padding-right: 30px;">{{ $asset['name'] }}
                                         </td>
-                                        <td class="text-end font-family-cairo">{{ number_format($asset['balance'], 2) }}
+                                        <td class="text-end font-hold">{{ number_format($asset['balance'], 2) }}
                                         </td>
                                     </tr>
                                 @endforeach
                                 
                                 <tr class="table-warning">
-                                    <td class="font-family-cairo fw-bold">إجمالي الأصول غير المتداولة</td>
+                                    <td class="font-bold">إجمالي الأصول غير المتداولة</td>
                                     <td class="text-end font-family-cairo fw-bold">
                                         {{ number_format($nonCurrentAssetsTotal, 2) }}</td>
                                 </tr>
                                 
                                 <tr class="table-success">
-                                    <td class="font-family-cairo fw-bold fs-5">إجمالي الأصول</td>
-                                    <td class="text-end font-family-cairo fw-bold fs-5">
+                                    <td class="fw-bold fs-5">إجمالي الأصول</td>
+                                    <td class="text-end fw-bold fs-5">
                                         {{ number_format($totalAssets, 2) }}</td>
                                 </tr>
                                 
                                 <!-- الخصوم وحقوق الملكية -->
                                 <tr class="table-primary">
-                                    <td colspan="2" class="font-family-cairo fw-bold fs-5">الخصوم وحقوق الملكية
+                                    <td colspan="2" class="fw-bold fs-5">الخصوم وحقوق الملكية
                                         (Liabilities & Equity)</td>
                                 </tr>
                                 
                                 <!-- الخصوم المتداولة -->
                                 <tr class="table-info">
-                                    <td class="font-family-cairo fw-bold">الخصوم المتداولة (Current Liabilities)</td>
+                                    <td class="fw-bold">الخصوم المتداولة (Current Liabilities)</td>
                                     <td></td>
                                 </tr>
                                 
                                 @foreach ($currentLiabilities as $liability)
                                     <tr>
-                                        <td class="font-family-cairo fw-bold" style="padding-right: 30px;">
+                                        <td class="font-hold fw-bold" style="padding-right: 30px;">
                                             {{ $liability['name'] }}</td>
-                                        <td class="text-end font-family-cairo fw-bold">
+                                        <td class="text-end font-hold fw-bold">
                                             {{ number_format($liability['balance'], 2) }}</td>
                                     </tr>
                                 @endforeach
@@ -442,9 +442,9 @@ new class extends Component {
                                 
                                 @foreach ($nonCurrentLiabilities as $liability)
                                     <tr>
-                                        <td class="font-family-cairo fw-bold" style="padding-right: 30px;">
+                                        <td class="font-hold fw-bold" style="padding-right: 30px;">
                                             {{ $liability['name'] }}</td>
-                                        <td class="text-end font-family-cairo fw-bold">
+                                        <td class="text-end font-hold fw-bold">
                                             {{ number_format($liability['balance'], 2) }}</td>
                                     </tr>
                                 @endforeach
@@ -469,9 +469,9 @@ new class extends Component {
                                 
                                 @foreach ($equity as $equityItem)
                                     <tr>
-                                        <td class="font-family-cairo fw-bold" style="padding-right: 30px;">
+                                        <td class="font-hold fw-bold" style="padding-right: 30px;">
                                             {{ $equityItem['name'] }}</td>
-                                        <td class="text-end font-family-cairo fw-bold">
+                                        <td class="text-end font-hold fw-bold">
                                             {{ number_format($equityItem['balance'], 2) }}</td>
                                     </tr>
                                 @endforeach
@@ -518,7 +518,7 @@ new class extends Component {
     </div>
 
     <style>
-    .font-family-cairo {
+    .font-hold {
         font-family: 'Cairo', sans-serif;
     }
 

@@ -115,11 +115,11 @@ new class extends Component {
                         @foreach ($formAccounts as $formAccount)
                             <tr data-item-id="{{ $formAccount['id'] }}">
                                 <td>
-                                    <p class="font-family-cairo fw-bold font-16 text-center">{{ $formAccount['code'] }}
+                                    <p class="font-hold fw-bold font-16 text-center">{{ $formAccount['code'] }}
                                     </p>
                                 </td>
                                 <td>
-                                    <p class="font-family-cairo fw-bold font-16 text-center">{{ $formAccount['name'] }}
+                                    <p class="font-hold fw-bold font-16 text-center">{{ $formAccount['name'] }}
                                         - <a
                                             href="{{ route('account-movement', ['accountId' => $formAccount['id']]) }}">
                                             <i class="las la-eye fa-lg" title="عرض حركات الحساب"></i>
@@ -127,7 +127,7 @@ new class extends Component {
                                 </td>
                                 <td>
                                     <p
-                                        class="font-family-cairo fw-bold font-16 text-center @if ($formAccount['current_start_balance'] < 0) text-danger @endif">
+                                        class="font-hold fw-bold font-16 text-center @if ($formAccount['current_start_balance'] < 0) text-danger @endif">
                                         {{ number_format($formAccount['current_start_balance'] ?? 0, 2) }}</p>
                                 </td>
                                 <td>

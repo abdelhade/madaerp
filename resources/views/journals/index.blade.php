@@ -54,26 +54,26 @@
                     <tbody>
                         @forelse ($journals as $journal)
                             <tr>
-                                <td class="font-family-cairo fw-bold font-14 text-center">{{ $loop->iteration }}</td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">{{ $journal->pro_date }}</td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">{{ $journal->pro_id }}</td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">
+                                <td class="font-hold fw-bold font-14 text-center">{{ $loop->iteration }}</td>
+                                <td class="font-hold fw-bold font-14 text-center">{{ $journal->pro_date }}</td>
+                                <td class="font-hold fw-bold font-14 text-center">{{ $journal->pro_id }}</td>
+                                <td class="font-hold fw-bold font-14 text-center">
                                     {{ $journal->type->ptext ?? '—' }}
                                 </td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">{{ $journal->details }}</td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">{{ $journal->pro_value }}</td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">{{ $journal->account1->aname }}
+                                <td class="font-hold fw-bold font-14 text-center">{{ $journal->details }}</td>
+                                <td class="font-hold fw-bold font-14 text-center">{{ $journal->pro_value }}</td>
+                                <td class="font-hold fw-bold font-14 text-center">{{ $journal->account1->aname }}
                                 </td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">
+                                <td class="font-hold fw-bold font-14 text-center">
                                     {{ $journal->account2->aname ?? '' }}</td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">{{ $journal->emp1->aname ?? '' }}
+                                <td class="font-hold fw-bold font-14 text-center">{{ $journal->emp1->aname ?? '' }}
                                 </td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">{{ $journal->emp2->aname ?? '' }}
+                                <td class="font-hold fw-bold font-14 text-center">{{ $journal->emp2->aname ?? '' }}
                                 </td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">{{ $journal->user }}</td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">{{ $journal->created_at }}</td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">{{ $journal->info }}</td>
-                                <td class="font-family-cairo fw-bold font-14 text-center">
+                                <td class="font-hold fw-bold font-14 text-center">{{ $journal->user }}</td>
+                                <td class="font-hold fw-bold font-14 text-center">{{ $journal->created_at }}</td>
+                                <td class="font-hold fw-bold font-14 text-center">{{ $journal->info }}</td>
+                                <td class="font-hold fw-bold font-14 text-center">
                                     {{ $journal->confirmed ? 'نعم' : 'لا' }}</td>
                                 @canany(['edit journals', 'delete journals'])
                                     <td class="font-family-cairo fw-bold font-14 text-center" x-show="columns[16]">
