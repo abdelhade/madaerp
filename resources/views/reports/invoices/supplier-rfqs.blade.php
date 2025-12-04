@@ -334,5 +334,17 @@
                 icon.toggleClass('rotated');
             });
         });
+
+        // Re-initialize MetisMenu to ensure sidebar works correctly after dynamic changes
+        $(document).ready(function() {
+            if($(".metismenu").length > 0) {
+                try {
+                    $(".metismenu").metisMenu('dispose');
+                } catch(e) {
+                    console.log('MetisMenu dispose failed', e);
+                }
+                $(".metismenu").metisMenu();
+            }
+        });
     </script>
 @endpush
