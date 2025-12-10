@@ -314,7 +314,7 @@ class ManufacturingInvoiceService
                         'op_id' => $operation->id,
                         'amount' => $expense['amount'],
                         'account_id' => $expense['account_id'],
-                        'description' => 'مصروف إضافي: '.($expense['description'] ?? 'غير محدد').' - فاتورة: '.$component->pro_id,
+                        'description' => 'مصروف إضافي: ' . ($expense['description'] ?? 'غير محدد') . ' - فاتورة: ' . $component->pro_id,
                     ]);
                 }
             }
@@ -399,7 +399,7 @@ class ManufacturingInvoiceService
                 $journalId++;
                 JournalHead::create([
                     'journal_id' => $journalId,
-                    'total' => $totalRaw,
+                    'total' => $totalRaw + $totalExpenses,
                     'date' => $component->invoiceDate,
                     'op_id' => $operation->id,
                     'pro_type' => 59,
@@ -410,7 +410,7 @@ class ManufacturingInvoiceService
                 JournalDetail::create([
                     'journal_id' => $journalId,
                     'account_id' => $component->productAccount,
-                    'debit' => $totalRaw,
+                    'debit' => $totalRaw + $totalExpenses,
                     'credit' => 0,
                     'type' => 1,
                     'info' => 'إنتاج منتجات تامة',
@@ -421,7 +421,7 @@ class ManufacturingInvoiceService
                     'journal_id' => $journalId,
                     'account_id' => $component->OperatingAccount,
                     'debit' => 0,
-                    'credit' => $totalRaw,
+                    'credit' => $totalRaw + $totalExpenses,
                     'type' => 1,
                     'info' => 'إنتاج منتجات تامة',
                     'op_id' => $operation->id,
@@ -587,7 +587,7 @@ class ManufacturingInvoiceService
                     'op_id' => $operation->id,
                     'amount' => $expense['amount'],
                     'account_id' => $expense['account_id'],
-                    'description' => 'مصروف إضافي: '.($expense['description'] ?? 'غير محدد').' - فاتورة: '.$component->pro_id,
+                    'description' => 'مصروف إضافي: ' . ($expense['description'] ?? 'غير محدد') . ' - فاتورة: ' . $component->pro_id,
                 ]);
             }
             // }
@@ -710,7 +710,7 @@ class ManufacturingInvoiceService
             return $operation->id;
         } catch (\Exception $e) {
             DB::rollBack();
-            $component->dispatch('error-swal', title: 'خطأ!', text: 'حدث خطأ أثناء تعديل الفاتورة: '.$e->getMessage(), icon: 'error');
+            $component->dispatch('error-swal', title: 'خطأ!', text: 'حدث خطأ أثناء تعديل الفاتورة: ' . $e->getMessage(), icon: 'error');
 
             return false;
         }
