@@ -156,7 +156,7 @@
                                                 <div class="mb-3">
                                                     <label
                                                         class="form-label fw-bold">{{ __('Choose Template') }}:</label>
-                                                    <select wire:model.live="selectedTemplate"
+                                                    <select wire:model.debounce.300ms="selectedTemplate"
                                                         class="form-select form-select-lg">
                                                         <option value="">{{ __('-- Select Template --') }}
                                                         </option>
