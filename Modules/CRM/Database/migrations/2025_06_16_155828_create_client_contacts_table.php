@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->string('position')->nullable();
+            $table->enum('preferred_contact_method', ['phone', 'whatsapp', 'email'])->default('phone');
             $table->timestamps();
         });
     }

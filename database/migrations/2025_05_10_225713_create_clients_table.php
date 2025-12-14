@@ -31,6 +31,8 @@ return new class extends Migration
             $table->string('info')->nullable();
             $table->string('job')->nullable();
             $table->enum('gender', ['male', 'female'])->nullable();
+            $table->string('commercial_register')->nullable();
+            $table->string('tax_certificate')->nullable();
             $table->boolean('isdeleted')->default(0);
             $table->boolean('is_active')->default(0);
             $table->integer('created_by')->default(0);

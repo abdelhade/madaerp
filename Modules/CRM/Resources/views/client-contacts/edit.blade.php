@@ -66,6 +66,18 @@
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
+
+                            <div class="mb-3 col-lg-4">
+                                <label class="form-label" for="preferred_contact_method">{{ __('Preferred Contact Method') }}</label>
+                                <select class="form-select" id="preferred_contact_method" name="preferred_contact_method">
+                                    <option value="phone" {{ old('preferred_contact_method', $contact->preferred_contact_method) == 'phone' ? 'selected' : '' }}>{{ __('Phone') }}</option>
+                                    <option value="whatsapp" {{ old('preferred_contact_method', $contact->preferred_contact_method) == 'whatsapp' ? 'selected' : '' }}>{{ __('WhatsApp') }}</option>
+                                    <option value="email" {{ old('preferred_contact_method', $contact->preferred_contact_method) == 'email' ? 'selected' : '' }}>{{ __('Email') }}</option>
+                                </select>
+                                @error('preferred_contact_method')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-start mt-4">

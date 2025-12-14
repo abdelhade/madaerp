@@ -63,6 +63,8 @@
                                     <th>{{ __('Phone') }}</th>
                                     <th>{{ __('Address') }}</th>
                                     <th>{{ __('Job') }}</th>
+                                    <th>{{ __('Commercial Register') }}</th>
+                                    <th>{{ __('Tax Certificate') }}</th>
                                     {{-- <th>{{ __('Date of Birth') }}</th> --}}
                                     <th>{{ __('Type') }}</th>
                                     {{-- <th>{{ __('الجنس') }}</th> --}}
@@ -81,6 +83,8 @@
                                         <td>{{ $client->phone }}</td>
                                         <td>{{ $client->address }}</td>
                                         <td>{{ $client->job }}</td>
+                                        <td>{{ $client->commercial_register }}</td>
+                                        <td>{{ $client->tax_certificate }}</td>
                                         {{-- <td>{{ $client->date_of_birth?->format('Y-m-d') }}</td> --}}
                                         <td>
                                             {{ $client->clientType?->title ?? __('Not Specified') }}

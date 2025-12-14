@@ -136,6 +136,20 @@
                                     value="{{ old('job', $client->job) }}">
                             </div>
 
+                            {{-- السجل التجاري --}}
+                            <div class="mb-3 col-lg-4">
+                                <label class="form-label">{{ __('Commercial Register') }}</label>
+                                <input type="text" name="commercial_register" class="form-control"
+                                    value="{{ old('commercial_register', $client->commercial_register) }}">
+                            </div>
+
+                            {{-- الشهادة الضريبية --}}
+                            <div class="mb-3 col-lg-4">
+                                <label class="form-label">{{ __('Tax Certificate') }}</label>
+                                <input type="text" name="tax_certificate" class="form-control"
+                                    value="{{ old('tax_certificate', $client->tax_certificate) }}">
+                            </div>
+
                             {{-- شخص للتواصل --}}
                             <div class="mb-3 col-lg-4">
                                 <label class="form-label">{{ __('Contact Person') }}</label>

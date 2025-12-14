@@ -124,6 +124,18 @@
                                 <input type="text" name="job" class="form-control">
                             </div>
 
+                            {{-- السجل التجاري --}}
+                            <div class="mb-3 col-lg-4">
+                                <label class="form-label">{{ __('Commercial Register') }}</label>
+                                <input type="text" name="commercial_register" class="form-control">
+                            </div>
+
+                            {{-- الشهادة الضريبية --}}
+                            <div class="mb-3 col-lg-4">
+                                <label class="form-label">{{ __('Tax Certificate') }}</label>
+                                <input type="text" name="tax_certificate" class="form-control">
+                            </div>
+
                             {{-- شخص للتواصل --}}
                             <div class="mb-3 col-lg-4">
                                 <label class="form-label">{{ __('Contact Person') }}</label>

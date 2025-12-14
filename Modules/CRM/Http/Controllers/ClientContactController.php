@@ -38,22 +38,22 @@ class ClientContactController extends Controller
     {
         return view('crm::show');
     }
-    public function edit(ClientContact $contact)
+    public function edit(ClientContact $clientContact)
     {
-        return view('crm::client-contacts.edit', compact('contact'));
+        return view('crm::client-contacts.edit', ['contact' => $clientContact]);
     }
 
-    public function update(ClientContactRequest $request, ClientContact $contact)
+    public function update(ClientContactRequest $request, ClientContact $clientContact)
     {
-        $contact->update($request->validated());
+        $clientContact->update($request->validated());
         Alert::toast(__('Contact updated successfully'), 'success');
         return redirect()->route('client-contacts.index');
     }
 
-    public function destroy(ClientContact $contact)
+    public function destroy(ClientContact $clientContact)
     {
         try {
-            $contact->delete();
+            $clientContact->delete();
             Alert::toast(__('Contact deleted successfully'), 'success');
         } catch (\Exception) {
             Alert::toast(__('An error occurred while deleting the contact'), 'error');

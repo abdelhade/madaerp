@@ -36,6 +36,7 @@
                                     <th>{{ __('Email') }}</th>
                                     <th>{{ __('Phone') }}</th>
                                     <th>{{ __('Position') }}</th>
+                                    <th>{{ __('Preferred Contact Method') }}</th>
                                     @canany(['edit Client Contacts', 'delete Client Contacts'])
                                         <th>{{ __('Actions') }}</th>
                                     @endcanany
@@ -50,6 +51,15 @@
                                         <td>{{ $contact->email }}</td>
                                         <td>{{ $contact->phone }}</td>
                                         <td>{{ $contact->position }}</td>
+                                        <td>
+                                            @if($contact->preferred_contact_method == 'phone')
+                                                <span class="badge bg-primary"><i class="las la-phone"></i> {{ __('Phone') }}</span>
+                                            @elseif($contact->preferred_contact_method == 'whatsapp')
+                                                <span class="badge bg-success"><i class="lab la-whatsapp"></i> {{ __('WhatsApp') }}</span>
+                                            @elseif($contact->preferred_contact_method == 'email')
+                                                <span class="badge bg-info"><i class="las la-envelope"></i> {{ __('Email') }}</span>
+                                            @endif
+                                        </td>
                                         @canany(['edit Client Contacts', 'delete Client Contacts'])
                                             <td>
                                                 @can('edit Client Contacts')

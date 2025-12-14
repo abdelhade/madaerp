@@ -25,6 +25,7 @@ class ClientContactRequest extends FormRequest
             'email'     => ['required', 'email', 'max:255'],
             'phone'     => ['required', 'string', 'max:20'],
             'position'  => ['nullable', 'string', 'max:255'],
+            'preferred_contact_method' => ['required', 'in:phone,whatsapp,email'],
         ];
     }
 
@@ -41,6 +42,7 @@ class ClientContactRequest extends FormRequest
             'email'     => __('Email'),
             'phone'     => __('Phone'),
             'position'  => __('Position'),
+            'preferred_contact_method' => __('Preferred Contact Method'),
         ];
     }
 }
