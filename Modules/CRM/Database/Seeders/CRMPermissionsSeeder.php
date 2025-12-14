@@ -17,6 +17,8 @@ class CRMPermissionsSeeder extends Seeder
                 'Lead Statuses',
                 'Lead Sources',
                 'Chance Sources',
+                'Client Categories',
+                'Clients',
                 'Client Types',
                 'Client Contacts',
                 'Task Types',
@@ -30,10 +32,16 @@ class CRMPermissionsSeeder extends Seeder
         // الأفعال القياسية
         $actions = ['view', 'create', 'edit', 'delete', 'print'];
 
+        // صلاحيات خاصة للعملاء
+        $clientsActions = ['view', 'create', 'edit', 'delete', 'print', 'import'];
+
         // إنشاء الصلاحيات إن لم تكن موجودة
         foreach ($groupedPermissions as $category => $items) {
             foreach ($items as $base) {
-                foreach ($actions as $action) {
+                // استخدام صلاحيات خاصة للعملاء
+                $currentActions = ($base === 'Clients') ? $clientsActions : $actions;
+
+                foreach ($currentActions as $action) {
                     $fullName = "$action $base";
                     Permission::firstOrCreate(
                         ['name' => $fullName, 'guard_name' => 'web'],

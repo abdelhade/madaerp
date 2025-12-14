@@ -1,6 +1,4 @@
-@extends('admin.dashboard')
-
-
+@extends('admin.dashboard')s
 @section('sidebar')
     @include('components.sidebar.crm')
 @endsection
@@ -17,7 +15,7 @@
             @can('create Client Contacts')
                 <a href="{{ route('client-contacts.create') }}" type="button" class="btn btn-main font-hold fw-bold">
                     <i class="fas fa-plus me-2"></i>
-                    Add New
+                    {{ __('Add New') }}
                 </a>
             @endcan
             <br>
@@ -26,10 +24,8 @@
                 <div class="card-body">
                     <div class="table-responsive" style="overflow-x: auto;">
 
-
                         <x-table-export-actions table-id="client-contact-table" filename="client-contact-table"
                             excel-label="Export Excel" pdf-label="Export PDF" print-label="Print" />
-
 
                         <table id="client-contact-table" class="table table-striped mb-0" style="min-width: 1200px;">
                             <thead class="table-light text-center align-middle">
@@ -90,8 +86,6 @@
                                     </tr>
                                 @endforelse
                             </tbody>
-
-
                         </table>
                     </div>
                 </div>

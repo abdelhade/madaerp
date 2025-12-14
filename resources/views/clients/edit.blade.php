@@ -7,11 +7,11 @@
 
 @section('content')
     @include('components.breadcrumb', [
-        'title' => __('تعديل العميل'),
+        'title' => __('Edit Client'),
         'items' => [
-            ['label' => __('الرئيسيه'), 'url' => route('admin.dashboard')],
-            ['label' => __('العملاء'), 'url' => route('clients.index')],
-            ['label' => __('تعديل')],
+            ['label' => __('Home'), 'url' => route('admin.dashboard')],
+            ['label' => __('Clients'), 'url' => route('clients.index')],
+            ['label' => __('Edit')],
         ],
     ])
 
@@ -67,7 +67,7 @@
                         <div class="row">
                             {{-- الاسم --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">اسم العميل</label>
+                                <label class="form-label">{{ __('Client Name') }}</label>
                                 <input type="text" name="cname" class="form-control"
                                     value="{{ old('cname', $client->cname) }}">
                                 @error('cname')
@@ -77,7 +77,7 @@
 
                             {{-- البريد --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">البريد الإلكتروني</label>
+                                <label class="form-label">{{ __('Email') }}</label>
                                 <input type="email" name="email" class="form-control"
                                     value="{{ old('email', $client->email) }}">
                                 @error('email')
@@ -87,7 +87,7 @@
 
                             {{-- الهاتف 1 --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">الهاتف 1</label>
+                                <label class="form-label">{{ __('Primary Phone') }}</label>
                                 <input type="text" name="phone" class="form-control"
                                     value="{{ old('phone', $client->phone) }}">
                                 @error('phone')
@@ -97,69 +97,69 @@
 
                             {{-- الهاتف 2 --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">الهاتف 2</label>
+                                <label class="form-label">{{ __('Alternative Phone') }}</label>
                                 <input type="text" name="phone2" class="form-control"
                                     value="{{ old('phone2', $client->phone2) }}">
                             </div>
 
                             {{-- العنوان 1 --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">العنوان 1</label>
+                                <label class="form-label">{{ __('Main Address / Branch Address') }}</label>
                                 <input type="text" name="address" class="form-control"
                                     value="{{ old('address', $client->address) }}">
                             </div>
 
                             {{-- العنوان 2 --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">العنوان 2</label>
+                                <label class="form-label">{{ __('Address 2') }}</label>
                                 <input type="text" name="address2" class="form-control"
                                     value="{{ old('address2', $client->address2) }}">
                             </div>
 
                             {{-- تاريخ الميلاد --}}
-                            <div class="mb-3 col-lg-4">
+                            {{-- <div class="mb-3 col-lg-4">
                                 <label class="form-label">تاريخ الميلاد</label>
                                 <input type="date" name="date_of_birth" class="form-control"
                                     value="{{ old('date_of_birth', $client->date_of_birth ? $client->date_of_birth->format('Y-m-d') : '') }}">
-                            </div>
+                            </div> --}}
 
                             {{-- الرقم القومي --}}
-                            <div class="mb-3 col-lg-4">
+                            {{-- <div class="mb-3 col-lg-4">
                                 <label class="form-label">الرقم القومي</label>
                                 <input type="text" name="national_id" class="form-control"
                                     value="{{ old('national_id', $client->national_id) }}">
-                            </div>
+                            </div> --}}
 
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">الوظيفة</label>
+                                <label class="form-label">{{ __('Job') }}</label>
                                 <input type="text" name="job" class="form-control"
                                     value="{{ old('job', $client->job) }}">
                             </div>
 
                             {{-- شخص للتواصل --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">شخص للتواصل</label>
+                                <label class="form-label">{{ __('Contact Person') }}</label>
                                 <input type="text" name="contact_person" class="form-control"
                                     value="{{ old('contact_person', $client->contact_person) }}">
                             </div>
 
                             {{-- هاتف التواصل --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">هاتف التواصل</label>
+                                <label class="form-label">{{ __('Contact Phone') }}</label>
                                 <input type="text" name="contact_phone" class="form-control"
                                     value="{{ old('contact_phone', $client->contact_phone) }}">
                             </div>
 
                             {{-- العلاقة --}}
-                            <div class="mb-3 col-lg-4">
+                            {{-- <div class="mb-3 col-lg-4">
                                 <label class="form-label">صلة القرابة</label>
                                 <input type="text" name="contact_relation" class="form-control"
                                     value="{{ old('contact_relation', $client->contact_relation) }}">
-                            </div>
+                            </div> --}}
 
                             {{-- معلومات إضافية --}}
                             <div class="mb-3 col-lg-12">
-                                <label class="form-label">ملاحظات</label>
+                                <label class="form-label">{{ __('Notes') }}</label>
                                 <textarea name="info" class="form-control" rows="2">{{ old('info', $client->info) }}</textarea>
                             </div>
 
@@ -168,9 +168,9 @@
                                 <!-- حقل النوع -->
                                 <!-- نوع العميل -->
                                 <div class="col-md-3 mb-3">
-                                    <label class="form-label">{{ __('نوع العميل') }}</label>
+                                    <label class="form-label">{{ __('Client Type') }}</label>
                                     <select name="client_type_id" class="form-select" required>
-                                        <option value="">{{ __('اختر نوع العميل') }}</option>
+                                        <option value="">{{ __('Select Client Type') }}</option>
                                         @foreach ($clientTypes as $type)
                                             <option value="{{ $type->id }}"
                                                 {{ old('client_type_id', $client->client_type_id) == $type->id ? 'selected' : '' }}>
@@ -181,7 +181,7 @@
                                 </div>
 
                                 <!-- الجنس -->
-                                <div class="col-lg-3 col-md-6">
+                                {{-- <div class="col-lg-3 col-md-6">
                                     <label class="form-label">النوع</label>
                                     <select name="gender" id="gender" class="form-select">
                                         <option value="">اختر النوع</option>
@@ -191,12 +191,12 @@
                                             {{ old('gender', $client->gender) == 'female' ? 'selected' : '' }}>أنثى
                                         </option>
                                     </select>
-                                </div>
+                                </div> --}}
 
                                 <div class="mb-3 col-lg-3">
-                                    <label class="form-label">تصنيف العميل</label>
+                                    <label class="form-label">{{ __('Client Category') }}</label>
                                     <select name="client_category_id" class="form-select">
-                                        <option value="">اختر التصنيف</option>
+                                        <option value="">{{ __('Select Category') }}</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->id }}"
                                                 {{ old('client_category_id', $client->client_category_id) == $category->id ? 'selected' : '' }}>
@@ -211,13 +211,12 @@
 
                                 <!-- حقل الحالة -->
                                 <div class="col-lg-3 col-md-6">
-                                    <label class="form-label">الحالة</label>
+                                    <label class="form-label">{{ __('Status') }}</label>
                                     <div class="status-container d-flex align-items-center justify-content-between">
-                                        <span class="status-label">نشط</span>
+                                        <span class="status-label">{{ __('Active') }}</span>
                                         <div class="form-check form-switch m-0">
-                                            <input type="checkbox" class="form-check-input" id="is_active"
-                                                name="is_active" value="1"
-                                                {{ old('is_active', $client->is_active) ? 'checked' : '' }}>
+                                            <input type="checkbox" class="form-check-input" id="is_active" name="is_active"
+                                                value="1" {{ old('is_active', $client->is_active) ? 'checked' : '' }}>
                                         </div>
                                     </div>
                                 </div>
@@ -226,11 +225,11 @@
 
                         <div class="d-flex justify-content-start mt-4">
                             <button type="submit" class="btn btn-main me-2">
-                                <i class="las la-save"></i> تحديث
+                                <i class="las la-save"></i> {{ __('Update') }}
                             </button>
 
                             <a href="{{ route('clients.index') }}" class="btn btn-danger">
-                                <i class="las la-times"></i> إلغاء
+                                <i class="las la-times"></i> {{ __('Cancel') }}
                             </a>
                         </div>
                     </form>

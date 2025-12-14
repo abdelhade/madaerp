@@ -6,11 +6,11 @@
 
 @section('content')
     @include('components.breadcrumb', [
-        'title' => __('العملاء'),
+        'title' => __('Clients'),
         'items' => [
-            ['label' => __('الرئيسيه'), 'url' => route('admin.dashboard')],
-            ['label' => __('العملاء'), 'url' => route('clients.index')],
-            ['label' => __('إنشاء')],
+            ['label' => __('Home'), 'url' => route('admin.dashboard')],
+            ['label' => __('Clients'), 'url' => route('clients.index')],
+            ['label' => __('Create')],
         ],
     ])
     @push('styles')
@@ -64,7 +64,7 @@
                         <div class="row">
                             {{-- الاسم --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">اسم المنشأة</label>
+                                <label class="form-label">{{ __('Company Name') }}</label>
                                 <input type="text" name="cname" class="form-control">
                                 @error('cname')
                                     <small class="text-danger">{{ $message }}</small>
@@ -73,7 +73,7 @@
 
                             {{-- البريد --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">البريد الإلكتروني</label>
+                                <label class="form-label">{{ __('Email') }}</label>
                                 <input type="email" name="email" class="form-control">
                                 @error('email')
                                     <small class="text-danger">{{ $message }}</small>
@@ -82,7 +82,7 @@
 
                             {{-- الهاتف 1 --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">الهاتف الرئيسي </label>
+                                <label class="form-label">{{ __('Primary Phone') }}</label>
                                 <input type="text" name="phone" class="form-control">
                                 @error('phone')
                                     <small class="text-danger">{{ $message }}</small>
@@ -91,19 +91,19 @@
 
                             {{-- الهاتف 2 --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">هاتف بديل</label>
+                                <label class="form-label">{{ __('Alternative Phone') }}</label>
                                 <input type="text" name="phone2" class="form-control">
                             </div>
 
                             {{-- العنوان 1 --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">عنوان المقر الرئيسي / عنوان الفروع </label>
+                                <label class="form-label">{{ __('Main Address / Branch Address') }}</label>
                                 <input type="text" name="address" class="form-control">
                             </div>
 
                             {{-- العنوان 2 --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">العنوان 2</label>
+                                <label class="form-label">{{ __('Address 2') }}</label>
                                 <input type="text" name="address2" class="form-control">
                             </div>
 
@@ -120,19 +120,19 @@
                             </div> --}}
 
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">الوظيفة</label>
+                                <label class="form-label">{{ __('Job') }}</label>
                                 <input type="text" name="job" class="form-control">
                             </div>
 
                             {{-- شخص للتواصل --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">شخص للتواصل</label>
+                                <label class="form-label">{{ __('Contact Person') }}</label>
                                 <input type="text" name="contact_person" class="form-control">
                             </div>
 
                             {{-- هاتف التواصل --}}
                             <div class="mb-3 col-lg-4">
-                                <label class="form-label">هاتف التواصل</label>
+                                <label class="form-label">{{ __('Contact Phone') }}</label>
                                 <input type="text" name="contact_phone" class="form-control">
                             </div>
 
@@ -144,7 +144,7 @@
 
                             {{-- معلومات إضافية --}}
                             <div class="mb-3 col-lg-12">
-                                <label class="form-label">ملاحظات</label>
+                                <label class="form-label">{{ __('Notes') }}</label>
                                 <textarea name="info" class="form-control" rows="2"></textarea>
                             </div>
 
@@ -152,9 +152,9 @@
                             <div class="row g-3">
                                 <!-- حقل النوع -->
                                 <div class="col-md-3 mb-3">
-                                    <label for="client_type_id" class="form-label">{{ __('نوع العميل') }}</label>
+                                    <label for="client_type_id" class="form-label">{{ __('Client Type') }}</label>
                                     <select name="client_type_id" id="client_type_id" class="form-select" required>
-                                        <option value="">{{ __('اختر نوع العميل') }}</option>
+                                        <option value="">{{ __('Select Client Type') }}</option>
                                         @foreach ($clientTypes as $type)
                                             <option value="{{ $type->id }}"
                                                 {{ old('client_type_id') == $type->id ? 'selected' : '' }}>
@@ -174,9 +174,9 @@
                                 </div> --}}
 
                                 <div class="mb-3 col-lg-3">
-                                    <label class="form-label">تصنيف العميل</label>
+                                    <label class="form-label">{{ __('Client Category') }}</label>
                                     <select name="client_category_id" class="form-select">
-                                        <option value="">اختر التصنيف</option>
+                                        <option value="">{{ __('Select Category') }}</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->id }}"
                                                 {{ old('client_category_id') == $category->id ? 'selected' : '' }}>
@@ -191,9 +191,9 @@
 
                                 <!-- حقل الحالة -->
                                 <div class="col-lg-3 col-md-6">
-                                    <label class="form-label">الحالة</label>
+                                    <label class="form-label">{{ __('Status') }}</label>
                                     <div class="status-container d-flex align-items-center justify-content-between">
-                                        <span class="status-label">نشط</span>
+                                        <span class="status-label">{{ __('Active') }}</span>
                                         <div class="form-check form-switch m-0">
                                             <input type="checkbox" class="form-check-input" id="is_active" name="is_active"
                                                 value="1" checked>
@@ -207,11 +207,11 @@
 
                         <div class="d-flex justify-content-start mt-4">
                             <button type="submit" class="btn btn-main me-2">
-                                <i class="las la-save"></i> حفظ
+                                <i class="las la-save"></i> {{ __('Save') }}
                             </button>
 
                             <a href="{{ route('clients.index') }}" class="btn btn-danger">
-                                <i class="las la-times"></i> إلغاء
+                                <i class="las la-times"></i> {{ __('Cancel') }}
                             </a>
                         </div>
 
