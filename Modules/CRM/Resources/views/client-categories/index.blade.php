@@ -15,7 +15,7 @@
         <div class="col-lg-12">
             @can('create Client Types')
                 <a href="{{ route('client.categories.create') }}" type="button" class="btn btn-main font-hold fw-bold">
-                    Add New
+                    {{ __('Add New') }}
                     <i class="fas fa-plus me-2"></i>
                 </a>
             @endcan

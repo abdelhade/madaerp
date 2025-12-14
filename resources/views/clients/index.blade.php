@@ -1,14 +1,13 @@
 @extends('admin.dashboard')
 
-{{-- Dynamic Sidebar --}}
 @section('sidebar')
     @include('components.sidebar.crm')
 @endsection
 
 @section('content')
     @include('components.breadcrumb', [
-        'title' => __('العملاء'),
-        'items' => [['label' => __('الرئيسيه'), 'url' => route('admin.dashboard')], ['label' => __('العملاء')]],
+        'title' => __('Clients'),
+        'items' => [['label' => __('Home'), 'url' => route('admin.dashboard')], ['label' => __('Clients')]],
     ])
     <style>
         .form-check-input.toggle-active {
@@ -26,45 +25,53 @@
     </style>
     <div class="row">
         <div class="col-lg-12">
-            <a href="{{ route('clients.create') }}" type="button" class="btn btn-main">
-                <i class="fas fa-plus me-2"></i>
-                اضافه عميل جديد
-            </a>
+            @can('create Clients')
+                <a href="{{ route('clients.create') }}" type="button" class="btn btn-main">
+                    <i class="fas fa-plus me-2"></i>
+                    {{ __('Add New Client') }}
+                </a>
+            @endcan
             <br><br>
-            <x-app::excel-importer model="Client" :column-mapping="[
-                'cname' => 'cname',
-                'email' => 'email',
-                'phone' => 'phone',
-                'phone2' => 'phone2',
-                'address' => 'address',
-                'job' => 'job',
-                'gender' => 'gender',
-                'type' => 'type',
-                'national_id' => 'national_id',
-            ]" :validation-rules="[]" button-text="استيراد العملاء"
-                button-size="small" />
+            @can('import Clients')
+                <x-app::excel-importer model="Client" :column-mapping="[
+                    'cname' => 'cname',
+                    'email' => 'email',
+                    'phone' => 'phone',
+                    'phone2' => 'phone2',
+                    'address' => 'address',
+                    'job' => 'job',
+                    'gender' => 'gender',
+                    'type' => 'type',
+                    'national_id' => 'national_id',
+                ]" :validation-rules="[]" button-text="{{ __('Import Clients') }}"
+                    button-size="small" />
+            @endcan
 
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive" style="overflow-x: auto;">
 
-                        <x-table-export-actions table-id="clients-table" filename="clients-table" excel-label="تصدير Excel"
-                            pdf-label="تصدير PDF" print-label="طباعة" />
+                        <x-table-export-actions table-id="clients-table" filename="clients-table" excel-label="{{ __('Export Excel') }}"
+                            pdf-label="{{ __('Export PDF') }}" print-label="{{ __('Print') }}" />
 
                         <table id="clients-table" class="table table-striped mb-0" style="min-width: 1200px;">
                             <thead class="table-light text-center align-middle">
                                 <tr>
                                     <th>#</th>
-                                    <th>{{ __('اسم العميل') }}</th>
-                                    <th>{{ __('البريد الإلكتروني') }}</th>
-                                    <th>{{ __('الهاتف') }}</th>
-                                    <th>{{ __('العنوان') }}</th>
-                                    <th>{{ __('الوظيفة') }}</th>
-                                    <th>{{ __('تاريخ الميلاد') }}</th>
-                                    <th>{{ __('الصفه') }}</th>
-                                    <th>{{ __('الجنس') }}</th>
-                                    <th>{{ __('الحالة') }}</th>
-                                    <th>{{ __('العمليات') }}</th>
+                                    <th>{{ __('Client Name') }}</th>
+                                    <th>{{ __('Email') }}</th>
+                                    <th>{{ __('Phone') }}</th>
+                                    <th>{{ __('Address') }}</th>
+                                    <th>{{ __('Job') }}</th>
+                                    <th>{{ __('Commercial Register') }}</th>
+                                    <th>{{ __('Tax Certificate') }}</th>
+                                    {{-- <th>{{ __('Date of Birth') }}</th> --}}
+                                    <th>{{ __('Type') }}</th>
+                                    {{-- <th>{{ __('الجنس') }}</th> --}}
+                                    <th>{{ __('Status') }}</th>
+                                    @canany(['edit Clients', 'delete Clients'])
+                                        <th>{{ __('Actions') }}</th>
+                                    @endcanany
                                 </tr>
                             </thead>
                             <tbody>
@@ -76,11 +83,13 @@
                                         <td>{{ $client->phone }}</td>
                                         <td>{{ $client->address }}</td>
                                         <td>{{ $client->job }}</td>
-                                        <td>{{ $client->date_of_birth?->format('Y-m-d') }}</td>
+                                        <td>{{ $client->commercial_register }}</td>
+                                        <td>{{ $client->tax_certificate }}</td>
+                                        {{-- <td>{{ $client->date_of_birth?->format('Y-m-d') }}</td> --}}
                                         <td>
-                                            {{ $client->clientType?->title ?? 'غير محدد' }}
+                                            {{ $client->clientType?->title ?? __('Not Specified') }}
                                         </td>
-                                        <td>
+                                        {{-- <td>
                                             @if ($client->type === 'person')
                                                 @if ($client->gender === 'male')
                                                     <span class="badge bg-primary">ذكر</span>
@@ -90,33 +99,45 @@
                                             @else
                                                 <span class="badge bg-secondary">—</span>
                                             @endif
-                                        </td>
+                                        </td> --}}
 
                                         <td>
-                                            <span class="d-inline-flex align-items-center">
-                                                <div class="form-check form-switch">
-                                                    <input type="checkbox" class="form-check-input toggle-active"
-                                                        data-id="{{ $client->id }}"
-                                                        {{ $client->is_active ? 'checked' : '' }}>
-                                                </div>
-                                            </span>
+                                            @can('edit Clients')
+                                                <span class="d-inline-flex align-items-center">
+                                                    <div class="form-check form-switch">
+                                                        <input type="checkbox" class="form-check-input toggle-active"
+                                                            data-id="{{ $client->id }}"
+                                                            {{ $client->is_active ? 'checked' : '' }}>
+                                                    </div>
+                                                </span>
+                                            @else
+                                                <span class="badge {{ $client->is_active ? 'bg-success' : 'bg-danger' }}">
+                                                    {{ $client->is_active ? __('Active') : __('Inactive') }}
+                                                </span>
+                                            @endcan
                                         </td>
 
-                                        <td>
-                                            <a class="btn btn-success btn-icon-square-sm"
-                                                href="{{ route('clients.edit', $client->id) }}">
-                                                <i class="las la-edit"></i>
-                                            </a>
-                                            <form action="{{ route('clients.destroy', $client->id) }}" method="POST"
-                                                style="display:inline-block;"
-                                                onsubmit="return confirm('هل أنت متأكد من حذف هذا العميل؟');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-icon-square-sm">
-                                                    <i class="las la-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
+                                        @canany(['edit Clients', 'delete Clients'])
+                                            <td>
+                                                @can('edit Clients')
+                                                    <a class="btn btn-success btn-icon-square-sm"
+                                                        href="{{ route('clients.edit', $client->id) }}">
+                                                        <i class="las la-edit"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('delete Clients')
+                                                    <form action="{{ route('clients.destroy', $client->id) }}" method="POST"
+                                                        style="display:inline-block;"
+                                                        onsubmit="return confirm('{{ __('Are you sure you want to delete this client?') }}');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-danger btn-icon-square-sm">
+                                                            <i class="las la-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
+                                            </td>
+                                        @endcanany
                                     </tr>
                                 @empty
                                     <tr>
@@ -124,7 +145,7 @@
                                             <div class="alert alert-info py-3 mb-0"
                                                 style="font-size: 1.2rem; font-weight: 500;">
                                                 <i class="las la-info-circle me-2"></i>
-                                                لا توجد بيانات عملاء
+                                                {{ __('No clients data available') }}
                                             </div>
                                         </td>
                                     </tr>
@@ -162,13 +183,13 @@
                     .then(res => res.json())
                     .then(data => {
                         if (!data.success) {
-                            alert("حصل خطأ أثناء التحديث");
-                            this.checked = !this.checked; // عكس الحالة إذا فشل التحديث
+                            alert("{{ __('An error occurred while updating') }}");
+                            this.checked = !this.checked;
                         }
                     })
                     .catch(() => {
-                        alert("حصل خطأ في الاتصال");
-                        this.checked = !this.checked; // عكس الحالة إذا فشل الاتصال
+                        alert("{{ __('Connection error occurred') }}");
+                        this.checked = !this.checked;
                     });
             });
         });

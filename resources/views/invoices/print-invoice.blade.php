@@ -616,6 +616,16 @@
                     <h1>Massar</h1>
                     <p>نظام إدارة المبيعات والمشتريات</p>
                     <p>📧 info@massar.com | 📱 +966 12 345 6789</p>
+                    @php
+                        $nationalAddress = \Modules\Settings\Models\PublicSetting::where('key', 'national_address')->value('value');
+                        $taxNumber = \Modules\Settings\Models\PublicSetting::where('key', 'tax_number')->value('value');
+                    @endphp
+                    @if($nationalAddress)
+                    <p>📍 العنوان الوطني: {{ $nationalAddress }}</p>
+                    @endif
+                    @if($taxNumber)
+                    <p>🔢 الرقم الضريبي: {{ $taxNumber }}</p>
+                    @endif
                 </div>
 
                 <div class="invoice-title">
@@ -727,7 +737,7 @@
                         @forelse ($invoiceItems as $index => $row)
                         @php
                         $itemData = $items->firstWhere('id', $row['item_id']);
-                        $unitData = $row['available_units']->first();
+                        $unitData = isset($row['available_units']) ? $row['available_units']->first() : null;
                         // Get barcode for this item and unit
                         $barcode = null;
                         if ($itemData) {
@@ -765,7 +775,7 @@
                             </td>
                             <td>
                                 <strong class="text-primary">
-                                    {{ number_format($row['sub_value'], 2) }} جنيه
+                                    {{ number_format($row['sub_value'] ?? (($row['quantity'] * $row['price']) - ($row['discount'] ?? 0)), 2) }} جنيه
                                 </strong>
                             </td>
                         </tr>
@@ -822,7 +832,7 @@
             </div>
 
             <!-- Notes Section -->
-            @if($notes)
+            @if(isset($notes) && $notes)
             <div class="notes-section">
                 <div class="section-title">الملاحظات</div>
                 <div class="notes-content">

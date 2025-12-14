@@ -16,7 +16,7 @@
         <div class="col-lg-12">
             @can('create Chance Sources')
                 <a href="{{ route('chance-sources.create') }}" type="button" class="btn btn-main font-hold fw-bold">
-                    Add New
+                    {{ __('Add New') }}
                     <i class="fas fa-plus me-2"></i>
                 </a>
             @endcan

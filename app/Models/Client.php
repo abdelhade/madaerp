@@ -26,6 +26,8 @@ class Client extends Model
         'info',
         'job',
         'gender',
+        'commercial_register',
+        'tax_certificate',
         'isdeleted',
         'tenant',
         'branch_id',
