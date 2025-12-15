@@ -27,6 +27,7 @@ return new class extends Migration
 
             $table->text('reason')->nullable();
             $table->text('notes')->nullable();
+            $table->string('attachment')->nullable();
 
             $table->decimal('total_amount', 15, 2)->default(0);
             $table->decimal('refund_amount', 15, 2)->default(0);
