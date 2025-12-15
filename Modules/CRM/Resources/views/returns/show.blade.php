@@ -130,6 +130,18 @@
                         </div>
                     @endif
 
+                    @if ($return->attachment)
+                        <div class="border-top pt-3 mb-3">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-paperclip me-2 text-info"></i>
+                                {{ __('Attachment') }}
+                            </h6>
+                            <a href="{{ asset('storage/' . $return->attachment) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="las la-download me-1"></i> {{ __('Download File') }}
+                            </a>
+                        </div>
+                    @endif
+
                     @can('edit Returns')
                         <div class="d-flex gap-2 mt-4">
                             <a href="{{ route('returns.edit', $return) }}" class="btn btn-primary">

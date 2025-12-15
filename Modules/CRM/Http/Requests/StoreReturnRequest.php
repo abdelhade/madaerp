@@ -22,6 +22,7 @@ class StoreReturnRequest extends FormRequest
             'branch_id'               => 'required|exists:branches,id',
             'reason'                  => 'nullable|string',
             'notes'                   => 'nullable|string',
+            'attachment'              => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'items'                   => 'required|array|min:1',
             'items.*.item_id'         => 'required|exists:items,id',
             'items.*.quantity'        => 'required|integer|min:1',

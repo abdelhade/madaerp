@@ -13,15 +13,15 @@
             ['label' => __('Create')],
         ],
     ])
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <div class="row">
         <div class="col-lg-12">
@@ -30,7 +30,7 @@
                     <h2>{{ __('Add New Return') }}</h2>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('returns.store') }}" method="POST" id="returnForm">
+                    <form action="{{ route('returns.store') }}" method="POST" id="returnForm" enctype="multipart/form-data">
                         @csrf
 
                         <div class="row">
@@ -38,16 +38,6 @@
                             <div class="col-md-6 mb-3">
                                 <x-dynamic-search name="client_id" :label="__('Client')" column="cname"
                                     model="App\Models\Client" :placeholder="__('Search for client...')" :required="true" :class="'form-select'" />
-                            </div>
-
-                            <!-- Return Date -->
-                            <div class="mb-3 col-lg-3">
-                                <label for="return_date" class="form-label">{{ __('Return Date') }}</label>
-                                <input type="date" name="return_date" id="return_date" class="form-control"
-                                    value="{{ old('return_date', date('Y-m-d')) }}" required>
-                                @error('return_date')
-                                    <small class="text-danger">{{ $message }}</small>
-                                @enderror
                             </div>
 
                             <!-- Return Type -->
@@ -58,11 +48,20 @@
                                         {{ __('Refund') }}</option>
                                     <option value="exchange" {{ old('return_type') == 'exchange' ? 'selected' : '' }}>
                                         {{ __('Exchange') }}</option>
-                                    <option value="credit_note"
-                                        {{ old('return_type') == 'credit_note' ? 'selected' : '' }}>
+                                    <option value="credit_note" {{ old('return_type') == 'credit_note' ? 'selected' : '' }}>
                                         {{ __('Credit Note') }}</option>
                                 </select>
                                 @error('return_type')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+                            <!-- Return Date -->
+                            <div class="mb-3 col-lg-3">
+                                <label for="return_date" class="form-label">{{ __('Return Date') }}</label>
+                                <input type="date" name="return_date" id="return_date" class="form-control"
+                                    value="{{ old('return_date', date('Y-m-d')) }}" required>
+                                @error('return_date')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
@@ -99,11 +98,21 @@
                             </div>
 
                             <!-- Notes -->
-                            <div class="mb-3 col-lg-9">
+                            <div class="mb-3 col-lg-6">
                                 <label for="notes" class="form-label">{{ __('Notes') }}</label>
                                 <textarea name="notes" id="notes" class="form-control" rows="2">{{ old('notes') }}</textarea>
                                 @error('notes')
                                     <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+                            <!-- Attachment -->
+                            <div class="mb-3 col-lg-3">
+                                <label for="attachment" class="form-label">{{ __('Attachment') }}</label>
+                                <input type="file" name="attachment" id="attachment" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="text-muted">{{ __('PDF, JPG, PNG (Max: 5MB)') }}</small>
+                                @error('attachment')
+                                    <small class="text-danger d-block">{{ $message }}</small>
                                 @enderror
                             </div>
 

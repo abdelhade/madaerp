@@ -45,6 +45,10 @@ class ReturnController extends Controller
             $itemsData = $validated['items'];
             unset($validated['items']);
 
+            if ($request->hasFile('attachment')) {
+                $validated['attachment'] = $request->file('attachment')->store('returns/attachments', 'public');
+            }
+
             $validated['created_by'] = Auth::id();
             $validated['status'] = 'pending';
 
@@ -106,7 +110,7 @@ class ReturnController extends Controller
             $itemsData = $validated['items'];
             unset($validated['items']);
 
-            $return->update([
+            $updateData = [
                 'client_id'               => $validated['client_id'],
                 'return_date'             => $validated['return_date'],
                 'return_type'             => $validated['return_type'],
@@ -115,7 +119,16 @@ class ReturnController extends Controller
                 'branch_id'               => $validated['branch_id'],
                 'reason'                  => $validated['reason'],
                 'notes'                   => $validated['notes'],
-            ]);
+            ];
+
+            if ($request->hasFile('attachment')) {
+                if ($return->attachment) {
+                    \Storage::disk('public')->delete($return->attachment);
+                }
+                $updateData['attachment'] = $request->file('attachment')->store('returns/attachments', 'public');
+            }
+
+            $return->update($updateData);
 
             $return->items()->delete();
 

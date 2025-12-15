@@ -33,7 +33,7 @@
                     <h2>{{ __('Edit Return') }} : {{ $return->return_number }}</h2>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('returns.update', $return->id) }}" method="POST" id="returnForm">
+                    <form action="{{ route('returns.update', $return->id) }}" method="POST" id="returnForm" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
@@ -56,17 +56,6 @@
                                 @enderror
                             </div>
 
-                            <!-- Return Date -->
-                            <div class="mb-3 col-lg-3">
-                                <label for="return_date" class="form-label">{{ __('Return Date') }} <span
-                                        class="text-danger">*</span></label>
-                                <input type="date" name="return_date" id="return_date" class="form-control"
-                                    value="{{ old('return_date', $return->return_date->format('Y-m-d')) }}" required>
-                                @error('return_date')
-                                    <small class="text-danger">{{ $message }}</small>
-                                @enderror
-                            </div>
-
                             <!-- Return Type -->
                             <div class="mb-3 col-lg-3">
                                 <label for="return_type" class="form-label">{{ __('Return Type') }} <span
@@ -80,6 +69,17 @@
                                     @endforeach
                                 </select>
                                 @error('return_type')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+                            <!-- Return Date -->
+                            <div class="mb-3 col-lg-3">
+                                <label for="return_date" class="form-label">{{ __('Return Date') }} <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" name="return_date" id="return_date" class="form-control"
+                                    value="{{ old('return_date', $return->return_date->format('Y-m-d')) }}" required>
+                                @error('return_date')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
@@ -107,9 +107,26 @@
                             </div>
 
                             <!-- Notes -->
-                            <div class="mb-3 col-lg-9">
+                            <div class="mb-3 col-lg-6">
                                 <label for="notes" class="form-label">{{ __('Notes') }}</label>
                                 <textarea name="notes" class="form-control" rows="2">{{ old('notes', $return->notes) }}</textarea>
+                            </div>
+
+                            <!-- Attachment -->
+                            <div class="mb-3 col-lg-3">
+                                <label for="attachment" class="form-label">{{ __('Attachment') }}</label>
+                                <input type="file" name="attachment" id="attachment" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="text-muted">{{ __('PDF, JPG, PNG (Max: 5MB)') }}</small>
+                                @if($return->attachment)
+                                    <div class="mt-1">
+                                        <a href="{{ asset('storage/' . $return->attachment) }}" target="_blank" class="text-primary">
+                                            <i class="las la-file"></i> {{ __('View Current File') }}
+                                        </a>
+                                    </div>
+                                @endif
+                                @error('attachment')
+                                    <small class="text-danger d-block">{{ $message }}</small>
+                                @enderror
                             </div>
 
                             <!-- Branch (Fixed Select) -->

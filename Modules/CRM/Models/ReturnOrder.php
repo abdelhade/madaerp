@@ -22,6 +22,7 @@ class ReturnOrder extends Model
         'return_type',
         'reason',
         'notes',
+        'attachment',
         'total_amount',
         'refund_amount',
         'branch_id',
