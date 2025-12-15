@@ -10,6 +10,11 @@ use App\Models\OperHead;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Models\{OperHead, OperationItems, Item, JournalHead, JournalDetail, User};
+use Modules\Notifications\Notifications\OrderNotification;
+use App\Services\RecalculationServiceFactory;
+use App\Services\RecalculationServiceHelper;
 
 class SaveInvoiceService
 {
@@ -185,7 +190,16 @@ class SaveInvoiceService
 
             // تحديث الفاتورة الحالية أو إنشاء جديدة
             if ($isEdit && $component->operationId) {
-                $operation = OperHead::findOrFail($component->operationId);
+                $operation = OperHead::with('operationItems')->findOrFail($component->operationId);
+                
+                // حفظ معلومات الفاتورة القديمة قبل الحذف
+                $oldOperationDate = $operation->pro_date;
+                $oldItemIds = $operation->operationItems()
+                    ->where('is_stock', 1)
+                    ->pluck('item_id')
+                    ->unique()
+                    ->toArray();
+                
                 $this->deleteRelatedRecords($operation->id);
                 $operationData['pro_id'] = $operation->pro_id;
                 $operation->update($operationData);
@@ -357,15 +371,23 @@ class SaveInvoiceService
 
                 // تحديث متوسط التكلفة للمشتريات
                 if (in_array($component->type, [11, 12, 20])) {
-                    $newAverageCost = $this->updateAverageCost($itemId, $originalQty, $subValue, $itemCost, $unitId);
+                    // ✅ تمرير $subValue الذي يمثل السعر قبل الخصم
+                    $newAverageCost = $this->updateAverageCost(
+                        $itemId,
+                        $quantity,
+                        $subValue,  // القيمة قبل الخصم على مستوى الصنف
+                        $itemCost,
+                        $unitId
+                    );
                     $itemCost = $newAverageCost;
                 }
-
-                // ✅ حساب الربح بعد ما يتحسب basePrice و baseQty (تم نقله هنا)
+                // ✅ حساب الربح بعد ما يتحسب basePrice و baseQty
                 $profit = 0;
                 if (in_array($component->type, [10, 11, 13, 19])) {
                     if ($component->type == 10) {
-                        $profit = ($basePrice - $itemCost) * $baseQty;
+                        // ✅ حساب الربح على السعر قبل الخصم (استخدم $subValue بدلاً من السعر بعد الخصم)
+                        $itemProfit = $subValue - ($itemCost * $baseQty);
+                        $profit = $itemProfit;
                     } else {
                         $discountItem = $component->subtotal != 0
                             ? ($component->discount_value * $subValue / $component->subtotal)
@@ -375,6 +397,7 @@ class SaveInvoiceService
                     }
                     $totalProfit += $profit;
                 }
+
 
                 // إنشاء عنصر الفاتورة لأي شيء غير التحويلات (النوع 21)
                 if ($component->type != 21) {
@@ -429,6 +452,65 @@ class SaveInvoiceService
 
             DB::commit();
 
+            // إعادة حساب average_cost والأرباح والقيود بعد التعديل أو الإضافة
+            if ($isEdit && isset($oldItemIds) && isset($oldOperationDate)) {
+                // حالة التعديل: إعادة حساب من تاريخ الفاتورة القديمة
+                // عند التعديل، نعيد حساب الفواتير التي بعد تاريخ الفاتورة القديمة
+                try {
+                    // استخدام Helper لاختيار تلقائي للطريقة المناسبة (Queue/Stored Procedure/PHP)
+                    if (in_array($component->type, [11, 12, 20, 59])) {
+                        // إعادة حساب average_cost (يختار تلقائياً Queue/Stored Procedure/PHP)
+                        RecalculationServiceHelper::recalculateAverageCost($oldItemIds, $oldOperationDate);
+                    }
+                    
+                    // إعادة حساب الأرباح والقيود للفواتير المتأثرة (فقط التي بعد تاريخ الفاتورة القديمة)
+                    if (!empty($oldItemIds)) {
+                        // عند التعديل، نستخدم تاريخ الفاتورة القديمة
+                        // ولا نستثني الفاتورة الحالية لأنها تم تعديلها بالفعل
+                        RecalculationServiceHelper::recalculateProfitsAndJournals(
+                            $oldItemIds, 
+                            $oldOperationDate,
+                            null, // لا نستثني أي فاتورة عند التعديل
+                            null  // لا نحتاج created_at عند التعديل
+                        );
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error recalculating after invoice update: ' . $e->getMessage());
+                    Log::error('Stack trace: ' . $e->getTraceAsString());
+                    // لا نوقف العملية، فقط نسجل الخطأ
+                }
+            } elseif (!$isEdit && in_array($component->type, [11, 12, 20, 59])) {
+                // حالة الإضافة: إعادة حساب من تاريخ الفاتورة الجديدة
+                // مهم: عند إضافة فاتورة مشتريات بتاريخ قديم، يجب إعادة حساب فقط الفواتير
+                // التي تاريخها بعد تاريخ الفاتورة المضافة (مع مراعاة الوقت في نفس اليوم)
+                try {
+                    $newItemIds = $operation->operationItems()
+                        ->where('is_stock', 1)
+                        ->pluck('item_id')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+
+                    if (!empty($newItemIds)) {
+                        // إعادة حساب average_cost
+                        RecalculationServiceHelper::recalculateAverageCost($newItemIds, $component->pro_date);
+                        
+                        // إعادة حساب الأرباح والقيود فقط للفواتير التي بعد تاريخ الفاتورة المضافة
+                        // (مع مراعاة الوقت في نفس اليوم)
+                        RecalculationServiceHelper::recalculateProfitsAndJournals(
+                            $newItemIds, 
+                            $component->pro_date,
+                            $operation->id, // currentInvoiceId - لاستثناء الفاتورة الحالية
+                            $operation->created_at?->format('Y-m-d H:i:s') // currentInvoiceCreatedAt - لمقارنة الفواتير في نفس اليوم
+                        );
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error recalculating after invoice creation: ' . $e->getMessage());
+                    Log::error('Stack trace: ' . $e->getTraceAsString());
+                    // لا نوقف العملية، فقط نسجل الخطأ
+                }
+            }
+
             $message = $isEdit ? 'تم تحديث الفاتورة بنجاح.' : 'تم حفظ الفاتورة بنجاح.';
             $component->dispatch(
                 'swal',
@@ -469,15 +551,8 @@ class SaveInvoiceService
     private function updateAverageCost($itemId, $quantity, $subValue, $currentCost, $unitId)
     {
         // 1. حساب الرصيد السابق بالوحدة الأساسية
-        // نضرب الكمية (qty_in - qty_out) في معامل التحويل (u_val) لكل عملية
         $oldQtyInBase = OperationItems::where('operation_items.item_id', $itemId)
             ->where('operation_items.is_stock', 1)
-            ->leftJoin('item_units', function ($join) {
-                $join->on('operation_items.item_id', '=', 'item_units.item_id')
-                    ->on('operation_items.unit_id', '=', 'item_units.unit_id');
-            })
-            // ->selectRaw('SUM((qty_in - qty_out) * COALESCE(item_units.u_val, 1)) as total')
-            // ✅ الكميات مخزنة بالفعل بالوحدة الأساسية
             ->selectRaw('SUM(qty_in - qty_out) as total')
             ->value('total') ?? 0;
 
@@ -493,21 +568,20 @@ class SaveInvoiceService
         // 4. حساب الكمية الجديدة بالوحدة الأساسية
         $newQtyInBase = $oldQtyInBase + $quantityInBase;
 
-        // 5. حساب متوسط التكلفة الجديد
-        // التكلفة الحالية ($currentCost) هي للوحدة الأساسية
-        // القيمة الحالية ($subValue) هي القيمة الإجمالية للكمية المضافة
+        // ✅ 5. حساب القيمة قبل الخصم (استخدم subtotal بدون خصم)
+        // القيمة المُرسلة هنا ($subValue) هي بالفعل قبل الخصم
         if ($oldQtyInBase == 0 && $currentCost == 0) {
             $newCost = $quantityInBase > 0 ? $subValue / $quantityInBase : 0;
         } else {
             $oldValue = $oldQtyInBase * $currentCost;
-            $totalValue = $oldValue + $subValue;
+            $totalValue = $oldValue + $subValue; // ✅ القيمة قبل الخصم
             $newCost = $newQtyInBase > 0 ? $totalValue / $newQtyInBase : $currentCost;
         }
 
         Item::where('id', $itemId)->update(['average_cost' => $newCost]);
-
-        return $newCost; // ✅ إرجاع التكلفة الجديدة    }
+        return $newCost;
     }
+
 
     private function deleteRelatedRecords($operationId)
     {
@@ -641,6 +715,59 @@ class SaveInvoiceService
         // قيد تكلفة البضاعة المباعة للمبيعات
         if (in_array($component->type, [10, 12, 19])) {
             $this->createCostOfGoodsJournal($component, $operation);
+        }
+        // قيد الخصم المسموح به للمبيعات
+        if ($component->type == 10 && $component->discount_value > 0) {
+            JournalDetail::create([
+                'journal_id' => $journalId,
+                'account_id' => 4103, // حساب خصم مسموح به (Discount Allowed)
+                'debit'      => $component->discount_value,
+                'credit'     => 0,
+                'type'       => 1,
+                'info'       => 'خصم مسموح به - ' . $component->notes,
+                'op_id'      => $operation->id,
+                'isdeleted'  => 0,
+                'branch_id' => $component->branch_id
+            ]);
+
+            JournalDetail::create([
+                'journal_id' => $journalId,
+                'account_id' => $component->acc1_id, // العميل
+                'debit'      => 0,
+                'credit'     => $component->discount_value,
+                'type'       => 1,
+                'info'       => 'خصم مسموح به - ' . $component->notes,
+                'op_id'      => $operation->id,
+                'isdeleted'  => 0,
+                'branch_id' => $component->branch_id
+            ]);
+        }
+
+        // قيد الخصم المكتسب للمشتريات
+        if (in_array($component->type, [11, 20]) && $component->discount_value > 0) {
+            JournalDetail::create([
+                'journal_id' => $journalId,
+                'account_id' => $component->acc1_id, // المورد (مدين)
+                'debit'      => $component->discount_value,
+                'credit'     => 0,
+                'type'       => 1,
+                'info'       => 'خصم مكتسب - ' . $component->notes,
+                'op_id'      => $operation->id,
+                'isdeleted'  => 0,
+                'branch_id' => $component->branch_id
+            ]);
+
+            JournalDetail::create([
+                'journal_id' => $journalId,
+                'account_id' => 4201, // حساب خصم مكتسب (Discount Received)
+                'debit'      => 0,
+                'credit'     => $component->discount_value,
+                'type'       => 1,
+                'info'       => 'خصم مكتسب - ' . $component->notes,
+                'op_id'      => $operation->id,
+                'isdeleted'  => 0,
+                'branch_id' => $component->branch_id
+            ]);
         }
     }
 

@@ -237,6 +237,20 @@
         <div class="header">
             <div class="company-name">Massar</div>
             <div class="invoice-title">{{ $titles[$type] ?? 'فاتورة' }}</div>
+            @php
+                $nationalAddress = \Modules\Settings\Models\PublicSetting::where('key', 'national_address')->value('value');
+                $taxNumber = \Modules\Settings\Models\PublicSetting::where('key', 'tax_number')->value('value');
+            @endphp
+            @if($nationalAddress || $taxNumber)
+            <div style="font-size: 10px; margin-top: 5px;">
+                @if($nationalAddress)
+                <div>العنوان الوطني: {{ $nationalAddress }}</div>
+                @endif
+                @if($taxNumber)
+                <div>الرقم الضريبي: {{ $taxNumber }}</div>
+                @endif
+            </div>
+            @endif
         </div>
 
         <!-- Invoice Information -->
@@ -332,7 +346,7 @@
                 @forelse($invoiceItems as $index => $item)
                     @php
                         $itemData = $items->firstWhere('id', $item['item_id']);
-                        $unitData = $item['available_units']->first();
+                        $unitData = isset($item['available_units']) ? $item['available_units']->first() : null;
                         // Get barcode for this item and unit
                         $barcode = null;
                         if ($itemData) {
@@ -370,7 +384,7 @@
                         </td>
                         <td>
                             <strong>
-                                {{ number_format($item['sub_value'], 2) }} جنيه
+                                {{ number_format($item['sub_value'] ?? (($item['quantity'] * $item['price']) - ($item['discount'] ?? 0)), 2) }} جنيه
                             </strong>
                         </td>
                     </tr>
@@ -425,7 +439,7 @@
         </div>
 
         <!-- Notes Section -->
-        @if ($notes)
+        @if (isset($notes) && $notes)
             <div class="notes-section">
                 <div class="notes-label">الملاحظات:</div>
                 <div>{{ $notes }}</div>

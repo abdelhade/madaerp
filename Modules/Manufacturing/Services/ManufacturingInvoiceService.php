@@ -10,6 +10,8 @@ use App\Models\OperationItems;
 use App\Models\OperHead;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Services\RecalculationServiceHelper;
 
 class ManufacturingInvoiceService
 {
@@ -394,6 +396,42 @@ class ManufacturingInvoiceService
                             'branch_id' => $component->branch_id,
                         ]);
                     }
+
+                    // قيد المصروفات (كود 5)
+                    $journalId++;
+                    JournalHead::create([
+                        'journal_id' => $journalId,
+                        'total' => $totalExpenses,
+                        'date' => $component->invoiceDate,
+                        'op_id' => $operation->id,
+                        'pro_type' => 59,
+                        'details' => 'مصروفات تصنيع',
+                        'user' => Auth::id(),
+                        'branch_id' => $component->branch_id,
+                    ]);
+
+                    foreach ($component->additionalExpenses as $expense) {
+                        JournalDetail::create([
+                            'journal_id' => $journalId,
+                            'account_id' => $expense['account_id'],
+                            'debit' => $expense['amount'],
+                            'credit' => 0,
+                            'type' => 1,
+                            'info' => 'مصروفات تصنيع',
+                            'op_id' => $operation->id,
+                            'branch_id' => $component->branch_id,
+                        ]);
+                    }
+                    JournalDetail::create([
+                        'journal_id' => $journalId,
+                        'account_id' => $component->OperatingAccount,
+                        'debit' => 0,
+                        'credit' => $totalExpenses,
+                        'type' => 1,
+                        'info' => 'مصروفات تصنيع',
+                        'op_id' => $operation->id,
+                        'branch_id' => $component->branch_id,
+                    ]);
                 }
 
                 $journalId++;
@@ -429,7 +467,40 @@ class ManufacturingInvoiceService
                 ]);
             }
             DB::commit();
-            // dd($component->all());
+
+            // إعادة حساب average_cost والأرباح والقيود بعد إضافة فاتورة التصنيع
+            // مهم: فاتورة التصنيع تحتوي على:
+            // 1. خامات (qty_out > 0) - تتأثر بمتوسط التكلفة من فواتير المشتريات
+            // 2. منتجات (qty_in > 0) - تتأثر بتكلفة الخامات في نفس فاتورة التصنيع
+            if (!$isTemplate) {
+                try {
+                    // جمع جميع الأصناف المتأثرة (خامات + منتجات)
+                    $allItemIds = $operation->operationItems()
+                        ->where('is_stock', 1)
+                        ->pluck('item_id')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+
+                    if (!empty($allItemIds)) {
+                        // إعادة حساب average_cost للمنتجات (لأن فاتورة التصنيع تؤثر على average_cost للمنتجات)
+                        RecalculationServiceHelper::recalculateAverageCost($allItemIds, $component->invoiceDate);
+                        
+                        // إعادة حساب الأرباح والقيود فقط للفواتير التي بعد تاريخ فاتورة التصنيع
+                        // (مع مراعاة الوقت في نفس اليوم)
+                        RecalculationServiceHelper::recalculateProfitsAndJournals(
+                            $allItemIds, 
+                            $component->invoiceDate,
+                            $operation->id, // currentInvoiceId - لاستثناء فاتورة التصنيع الحالية
+                            $operation->created_at?->format('Y-m-d H:i:s') // currentInvoiceCreatedAt - لمقارنة الفواتير في نفس اليوم
+                        );
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error recalculating after manufacturing invoice creation: ' . $e->getMessage());
+                    Log::error('Stack trace: ' . $e->getTraceAsString());
+                    // لا نوقف العملية، فقط نسجل الخطأ
+                }
+            }
 
             $component->dispatch('success-swal', title: 'تم الحفظ!', text: 'تم حفظ فاتورة التصنيع بنجاح.', icon: 'success');
 
@@ -448,7 +519,7 @@ class ManufacturingInvoiceService
             DB::beginTransaction();
 
             // 1. العثور على الفاتورة القديمة
-            $operation = OperHead::find($invoiceId);
+            $operation = OperHead::with('operationItems')->find($invoiceId);
             if (! $operation) {
                 $component->dispatch('error-swal', [
                     'title' => 'خطأ!',
@@ -458,6 +529,14 @@ class ManufacturingInvoiceService
 
                 return false;
             }
+
+            // حفظ معلومات الفاتورة القديمة قبل الحذف
+            $oldOperationDate = $operation->pro_date;
+            $oldItemIds = $operation->operationItems()
+                ->where('is_stock', 1)
+                ->pluck('item_id')
+                ->unique()
+                ->toArray();
 
             // 2. حذف البيانات القديمة
             OperationItems::where('pro_id', $operation->id)->delete();
@@ -666,13 +745,49 @@ class ManufacturingInvoiceService
                         'branch_id' => $component->branch_id,
                     ]);
                 }
+
+                // قيد المصروفات (كود 5)
+                $journalId++;
+                JournalHead::create([
+                    'journal_id' => $journalId,
+                    'total' => $totalExpenses,
+                    'date' => $component->invoiceDate,
+                    'op_id' => $operation->id,
+                    'pro_type' => 59,
+                    'details' => 'مصروفات تصنيع',
+                    'user' => Auth::id(),
+                    'branch_id' => $component->branch_id,
+                ]);
+
+                foreach ($component->additionalExpenses as $expense) {
+                    JournalDetail::create([
+                        'journal_id' => $journalId,
+                        'account_id' => $expense['account_id'],
+                        'debit' => $expense['amount'],
+                        'credit' => 0,
+                        'type' => 1,
+                        'info' => 'مصروفات تصنيع',
+                        'op_id' => $operation->id,
+                        'branch_id' => $component->branch_id,
+                    ]);
+                }
+                JournalDetail::create([
+                    'journal_id' => $journalId,
+                    'account_id' => $component->OperatingAccount,
+                    'debit' => 0,
+                    'credit' => $totalExpenses,
+                    'type' => 1,
+                    'info' => 'مصروفات تصنيع',
+                    'op_id' => $operation->id,
+                    'branch_id' => $component->branch_id,
+                ]);
             }
 
             // قيد إنتاج المنتجات
             $journalId++;
             JournalHead::create([
                 'journal_id' => $journalId,
-                'total' => $totalRaw,
+                'total' => $totalRaw + $totalExpenses,
                 'date' => $component->invoiceDate,
                 'op_id' => $operation->id,
                 'pro_type' => 59,
@@ -683,7 +798,7 @@ class ManufacturingInvoiceService
             JournalDetail::create([
                 'journal_id' => $journalId,
                 'account_id' => $component->productAccount,
-                'debit' => $totalRaw,
+                'debit' => $totalRaw + $totalExpenses,
                 'credit' => 0,
                 'type' => 1,
                 'info' => 'إنتاج منتجات تامة',
@@ -694,7 +809,7 @@ class ManufacturingInvoiceService
                 'journal_id' => $journalId,
                 'account_id' => $component->OperatingAccount,
                 'debit' => 0,
-                'credit' => $totalRaw,
+                'credit' => $totalRaw + $totalExpenses,
                 'type' => 1,
                 'info' => 'إنتاج منتجات تامة',
                 'op_id' => $operation->id,
@@ -702,6 +817,27 @@ class ManufacturingInvoiceService
             ]);
 
             DB::commit();
+
+            // إعادة حساب average_cost والأرباح والقيود بعد التعديل
+            if (!empty($oldItemIds) && !empty($oldOperationDate)) {
+                try {
+                    // استخدام Helper لاختيار تلقائي للطريقة المناسبة (Queue/Stored Procedure/PHP)
+                    // إعادة حساب average_cost (فاتورة التصنيع تؤثر على average_cost للمنتجات)
+                    RecalculationServiceHelper::recalculateAverageCost($oldItemIds, $oldOperationDate);
+                    
+                    // إعادة حساب الأرباح والقيود للفواتير المتأثرة (فقط التي بعد تاريخ الفاتورة القديمة)
+                    RecalculationServiceHelper::recalculateProfitsAndJournals(
+                        $oldItemIds, 
+                        $oldOperationDate,
+                        null, // لا نستثني أي فاتورة عند التعديل
+                        null  // لا نحتاج created_at عند التعديل
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Error recalculating after manufacturing invoice update: ' . $e->getMessage());
+                    Log::error('Stack trace: ' . $e->getTraceAsString());
+                    // لا نوقف العملية، فقط نسجل الخطأ
+                }
+            }
 
             $component->isEditing = false;
             $component->originalInvoiceId = null;
@@ -743,5 +879,69 @@ class ManufacturingInvoiceService
         }
 
         return $baseUnitId ?? $fallbackUnitId;
+    }
+
+    /**
+     * حذف فاتورة تصنيع مع إعادة حساب average_cost والأرباح
+     */
+    public function deleteManufacturingInvoice(int $invoiceId): bool
+    {
+        try {
+            $operation = OperHead::with('operationItems')->find($invoiceId);
+            if (!$operation || $operation->pro_type != 59) {
+                return false;
+            }
+
+            // حفظ معلومات الفاتورة قبل الحذف
+            $operationDate = $operation->pro_date;
+            $itemIds = $operation->operationItems()
+                ->where('is_stock', 1)
+                ->pluck('item_id')
+                ->unique()
+                ->toArray();
+
+            DB::beginTransaction();
+
+            // حذف البيانات
+            OperationItems::where('pro_id', $operation->id)->delete();
+            Expense::where('op_id', $operation->id)->delete();
+            JournalDetail::where('op_id', $operation->id)->delete();
+            JournalHead::where('op_id', $operation->id)->delete();
+            $operation->delete();
+
+            DB::commit();
+
+            // إعادة حساب average_cost والأرباح والقيود بعد الحذف
+            if (!empty($itemIds) && !empty($operationDate)) {
+                try {
+                    // استخدام Helper لاختيار تلقائي للطريقة المناسبة (Queue/Stored Procedure/PHP)
+                    // في حالة الحذف، نحسب من جميع الفواتير غير المحذوفة (لا من fromDate فقط)
+                    RecalculationServiceHelper::recalculateAverageCost(
+                        $itemIds, 
+                        $operationDate,
+                        false, // forceQueue
+                        true   // isDelete - مهم جداً!
+                    );
+                    
+                    // إعادة حساب الأرباح والقيود للفواتير المتأثرة (فقط التي بعد تاريخ الفاتورة المحذوفة)
+                    RecalculationServiceHelper::recalculateProfitsAndJournals(
+                        $itemIds, 
+                        $operationDate,
+                        null, // لا نستثني أي فاتورة عند الحذف (لأن الفاتورة محذوفة بالفعل)
+                        null  // لا نحتاج created_at عند الحذف
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Error recalculating after manufacturing invoice delete: ' . $e->getMessage());
+                    Log::error('Stack trace: ' . $e->getTraceAsString());
+                    // لا نوقف العملية، فقط نسجل الخطأ
+                }
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting manufacturing invoice: ' . $e->getMessage());
+            return false;
+        }
     }
 }
