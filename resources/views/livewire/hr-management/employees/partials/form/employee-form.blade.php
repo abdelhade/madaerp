@@ -51,10 +51,14 @@
     isEdit: @js($isEdit ?? false),
     isRedirecting: false,
     init() {
-        // Listen for employee saved event to disable all buttons
+        // Listen for employee saved event to disable all buttons and dispatch browser event
         if (window.Livewire) {
             this.$wire.on('employee-saved', () => {
                 this.isRedirecting = true;
+                
+                // Dispatch custom browser event for other Alpine components
+                window.dispatchEvent(new CustomEvent('employee-redirect-started'));
+                
                 // Disable all buttons immediately
                 this.$nextTick(() => {
                     document.querySelectorAll('button, a.btn').forEach(btn => {
@@ -66,6 +70,7 @@
                 });
             });
         }
+        
         // For new employee (create mode), always start with first tab
         // For edit mode, restore active tab from localStorage
         if (!this.isEdit) {
@@ -96,22 +101,7 @@
                 localStorage.setItem('employeeFormActiveTab', value);
             }
         });
-        
-        // Listen for employee saved event to disable all buttons
-        if (window.Livewire) {
-            this.$wire.on('employee-saved', () => {
-                this.isRedirecting = true;
-                // Disable all buttons immediately
-                this.$nextTick(() => {
-                    document.querySelectorAll('button, a.btn').forEach(btn => {
-                        if (!btn.hasAttribute('data-keep-enabled')) {
-                            btn.disabled = true;
-                            btn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
-                        }
-                    });
-                });
-            });
-        }
+    }
         
         // Listen for Livewire updates to preserve active tab
         if (window.Livewire) {

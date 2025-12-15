@@ -37,13 +37,7 @@
         <div class="col-lg-12">
             <div class="card" 
                  x-data="{ isRedirecting: false }"
-                 x-init="
-                     if (window.Livewire) {
-                         $wire.on('employee-saved', () => {
-                             isRedirecting = true;
-                         });
-                     }
-                 ">
+                 @employee-redirect-started.window="isRedirecting = true">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0 font-hold fw-bold">
                         <i class="fas {{ $isEdit ? 'fa-user-edit' : 'fa-user-plus' }} me-2"></i>{{ $title }}
@@ -109,13 +103,7 @@
                 <!-- Action Buttons - Outside Tabs -->
                 <div class="card-footer bg-light border-top" 
                      x-data="{ isRedirecting: false }"
-                     x-init="
-                         if (window.Livewire) {
-                             $wire.on('employee-saved', () => {
-                                 isRedirecting = true;
-                             });
-                         }
-                     ">
+                     @employee-redirect-started.window="isRedirecting = true">
                     <div class="d-flex justify-content-center gap-3" 
                          wire:loading.class="pointer-events-none" 
                          wire:target="save"

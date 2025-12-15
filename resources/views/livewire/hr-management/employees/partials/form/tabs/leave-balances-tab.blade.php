@@ -128,8 +128,8 @@
                                         @click="leaveTypeSearchOpen = !leaveTypeSearchOpen"
                                         wire:loading.attr="disabled" wire:target="save"
                                         wire:loading.class="opacity-50 cursor-not-allowed"
-                                        :disabled="$parent.isRedirecting"
-                                        :class="{ 'opacity-50 cursor-not-allowed': $parent.isRedirecting }">
+                                        :disabled="$root.isRedirecting"
+                                        :class="{ 'opacity-50 cursor-not-allowed': $root.isRedirecting }">
                                         <i class="fas" :class="leaveTypeSearchOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                                     </button>
                                     <button class="btn btn-outline-danger" type="button"
@@ -137,8 +137,8 @@
                                         @click="clearLeaveTypeSelection()"
                                         wire:loading.attr="disabled" wire:target="save"
                                         wire:loading.class="opacity-50 cursor-not-allowed"
-                                        :disabled="$parent.isRedirecting"
-                                        :class="{ 'opacity-50 cursor-not-allowed': $parent.isRedirecting }"
+                                        :disabled="$root.isRedirecting"
+                                        :class="{ 'opacity-50 cursor-not-allowed': $root.isRedirecting }"
                                         title="{{ __('مسح الاختيار') }}">
                                         <i class="fas fa-times"></i>
                                     </button>
@@ -185,10 +185,10 @@
                         <div class="col-md-4 d-flex align-items-end">
                             <button type="button" class="btn btn-main w-100"
                                 @click="if(selectedLeaveTypeId) $wire.addLeaveBalance()"
-                                :disabled="!selectedLeaveTypeId || $parent.isRedirecting"
+                                :disabled="!selectedLeaveTypeId || $root.isRedirecting"
                                 wire:loading.attr="disabled" wire:target="save,addLeaveBalance"
                                 wire:loading.class="opacity-50 cursor-not-allowed"
-                                :class="{ 'opacity-50 cursor-not-allowed': $parent.isRedirecting }">
+                                :class="{ 'opacity-50 cursor-not-allowed': $root.isRedirecting }">
                                 <span wire:loading.remove wire:target="addLeaveBalance">
                                     <i class="fas fa-plus me-2"></i>{{ __('إضافة') }}
                                 </span>
@@ -293,8 +293,8 @@
                                                 @click="$wire.removeLeaveBalance(balanceKey)"
                                                 wire:loading.attr="disabled" wire:target="save,removeLeaveBalance"
                                                 wire:loading.class="opacity-50 cursor-not-allowed"
-                                                :disabled="$parent.isRedirecting"
-                                                :class="{ 'opacity-50 cursor-not-allowed': $parent.isRedirecting }"
+                                                :disabled="$root.isRedirecting"
+                                                :class="{ 'opacity-50 cursor-not-allowed': $root.isRedirecting }"
                                                 title="{{ __('حذف رصيد الإجازة') }}">
                                                 <i class="fas fa-times"></i>
                                             </button>

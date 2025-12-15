@@ -134,8 +134,8 @@
                                         @click="kpiSearchOpen = !kpiSearchOpen"
                                         wire:loading.attr="disabled" wire:target="save"
                                         wire:loading.class="opacity-50 cursor-not-allowed"
-                                        :disabled="$parent.isRedirecting"
-                                        :class="{ 'opacity-50 cursor-not-allowed': $parent.isRedirecting }">
+                                        :disabled="$root.isRedirecting"
+                                        :class="{ 'opacity-50 cursor-not-allowed': $root.isRedirecting }">
                                         <i class="fas" :class="kpiSearchOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                                     </button>
                                     <button class="btn btn-outline-danger" type="button"
@@ -143,8 +143,8 @@
                                         @click="clearKpiSelection()"
                                         wire:loading.attr="disabled" wire:target="save"
                                         wire:loading.class="opacity-50 cursor-not-allowed"
-                                        :disabled="$parent.isRedirecting"
-                                        :class="{ 'opacity-50 cursor-not-allowed': $parent.isRedirecting }"
+                                        :disabled="$root.isRedirecting"
+                                        :class="{ 'opacity-50 cursor-not-allowed': $root.isRedirecting }"
                                         title="{{ __('مسح الاختيار') }}">
                                         <i class="fas fa-times"></i>
                                     </button>
@@ -192,8 +192,8 @@
                                 @click="$wire.addKpi()" 
                                 wire:loading.attr="disabled" wire:target="save,addKpi"
                                 wire:loading.class="opacity-50 cursor-not-allowed"
-                                :disabled="!selectedKpiId || $parent.isRedirecting"
-                                :class="{ 'opacity-50 cursor-not-allowed': $parent.isRedirecting }">
+                                :disabled="!selectedKpiId || $root.isRedirecting"
+                                :class="{ 'opacity-50 cursor-not-allowed': $root.isRedirecting }">
                                 <span wire:loading.remove wire:target="addKpi">
                                     <i class="fas fa-plus me-2"></i>{{ __('إضافة') }}
                                 </span>
@@ -227,8 +227,8 @@
                                                 @click="$wire.removeKpi(kpiId)" 
                                                 wire:loading.attr="disabled" wire:target="save,removeKpi"
                                                 wire:loading.class="opacity-50 cursor-not-allowed"
-                                                :disabled="$parent.isRedirecting"
-                                                :class="{ 'opacity-50 cursor-not-allowed': $parent.isRedirecting }"
+                                                :disabled="$root.isRedirecting"
+                                                :class="{ 'opacity-50 cursor-not-allowed': $root.isRedirecting }"
                                                 title="{{ __('حذف') }}">
                                                 <i class="fas fa-times"></i>
                                             </button>
