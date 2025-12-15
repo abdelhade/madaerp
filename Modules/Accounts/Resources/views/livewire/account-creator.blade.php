@@ -1,8 +1,8 @@
 {{-- resources/views/livewire/components/account-creator.blade.php --}}
 <div>
     <!-- زر فتح المودال -->
-    <button class="btn btn-primary btn-lg" type="button" class="{{ $buttonClass }}" wire:click="openModal">
-        <i class="fas fa-plus"></i> {{ $buttonText }}
+    <button class="btn btn-primary" type="button" class="{{ $buttonClass }}" wire:click="openModal">
+        <i class="fas fa-plus"></i>
     </button>
 
     <!-- المودال -->

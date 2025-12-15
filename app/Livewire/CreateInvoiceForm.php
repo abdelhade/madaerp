@@ -561,8 +561,6 @@ class CreateInvoiceForm extends Component
         }
 
         $this->balanceAfterInvoice = $this->currentBalance + $effect;
-
-        // $this->checkCashAccount($this->acc1_id);
     }
 
     public function updatedReceivedFromClient()
@@ -1233,12 +1231,12 @@ class CreateInvoiceForm extends Component
         } elseif ($field === 'discount') {
             // ✅ فحص صلاحية تغيير الخصم
             if (!auth()->user()->can('allow_discount_change')) {
-                $this->dispatch(
-                    'error',
-                    title: 'خطأ!',
-                    text: 'غير مسموح بتعديل الخصم. تواصل مع المسؤول للحصول على الصلاحية.',
-                    icon: 'error'
-                );
+                // $this->dispatch(
+                //     'error',
+                //     title: 'خطأ!',
+                //     text: 'غير مسموح بتعديل الخصم. تواصل مع المسؤول للحصول على الصلاحية.',
+                //     icon: 'error'
+                // );
                 $this->invoiceItems[$rowIndex]['discount'] = 0;
                 return;
             }
@@ -1411,7 +1409,7 @@ class CreateInvoiceForm extends Component
             $price = (float) $item['price'];
             $discount = (float) $item['discount'];
             $itemTotal = $qty * $price;
-            
+
             // ✅ التحقق من أن الخصم لا يتجاوز قيمة الصنف
             if ($discount > $itemTotal) {
                 $this->invoiceItems[$index]['discount'] = $itemTotal;
@@ -1423,7 +1421,7 @@ class CreateInvoiceForm extends Component
                     icon: 'warning'
                 );
             }
-            
+
             $sub = $itemTotal - $discount;
             $this->invoiceItems[$index]['sub_value'] = round(max(0, $sub), 2);
         }
@@ -1534,12 +1532,12 @@ class CreateInvoiceForm extends Component
     {
         // ✅ فحص صلاحية تغيير الخصم
         if (!auth()->user()->can('allow_discount_change')) {
-            $this->dispatch(
-                'error',
-                title: 'خطأ!',
-                text: 'غير مسموح بتعديل نسبة الخصم.',
-                icon: 'error'
-            );
+            // $this->dispatch(
+            //     'error',
+            //     title: 'خطأ!',
+            //     text: 'غير مسموح بتعديل نسبة الخصم.',
+            //     icon: 'error'
+            // );
             $this->discount_percentage = 0;
             $this->discount_value = 0;
             return;
@@ -1555,12 +1553,12 @@ class CreateInvoiceForm extends Component
     {
         // ✅ فحص صلاحية تغيير الخصم
         if (!auth()->user()->can('allow_discount_change')) {
-            $this->dispatch(
-                'error',
-                title: 'خطأ!',
-                text: 'غير مسموح بتعديل قيمة الخصم.',
-                icon: 'error'
-            );
+            // $this->dispatch(
+            //     'error',
+            //     title: 'خطأ!',
+            //     text: 'غير مسموح بتعديل قيمة الخصم.',
+            //     icon: 'error'
+            // );
             $this->discount_value = 0;
             $this->discount_percentage = 0;
             return;
@@ -1603,28 +1601,28 @@ class CreateInvoiceForm extends Component
         }
     }
 
-    public function handleKeyUp()
-    {
-        if ($this->selectedResultIndex > -1) {
-            $this->selectedResultIndex--;
-            $this->isCreateNewItemSelected = false;
-        }
-    }
+    // public function handleKeyUp()
+    // {
+    //     if ($this->selectedResultIndex > -1) {
+    //         $this->selectedResultIndex--;
+    //         $this->isCreateNewItemSelected = false;
+    //     }
+    // }
 
-    public function handleEnter()
-    {
-        if ($this->selectedResultIndex >= 0 && $this->searchResults && !$this->isCreateNewItemSelected) {
-            $item = $this->searchResults->get($this->selectedResultIndex);
-            if ($item) {
-                $this->addItemFromSearch($item->id);
-            }
-        }
-        // لو تم تحديد زر "إنشاء صنف جديد"
-        elseif ($this->isCreateNewItemSelected && strlen($this->searchTerm) > 0) {
-            $this->createNewItem($this->searchTerm);
-            $this->isCreateNewItemSelected = false; // إعادة تعيين الحالة
-        }
-    }
+    // public function handleEnter()
+    // {
+    //     if ($this->selectedResultIndex >= 0 && $this->searchResults && !$this->isCreateNewItemSelected) {
+    //         $item = $this->searchResults->get($this->selectedResultIndex);
+    //         if ($item) {
+    //             $this->addItemFromSearch($item->id);
+    //         }
+    //     }
+    //     // لو تم تحديد زر "إنشاء صنف جديد"
+    //     elseif ($this->isCreateNewItemSelected && strlen($this->searchTerm) > 0) {
+    //         $this->createNewItem($this->searchTerm);
+    //         $this->isCreateNewItemSelected = false; // إعادة تعيين الحالة
+    //     }
+    // }
 
     public function moveToNextField($rowIndex)
     {
