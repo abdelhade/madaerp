@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ebf9ffcd324f6ffdd0dc775155f8d197",
+    "content-hash": "6f540497dcbfaa2da249f5c0e57e5ea1",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -6741,16 +6741,16 @@
         },
         {
             "name": "spatie/laravel-medialibrary",
-            "version": "11.17.6",
+            "version": "11.17.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-medialibrary.git",
-                "reference": "e65a99926c23546692acc7b9f486c772f0f2770c"
+                "reference": "237f34f70ae97523c1a99cad7176e229b8d6f0b6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-medialibrary/zipball/e65a99926c23546692acc7b9f486c772f0f2770c",
-                "reference": "e65a99926c23546692acc7b9f486c772f0f2770c",
+                "url": "https://api.github.com/repos/spatie/laravel-medialibrary/zipball/237f34f70ae97523c1a99cad7176e229b8d6f0b6",
+                "reference": "237f34f70ae97523c1a99cad7176e229b8d6f0b6",
                 "shasum": ""
             },
             "require": {
@@ -6835,7 +6835,7 @@
             ],
             "support": {
                 "issues": "https://github.com/spatie/laravel-medialibrary/issues",
-                "source": "https://github.com/spatie/laravel-medialibrary/tree/11.17.6"
+                "source": "https://github.com/spatie/laravel-medialibrary/tree/11.17.7"
             },
             "funding": [
                 {
@@ -6847,7 +6847,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-12-10T09:33:01+00:00"
+            "time": "2025-12-15T08:51:55+00:00"
         },
         {
             "name": "spatie/laravel-package-tools",

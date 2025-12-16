@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Installments\Http\Controllers\InstallmentsController;
+use Modules\Installments\Http\Controllers\InstallmentController;
 
 Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
-    Route::apiResource('installments', InstallmentsController::class)->names('installments');
+    Route::apiResource('installments', InstallmentController::class)->names('installments');
 });

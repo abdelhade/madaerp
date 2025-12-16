@@ -11,7 +11,9 @@ label {
 }
 .form-control {
   &:focus {
-    box-shadow: none;
+    border-color: $success;
+    box-shadow: 0 0 0 0.2rem rgba($success, 0.25);
+    outline: 0;
   }
 }
 
@@ -32,9 +34,12 @@ label {
 .form-group{
   margin-bottom: 20px;
 }
-.custom-select:focus{
-  border-color: rgba($primary, 0.5);
-  box-shadow: none;
+.custom-select:focus,
+select.form-control:focus,
+textarea.form-control:focus {
+  border-color: $success;
+  box-shadow: 0 0 0 0.2rem rgba($success, 0.25);
+  outline: 0;
 }
 .custom-control-input:checked~.custom-control-indicator {
   background-color: $primary;

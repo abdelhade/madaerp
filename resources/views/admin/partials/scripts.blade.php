@@ -93,6 +93,12 @@
                 });
             });
 
+            // Auto focus on first input with class "frst"
+            initAutoFocus();
+
+            // Keyboard shortcuts for focus navigation (also called after Livewire init)
+            initFocusShortcuts();
+
             // Sidebar effects
             initSidebarEffects();
 
@@ -101,6 +107,61 @@
 
             // Sidebar state initialization
             initSidebarState();
+        }
+
+        // Flag to prevent multiple event listener registrations
+        let focusShortcutsInitialized = false;
+
+        // Auto focus on first input with class "frst"
+        function initAutoFocus() {
+            // Find first input with class "frst"
+            const firstInput = document.querySelector('input.frst, textarea.frst, select.frst');
+            if (firstInput) {
+                // Add small delay to ensure page is fully loaded
+                setTimeout(function() {
+                    firstInput.focus();
+                    // If it's an input or textarea, select the text if it has value
+                    if ((firstInput.tagName === 'INPUT' || firstInput.tagName === 'TEXTAREA') && firstInput.select) {
+                        firstInput.select();
+                    }
+                }, 100);
+            }
+        }
+
+        // Keyboard shortcuts for focus navigation (F1 -> .frst, F2 -> .scnd)
+        function initFocusShortcuts() {
+            // Prevent multiple registrations
+            if (focusShortcutsInitialized) {
+                return;
+            }
+            
+            document.addEventListener('keydown', function(event) {
+                // F1 key - Focus on input with class "frst"
+                if (event.key === 'F1') {
+                    event.preventDefault();
+                    const firstInput = document.querySelector('input.frst, textarea.frst, select.frst');
+                    if (firstInput) {
+                        firstInput.focus();
+                        if ((firstInput.tagName === 'INPUT' || firstInput.tagName === 'TEXTAREA') && firstInput.select) {
+                            firstInput.select();
+                        }
+                    }
+                }
+                
+                // F2 key - Focus on input with class "scnd"
+                if (event.key === 'F2') {
+                    event.preventDefault();
+                    const secondInput = document.querySelector('input.scnd, textarea.scnd, select.scnd');
+                    if (secondInput) {
+                        secondInput.focus();
+                        if ((secondInput.tagName === 'INPUT' || secondInput.tagName === 'TEXTAREA') && secondInput.select) {
+                            secondInput.select();
+                        }
+                    }
+                }
+            });
+            
+            focusShortcutsInitialized = true;
         }
 
         // Sidebar effects initialization
@@ -462,19 +523,30 @@
 
         // Show loader on Livewire navigation
         if (typeof window.Livewire !== 'undefined') {
-            document.addEventListener('livewire:init', function() {
-                Livewire.hook('morph.updating', function() {
-                    startLoader();
-                });
+            // Show loader on Livewire navigation
+            if (typeof window.Livewire !== 'undefined') {
+                document.addEventListener('livewire:init', function() {
+                    // Initialize focus shortcuts after Livewire loads
+                    initFocusShortcuts();
+                    
+                    // Auto focus on first input after Livewire loads
+                    setTimeout(initAutoFocus, 200);
 
-                Livewire.hook('morph.updated', function() {
-                    setTimeout(completeLoader, 200);
-                });
+                    Livewire.hook('morph.updating', function() {
+                        startLoader();
+                    });
 
-                Livewire.hook('morph.failed', function() {
-                    completeLoader();
+                    Livewire.hook('morph.updated', function() {
+                        setTimeout(completeLoader, 200);
+                        // Re-check for .frst input after DOM updates
+                        setTimeout(initAutoFocus, 100);
+                    });
+
+                    Livewire.hook('morph.failed', function() {
+                        completeLoader();
+                    });
                 });
-            });
+            }
         }
 
         // Show loader on AJAX requests

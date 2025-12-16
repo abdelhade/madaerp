@@ -107,5 +107,18 @@
     </style>
 
     @stack('styles')
+    
+    {{-- Custom Form Control Focus Styles --}}
+    <style>
+        .form-control:focus,
+        select.form-control:focus,
+        textarea.form-control:focus,
+        .custom-select:focus,
+        input.form-control:focus {
+            border-color: #28a745 !important;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+            outline: 0;
+        }
+    </style>
 </head>
 @include('components.idintity.loader')

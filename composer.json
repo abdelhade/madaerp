@@ -29,7 +29,7 @@
         "realrashid/sweet-alert": "^7.3",
         "salla/zatca": "^3.0",
         "spatie/laravel-activitylog": "^4.10",
-        "spatie/laravel-medialibrary": "^11.13",
+        "spatie/laravel-medialibrary": "^11.17",
         "spatie/laravel-permission": "^6.20",
         "spatie/laravel-settings": "^3.2",
         "spatie/laravel-translation-loader": "^2.8"

@@ -143,6 +143,151 @@ class CheckAccountingService
     }
 
     /**
+     * Collect check (تحصيل الورقة - يدعم البنك والصندوق)
+     */
+    public function collectCheck(Check $check, string $accountType, int $accountId, string $collectionDate, int $branchId): void
+    {
+        DB::beginTransaction();
+
+        try {
+            $proType = 67; // تحصيل شيك
+            $portfolioAccount = $this->portfolioService->getPortfolioAccount($check->type);
+
+            if (! $portfolioAccount) {
+                throw new \Exception('حافظة الأوراق المالية غير موجودة');
+            }
+
+            $lastProId = OperHead::withoutGlobalScopes()->where('pro_type', $proType)->max('pro_id') ?? 0;
+            $newProId = $lastProId + 1;
+
+            $accountTypeName = $accountType === 'bank' ? 'البنك' : 'الصندوق';
+            $accountTypeInfo = $accountType === 'bank' ? "تحويل للبنك بتاريخ {$collectionDate}" : "تحصيل نقدي بتاريخ {$collectionDate}";
+
+            // تحديد الحسابات حسب نوع الورقة
+            if ($check->type === 'incoming') {
+                // ورقة قبض: من البنك/الصندوق (مدين) إلى حافظة أوراق القبض (دائن)
+                $acc1 = $accountId; // البنك/الصندوق
+                $acc2 = $portfolioAccount->id; // حافظة أوراق القبض
+            } else {
+                // ورقة دفع: من حافظة أوراق الدفع (مدين) إلى البنك/الصندوق (دائن)
+                $acc1 = $portfolioAccount->id; // حافظة أوراق الدفع
+                $acc2 = $accountId; // البنك/الصندوق
+            }
+
+            $oper = OperHead::create([
+                'pro_id' => $newProId,
+                'pro_type' => $proType,
+                'pro_date' => $collectionDate,
+                'pro_num' => $check->check_number,
+                'acc1' => $acc1,
+                'acc2' => $acc2,
+                'acc1_before' => 0,
+                'acc1_after' => 0,
+                'acc2_before' => 0,
+                'acc2_after' => 0,
+                'pro_value' => $check->amount,
+                'fat_net' => $check->amount,
+                'details' => "تحصيل ورقة رقم {$check->check_number} من {$check->bank_name}",
+                'info' => $check->account_holder_name,
+                'info2' => $accountTypeInfo,
+                'is_finance' => 1,
+                'is_journal' => 1,
+                'journal_type' => 2,
+                'isdeleted' => 0,
+                'tenant' => 0,
+                'user' => Auth::id(),
+                'branch_id' => $branchId,
+            ]);
+
+            // ربط الورقة بـ oper_head
+            $check->oper_id = $oper->id;
+            $check->save();
+
+            $lastJournalId = JournalHead::withoutGlobalScopes()->max('journal_id') ?? 0;
+            $newJournalId = $lastJournalId + 1;
+
+            $journalHead = JournalHead::create([
+                'journal_id' => $newJournalId,
+                'total' => $check->amount,
+                'date' => $collectionDate,
+                'op_id' => $oper->id,
+                'pro_type' => $proType,
+                'details' => "تحصيل ورقة رقم {$check->check_number}",
+                'user' => Auth::id(),
+                'branch_id' => $branchId,
+            ]);
+
+            $checkInfo = "تحصيل ورقة {$check->check_number} - {$check->bank_name}";
+
+            if ($check->type === 'incoming') {
+                // ورقة قبض: من البنك/الصندوق (مدين) إلى حافظة أوراق القبض (دائن)
+                JournalDetail::create([
+                    'journal_id' => $newJournalId,
+                    'account_id' => $accountId,
+                    'debit' => $check->amount,
+                    'credit' => 0,
+                    'type' => 0,
+                    'info' => $checkInfo,
+                    'op_id' => $oper->id,
+                    'isdeleted' => 0,
+                    'tenant' => 0,
+                    'branch_id' => $branchId,
+                ]);
+
+                JournalDetail::create([
+                    'journal_id' => $newJournalId,
+                    'account_id' => $portfolioAccount->id,
+                    'debit' => 0,
+                    'credit' => $check->amount,
+                    'type' => 1,
+                    'info' => $checkInfo,
+                    'op_id' => $oper->id,
+                    'isdeleted' => 0,
+                    'tenant' => 0,
+                    'branch_id' => $branchId,
+                ]);
+            } else {
+                // ورقة دفع: من حافظة أوراق الدفع (مدين) إلى البنك/الصندوق (دائن)
+                JournalDetail::create([
+                    'journal_id' => $newJournalId,
+                    'account_id' => $portfolioAccount->id,
+                    'debit' => $check->amount,
+                    'credit' => 0,
+                    'type' => 0,
+                    'info' => $checkInfo,
+                    'op_id' => $oper->id,
+                    'isdeleted' => 0,
+                    'tenant' => 0,
+                    'branch_id' => $branchId,
+                ]);
+
+                JournalDetail::create([
+                    'journal_id' => $newJournalId,
+                    'account_id' => $accountId,
+                    'debit' => 0,
+                    'credit' => $check->amount,
+                    'type' => 1,
+                    'info' => $checkInfo,
+                    'op_id' => $oper->id,
+                    'isdeleted' => 0,
+                    'tenant' => 0,
+                    'branch_id' => $branchId,
+                ]);
+            }
+
+            $check->markAsCleared($collectionDate);
+
+            // Dispatch event
+            event(new CheckCleared($check));
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    /**
      * Clear check (تحصيل الشيك - تحويل للبنك)
      */
     public function clearCheck(Check $check, int $bankAccountId, string $collectionDate, int $branchId): void
