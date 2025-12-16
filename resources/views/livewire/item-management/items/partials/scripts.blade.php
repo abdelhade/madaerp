@@ -88,6 +88,33 @@
             document.documentElement.style.overflowY = 'scroll';
             document.body.style.overflowY = 'auto';
         });
+
+        // Initialize Bootstrap tabs
+        const tabTriggerList = [].slice.call(document.querySelectorAll('#itemFormTabs button[data-bs-toggle="tab"]'));
+        tabTriggerList.forEach(function (tabTriggerEl) {
+            tabTriggerEl.addEventListener('shown.bs.tab', function (event) {
+                // Tab is now active
+                const targetTab = event.target.getAttribute('data-bs-target');
+                // Ensure the tab pane is visible
+                const tabPane = document.querySelector(targetTab);
+                if (tabPane) {
+                    tabPane.classList.add('show', 'active');
+                }
+            });
+        });
+
+        // Handle Livewire updates - reinitialize tabs if needed
+        document.addEventListener('livewire:update', function () {
+            // Ensure active tab is shown after Livewire update
+            const activeTabButton = document.querySelector('#itemFormTabs button.active');
+            if (activeTabButton) {
+                const targetTab = activeTabButton.getAttribute('data-bs-target');
+                const tabPane = document.querySelector(targetTab);
+                if (tabPane && !tabPane.classList.contains('show')) {
+                    tabPane.classList.add('show', 'active');
+                }
+            }
+        });
     });
 
     // ========== CLIENT-SIDE CALCULATIONS ==========

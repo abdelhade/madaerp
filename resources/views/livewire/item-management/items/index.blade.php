@@ -48,6 +48,7 @@ new class extends Component {
 
     // Column visibility settings
     public $visibleColumns = [
+        'image' => true,
         'code' => true,
         'name' => true,
         'units' => true,
@@ -694,6 +695,9 @@ new class extends Component {
                             <thead class="table-light text-center align-middle">
                                 <tr>
                                     <th class="font-hold text-center fw-bold">#</th>
+                                    @if($visibleColumns['image'])
+                                        <th class="font-hold text-center fw-bold">{{ __('items.image') }}</th>
+                                    @endif
                                     @if($visibleColumns['code'])
                                         <th class="font-hold text-center fw-bold">{{ __('common.code') }}</th>
                                     @endif
@@ -755,6 +759,25 @@ new class extends Component {
                                              x-transition:leave-start="opacity-100 transform scale-100"
                                              x-transition:leave-end="opacity-0 transform scale-95">
                                             <td class="font-hold text-center fw-bold">{{ $loop->iteration }}</td>
+
+                                            @if($visibleColumns['image'])
+                                                <td class="font-hold text-center">
+                                                    @php
+                                                        $thumbnail = $item->getFirstMedia('item-thumbnail');
+                                                    @endphp
+                                                    @if($thumbnail)
+                                                        <img src="{{ $thumbnail->getUrl('thumb') }}" 
+                                                             alt="{{ $item->name }}" 
+                                                             class="img-thumbnail"
+                                                             style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;"
+                                                             onclick="window.open('{{ $thumbnail->getUrl('preview') }}', '_blank')">
+                                                    @else
+                                                        <div class="text-muted" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6; border-radius: 0.25rem;">
+                                                            <i class="fas fa-image fa-2x"></i>
+                                                        </div>
+                                                    @endif
+                                                </td>
+                                            @endif
 
                                             @if($visibleColumns['code'])
                                                 <td class="font-hold text-center fw-bold" x-text="itemData.code"></td>

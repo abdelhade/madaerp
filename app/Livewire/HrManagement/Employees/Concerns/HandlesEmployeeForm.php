@@ -201,8 +201,8 @@ trait HandlesEmployeeForm
 
         // Cache for 2 hours (moderately updated - HR data)
         $this->departments = $cache->remember('departments_list', 7200, function () {
-            return Department::with('director')
-                ->select('id', 'title')
+            return Department::with('director:id,name')
+                ->select('id', 'title', 'director_id')
                 ->orderBy('title')
                 ->get();
         });
@@ -228,10 +228,21 @@ trait HandlesEmployeeForm
         $this->currentImageUrl = null;
     }
 
+    /**
+     * Line managers computed property
+     * Note: This is now handled client-side by Alpine.js for better performance
+     * Keeping this for backward compatibility if needed
+     */
     #[Computed]
     public function lineManagers()
     {
-        return Employee::where('department_id', $this->department_id)->where('id', '!=', $this->employeeId)->get();
+        if (!$this->department_id) {
+            return collect([]);
+        }
+        return Employee::where('department_id', $this->department_id)
+            ->where('id', '!=', $this->employeeId)
+            ->select('id', 'name')
+            ->get();
     }
 
     /**
@@ -344,11 +355,87 @@ trait HandlesEmployeeForm
             $this->image = null;
         }
 
+        // Ensure status has a value before validation
+        if (empty($this->status)) {
+            $this->status = 'مفعل';
+        }
+
+        // Ensure salary_basic_account_id is set (convert empty string to null)
+        if ($this->salary_basic_account_id === '') {
+            $this->salary_basic_account_id = null;
+        }
+
+        // Ensure salary_type has a default value (good practice, even though nullable)
+        if (empty($this->salary_type)) {
+            $this->salary_type = 'ساعات عمل فقط'; // Default value
+        }
+
+        // Ensure flexible_hourly_wage has a default value (required by database)
+        if ($this->flexible_hourly_wage === null || $this->flexible_hourly_wage === '') {
+            $this->flexible_hourly_wage = 0;
+        }
+
+        // Ensure numeric fields have default values
+        if ($this->allowed_permission_days === null || $this->allowed_permission_days === '') {
+            $this->allowed_permission_days = 0;
+        }
+        if ($this->allowed_late_days === null || $this->allowed_late_days === '') {
+            $this->allowed_late_days = 0;
+        }
+        if ($this->allowed_absent_days === null || $this->allowed_absent_days === '') {
+            $this->allowed_absent_days = 0;
+        }
+        if ($this->allowed_errand_days === null || $this->allowed_errand_days === '') {
+            $this->allowed_errand_days = 0;
+        }
+        if ($this->is_errand_allowed === null || $this->is_errand_allowed === '') {
+            $this->is_errand_allowed = false;
+        }
+
         // Sanitize input data before validation
         $this->sanitizeInputs();
 
+        // Log data before validation for debugging
+        Log::info('Employee form data before validation', [
+            'name' => $this->name,
+            'email' => $this->email,
+            'phone' => $this->phone,
+            'status' => $this->status,
+            'salary_basic_account_id' => $this->salary_basic_account_id,
+            'is_edit' => $this->isEdit,
+            'employee_id' => $this->employeeId,
+        ]);
+
         // Validate the data
-        $validated = $this->validate();
+        try {
+            $validated = $this->validate();
+            Log::info('Employee form validation passed', [
+                'validated_fields' => array_keys($validated),
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Log validation errors for debugging
+            Log::warning('Employee form validation failed', [
+                'errors' => $e->errors(),
+                'data' => [
+                    'name' => $this->name,
+                    'email' => $this->email,
+                    'phone' => $this->phone,
+                    'status' => $this->status,
+                    'salary_basic_account_id' => $this->salary_basic_account_id,
+                ],
+            ]);
+            
+            // Re-throw to let Livewire handle it
+            throw $e;
+        }
+
+        // Check if validation added any errors to error bag
+        if ($this->getErrorBag()->any()) {
+            Log::warning('Employee form has validation errors after validate()', [
+                'errors' => $this->getErrorBag()->all(),
+            ]);
+            return;
+        }
 
         // Custom validation for KPI weights - must equal exactly 100%
         if (! empty($this->kpi_ids) && ! empty($this->kpi_weights)) {
@@ -393,6 +480,14 @@ trait HandlesEmployeeForm
             }
         }
 
+        // Check if there are any validation errors before proceeding
+        if ($this->getErrorBag()->any()) {
+            Log::warning('Employee form has validation errors before save', [
+                'errors' => $this->getErrorBag()->all(),
+            ]);
+            return;
+        }
+
         try {
             $imageFile = null;
             $employee = null;
@@ -419,45 +514,53 @@ trait HandlesEmployeeForm
                 // Remove KPI fields and leave balances from validated data
                 unset($validated['kpi_ids'], $validated['kpi_weights'], $validated['leave_balances']);
 
+                // Ensure status has a default value if not provided
+                if (empty($validated['status'])) {
+                    $validated['status'] = $this->status ?? 'مفعل';
+                }
+
+                // Ensure salary_type has a default value if not provided
+                if (empty($validated['salary_type'])) {
+                    $validated['salary_type'] = $this->salary_type ?? 'ساعات عمل فقط';
+                }
+
+                // Ensure numeric fields have default values (required by database)
+                if (!isset($validated['flexible_hourly_wage']) || $validated['flexible_hourly_wage'] === null || $validated['flexible_hourly_wage'] === '') {
+                    $validated['flexible_hourly_wage'] = 0;
+                }
+                if (!isset($validated['allowed_permission_days']) || $validated['allowed_permission_days'] === null || $validated['allowed_permission_days'] === '') {
+                    $validated['allowed_permission_days'] = 0;
+                }
+                if (!isset($validated['allowed_late_days']) || $validated['allowed_late_days'] === null || $validated['allowed_late_days'] === '') {
+                    $validated['allowed_late_days'] = 0;
+                }
+                if (!isset($validated['allowed_absent_days']) || $validated['allowed_absent_days'] === null || $validated['allowed_absent_days'] === '') {
+                    $validated['allowed_absent_days'] = 0;
+                }
+                if (!isset($validated['allowed_errand_days']) || $validated['allowed_errand_days'] === null || $validated['allowed_errand_days'] === '') {
+                    $validated['allowed_errand_days'] = 0;
+                }
+                if (!isset($validated['is_errand_allowed'])) {
+                    $validated['is_errand_allowed'] = false;
+                }
+
                 if ($this->isEdit && $this->employeeId) {
                     $employee = Employee::findOrFail($this->employeeId);
                     $employee->update($validated);
-
-                    // Sync KPIs with weights
-                    $kpiData = [];
-                    foreach ($this->kpi_ids as $kpiId) {
-                        if (isset($this->kpi_weights[$kpiId]) && $this->kpi_weights[$kpiId] > 0) {
-                            $kpiData[$kpiId] = ['weight_percentage' => $this->kpi_weights[$kpiId]];
-                        }
-                    }
-                    $employee->kpis()->sync($kpiData);
-
-                    // Sync leave balances
-                    $this->syncLeaveBalances($employee);
-
-                    // Sync the employee Account
-                    $this->syncEmployeeAccount($employee);
                     session()->flash('success', __('hr.employee_updated_successfully'));
                 } else {
                     $employee = Employee::create($validated);
-
-                    // Sync KPIs with weights
-                    $kpiData = [];
-                    foreach ($this->kpi_ids as $kpiId) {
-                        if (isset($this->kpi_weights[$kpiId]) && $this->kpi_weights[$kpiId] > 0) {
-                            $kpiData[$kpiId] = ['weight_percentage' => $this->kpi_weights[$kpiId]];
-                        }
-                    }
-                    $employee->kpis()->sync($kpiData);
-
-                    // Sync leave balances
-                    $this->syncLeaveBalances($employee);
-
-                    // Create employee account for new employee
-                    $this->syncEmployeeAccount($employee);
-
                     session()->flash('success', __('hr.employee_created_successfully'));
                 }
+
+                // Sync KPIs with weights (shared logic)
+                $this->syncEmployeeKpis($employee);
+
+                // Sync leave balances
+                $this->syncLeaveBalances($employee);
+
+                // Sync the employee Account
+                $this->syncEmployeeAccount($employee);
 
                 $this->dispatch('employee-saved');
             });
@@ -486,15 +589,26 @@ trait HandlesEmployeeForm
 
             // Redirect to index
             return redirect()->route('employees.index');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Validation errors are already handled by Livewire
+            Log::info('Employee form validation exception', [
+                'errors' => $e->errors(),
+            ]);
+            // Don't flash error, Livewire will show validation errors
         } catch (\Throwable $th) {
-            session()->flash('error', __('hr.error_occurred'));
+            session()->flash('error', __('hr.error_occurred') . ': ' . $th->getMessage());
             Log::error('Employee save error', [
                 'user_id' => Auth::id(),
                 'employee_id' => $this->employeeId,
                 'is_edit' => $this->isEdit,
                 'error' => $th->getMessage(),
+                'file' => $th->getFile(),
+                'line' => $th->getLine(),
                 'trace' => $th->getTraceAsString(),
             ]);
+            
+            // Add error to Livewire error bag so it shows in the form
+            $this->addError('general', __('hr.error_occurred') . ': ' . $th->getMessage());
         }
     }
 
@@ -512,9 +626,22 @@ trait HandlesEmployeeForm
         $this->image = null;
     }
 
+    /**
+     * Handle property updates
+     * Note: We removed real-time validation to improve performance
+     * Validation happens only on save() to reduce server requests
+     */
     public function updated($propertyName): void
     {
-        $this->validateOnly($propertyName);
+        // Only validate specific fields that need immediate feedback
+        // Most validation happens on save() to avoid unnecessary server requests
+        
+        // Email uniqueness check (important for user feedback)
+        if ($propertyName === 'email' && !empty($this->email)) {
+            $this->validateOnly('email');
+        }
+        
+        // Don't validate on every change - let save() handle it
     }
 
     /**
@@ -570,161 +697,43 @@ trait HandlesEmployeeForm
         }
     }
 
+    /**
+     * Add KPI - DEPRECATED: Now handled client-side by Alpine.js
+     * Keeping for backward compatibility and server-side fallback
+     * KPIs are now managed locally and synced via $wire.set() on save
+     */
     public function addKpi(): void
     {
-        // Authorization check
-        /** @var User|null $user */
-        $user = Auth::user();
-        abort_unless($user?->can('edit Hr-Employees') ?? false, 403, __('hr.unauthorized_action'));
-
-        if ($this->selected_kpi_id) {
-            if (! is_array($this->kpi_ids)) {
-                $this->kpi_ids = [];
-            }
-            if (! is_array($this->kpi_weights)) {
-                $this->kpi_weights = [];
-            }
-
-            if (! in_array($this->selected_kpi_id, $this->kpi_ids)) {
-                $this->kpi_ids[] = $this->selected_kpi_id;
-                $this->kpi_weights[$this->selected_kpi_id] = 0;
-                $this->selected_kpi_id = '';
-
-                // Dispatch event to clear Alpine.js selection
-                $this->dispatch('kpiAdded');
-
-                $this->dispatch('notify', [
-                    'type' => 'success',
-                    'message' => __('hr.kpi_added'),
-                ]);
-            } else {
-                $this->dispatch('notify', [
-                    'type' => 'error',
-                    'message' => __('hr.kpi_already_added'),
-                ]);
-            }
-        } else {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => __('hr.kpi_required'),
-            ]);
-        }
+        // Note: This method is no longer called from frontend
+        // KPI management is now done client-side for better performance
+        // Data is synced to Livewire via $wire.set() before save()
     }
 
+    /**
+     * Remove KPI - DEPRECATED: Now handled client-side by Alpine.js
+     */
     public function removeKpi($kpiId): void
     {
-        // Authorization check
-        /** @var User|null $user */
-        $user = Auth::user();
-        abort_unless($user?->can('edit Hr-Employees') ?? false, 403, __('hr.unauthorized_action'));
-
-        if (! is_array($this->kpi_ids)) {
-            $this->kpi_ids = [];
-        }
-        if (! is_array($this->kpi_weights)) {
-            $this->kpi_weights = [];
-        }
-
-        $this->kpi_ids = array_filter($this->kpi_ids, function ($id) use ($kpiId) {
-            return $id != $kpiId;
-        });
-        unset($this->kpi_weights[$kpiId]);
-
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => __('hr.kpi_removed'),
-        ]);
+        // Note: This method is no longer called from frontend
+        // KPI management is now done client-side for better performance
     }
 
+    /**
+     * Add Leave Balance - DEPRECATED: Now handled client-side by Alpine.js
+     */
     public function addLeaveBalance(): void
     {
-        // Authorization check
-        /** @var User|null $user */
-        $user = Auth::user();
-        abort_unless($user?->can('edit Hr-Employees') ?? false, 403, __('hr.unauthorized_action'));
-
-        if ($this->selected_leave_type_id) {
-            if (! is_array($this->leave_balances)) {
-                $this->leave_balances = [];
-            }
-
-            // Check if this leave type already exists for the current year
-            $currentYear = date('Y');
-            $key = $this->selected_leave_type_id.'_'.$currentYear;
-
-            if (isset($this->leave_balances[$key])) {
-                $this->dispatch('notify', [
-                    'type' => 'error',
-                    'message' => __('hr.leave_balance_already_exists'),
-                ]);
-
-                return;
-            }
-
-            // Get existing leave types for this employee to filter them out
-            if ($this->isEdit && $this->employeeId) {
-                $existingBalances = EmployeeLeaveBalance::where('employee_id', $this->employeeId)
-                    ->where('leave_type_id', $this->selected_leave_type_id)
-                    ->where('year', $currentYear)
-                    ->exists();
-
-                if ($existingBalances) {
-                    $this->dispatch('notify', [
-                        'type' => 'error',
-                        'message' => __('hr.leave_balance_already_exists'),
-                    ]);
-
-                    return;
-                }
-            }
-
-            // Add new leave balance with default values
-            $this->leave_balances[$key] = [
-                'leave_type_id' => $this->selected_leave_type_id,
-                'year' => $currentYear,
-                'opening_balance_days' => 0,
-                'used_days' => 0,
-                'pending_days' => 0,
-                'max_monthly_days' => 0,
-                'notes' => '',
-            ];
-
-            $this->selected_leave_type_id = '';
-
-            // Dispatch event to clear Alpine.js selection
-            $this->dispatch('leaveBalanceAdded');
-
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => __('hr.leave_balance_added'),
-            ]);
-        } else {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => __('hr.leave_type_required'),
-            ]);
-        }
+        // Note: This method is no longer called from frontend
+        // Leave balance management is now done client-side for better performance
     }
 
+    /**
+     * Remove Leave Balance - DEPRECATED: Now handled client-side by Alpine.js
+     */
     public function removeLeaveBalance($balanceKey): void
     {
-        // Authorization check
-        /** @var User|null $user */
-        $user = Auth::user();
-        abort_unless($user?->can('edit Hr-Employees') ?? false, 403, __('hr.unauthorized_action'));
-
-        if (! is_array($this->leave_balances)) {
-            $this->leave_balances = [];
-        }
-
-        if (isset($this->leave_balances[$balanceKey])) {
-            unset($this->leave_balances[$balanceKey]);
-        }
-
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => __('hr.leave_balance_removed'),
-        ]);
+        // Note: This method is no longer called from frontend
+        // Leave balance management is now done client-side for better performance
     }
 
     /**
@@ -773,31 +782,16 @@ trait HandlesEmployeeForm
             }
         }
 
-        // Bulk update existing records (optimized)
+        // Bulk update existing records
         if (! empty($toUpdate)) {
-            // Use bulk update with case statement for better performance
-            $ids = array_keys($toUpdate);
-            $cases = [];
-            $bindings = [];
-
-            foreach ($toUpdate as $id => $data) {
-                foreach ($data as $field => $value) {
-                    if (! isset($cases[$field])) {
-                        $cases[$field] = [];
+            // Use chunking for large updates to avoid memory issues
+            if (count($toUpdate) > 50) {
+                foreach (array_chunk($toUpdate, 50, true) as $chunk) {
+                    foreach ($chunk as $id => $data) {
+                        EmployeeLeaveBalance::where('id', $id)->update($data);
                     }
-                    $cases[$field][] = "WHEN {$id} THEN ?";
-                    $bindings[] = $value;
-                }
-            }
-
-            // If we have many updates, use bulk update, otherwise use individual updates
-            if (count($toUpdate) > 10) {
-                // For large datasets, use individual updates (more reliable)
-                foreach ($toUpdate as $id => $data) {
-                    EmployeeLeaveBalance::where('id', $id)->update($data);
                 }
             } else {
-                // For small datasets, use individual updates
                 foreach ($toUpdate as $id => $data) {
                     EmployeeLeaveBalance::where('id', $id)->update($data);
                 }
@@ -806,7 +800,14 @@ trait HandlesEmployeeForm
 
         // Bulk insert new records
         if (! empty($toCreate)) {
-            EmployeeLeaveBalance::insert($toCreate);
+            // Use chunking for large inserts
+            if (count($toCreate) > 100) {
+                foreach (array_chunk($toCreate, 100) as $chunk) {
+                    EmployeeLeaveBalance::insert($chunk);
+                }
+            } else {
+                EmployeeLeaveBalance::insert($toCreate);
+            }
         }
 
         // Delete balances that are no longer in the form
@@ -900,34 +901,8 @@ trait HandlesEmployeeForm
             throw new \Exception('Parent account not found');
         }
 
-        // Get all direct children and find the maximum code value
-        $children = $parentAccount->haveChildrens()->get();
-        
-        $maxChildCode = null;
-        foreach ($children as $child) {
-            if (is_numeric($child->code)) {
-                $childCodeValue = (int) $child->code;
-                if ($maxChildCode === null || $childCodeValue > $maxChildCode) {
-                    $maxChildCode = $childCodeValue;
-                }
-            }
-        }
-        
-        // Generate new code: max child code + 1, or find next available if no children
-        if ($maxChildCode !== null) {
-            $newCode = (string) ($maxChildCode + 1);
-        } else {
-            // No children exist - find next available code starting from parent + 1
-            $parentCodeValue = (int) $parentAccount->code;
-            $newCodeValue = $parentCodeValue + 1;
-            
-            // Ensure the code doesn't already exist as a non-child account
-            while (AccHead::where('code', (string) $newCodeValue)->exists()) {
-                $newCodeValue++;
-            }
-            
-            $newCode = (string) $newCodeValue;
-        }
+        // Generate new account code
+        $newCode = $this->generateAccountCode($parentAccount);
 
         $accountData = [
             'code' => $newCode,
@@ -941,14 +916,13 @@ trait HandlesEmployeeForm
         if (! $employee->account) {
             $employee->account()->create($accountData);
             $employee->load('account');
-            app(AccountService::class)->setStartBalances([$employee->account->id => $this->opening_balance]);
-            app(AccountService::class)->recalculateOpeningCapitalAndSyncJournal();
         } else {
             unset($accountData['accountable_type'], $accountData['accountable_id']);
             $employee->account->update($accountData);
-            app(AccountService::class)->setStartBalances([$employee->account->id => $this->opening_balance]);
-            app(AccountService::class)->recalculateOpeningCapitalAndSyncJournal();
         }
+
+        // Update account balances and recalculate (single call)
+        $this->updateEmployeeAccountBalances($employee);
 
         // Create sub-accounts (advance, deductions, rewards)
         $this->createEmployeeSubAccounts($employee);
@@ -1015,35 +989,7 @@ trait HandlesEmployeeForm
         }
 
         // Generate code for new account
-        // Get all direct children and find the maximum code value
-        $children = $parentAccount->haveChildrens()->get();
-        
-        $maxChildCode = null;
-        foreach ($children as $child) {
-            if (is_numeric($child->code)) {
-                $childCodeValue = (int) $child->code;
-                if ($maxChildCode === null || $childCodeValue > $maxChildCode) {
-                    $maxChildCode = $childCodeValue;
-                }
-            }
-        }
-        
-        // Generate new code: max child code + 1, or find next available if no children
-        if ($maxChildCode !== null) {
-            $newCode = (string) ($maxChildCode + 1);
-        } else {
-            // No children exist - find next available code starting from parent + 1
-            $parentCodeValue = (int) $parentAccount->code;
-            $newCodeValue = $parentCodeValue + 1;
-            
-            // Ensure the code doesn't already exist as a non-child account
-            // or find the next available sequential code
-            while (AccHead::where('code', (string) $newCodeValue)->exists()) {
-                $newCodeValue++;
-            }
-            
-            $newCode = (string) $newCodeValue;
-        }
+        $newCode = $this->generateAccountCode($parentAccount);
 
         // Create new account
         AccHead::create([
@@ -1065,5 +1011,71 @@ trait HandlesEmployeeForm
             'crtime' => now(),
             'mdtime' => now(),
         ]);
+    }
+
+    /**
+     * Sync employee KPIs with weights
+     * Extracted to avoid code duplication
+     */
+    private function syncEmployeeKpis(Employee $employee): void
+    {
+        $kpiData = [];
+        foreach ($this->kpi_ids as $kpiId) {
+            if (isset($this->kpi_weights[$kpiId]) && $this->kpi_weights[$kpiId] > 0) {
+                $kpiData[$kpiId] = ['weight_percentage' => $this->kpi_weights[$kpiId]];
+            }
+        }
+        $employee->kpis()->sync($kpiData);
+    }
+
+    /**
+     * Update employee account balances and recalculate
+     * Optimized to call AccountService once instead of twice
+     */
+    private function updateEmployeeAccountBalances(Employee $employee): void
+    {
+        if (! $employee->account) {
+            return;
+        }
+
+        $accountService = app(AccountService::class);
+        $accountService->setStartBalances([$employee->account->id => $this->opening_balance]);
+        $accountService->recalculateOpeningCapitalAndSyncJournal();
+    }
+
+    /**
+     * Generate account code for new account
+     * Extracted to avoid code duplication
+     */
+    private function generateAccountCode(AccHead $parentAccount): string
+    {
+        // Get all direct children and find the maximum code value
+        $children = $parentAccount->haveChildrens()->get();
+        
+        $maxChildCode = null;
+        foreach ($children as $child) {
+            if (is_numeric($child->code)) {
+                $childCodeValue = (int) $child->code;
+                if ($maxChildCode === null || $childCodeValue > $maxChildCode) {
+                    $maxChildCode = $childCodeValue;
+                }
+            }
+        }
+        
+        // Generate new code: max child code + 1, or find next available if no children
+        if ($maxChildCode !== null) {
+            return (string) ($maxChildCode + 1);
+        }
+        
+        // No children exist - find next available code starting from parent + 1
+        $parentCodeValue = (int) $parentAccount->code;
+        $newCodeValue = $parentCodeValue + 1;
+        
+        // Ensure the code doesn't already exist as a non-child account
+        while (AccHead::where('code', (string) $newCodeValue)->exists()) {
+            $newCodeValue++;
+        }
+        
+        return (string) $newCodeValue;
     }
 }
