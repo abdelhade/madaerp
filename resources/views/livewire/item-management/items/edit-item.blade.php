@@ -10,8 +10,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Enums\ItemType;
+use Livewire\WithFileUploads;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 new class extends Component {
+    use WithFileUploads;
+
     public Item $itemModel;
 
     public $units;
@@ -30,6 +34,13 @@ new class extends Component {
 
     public $unitRows = [];
 
+    // Image properties
+    public $itemThumbnail = null;
+    public $itemImages = [];
+    public $existingThumbnail = null;
+    public $existingImages = [];
+    public $imagesToDelete = [];
+
     // Modal properties
     public $showModal = false;
     public $modalType = ''; // 'unit' or 'note'
@@ -45,6 +56,10 @@ new class extends Component {
         $this->units = Unit::all();
         $this->prices = Price::all();
         $this->notes = Note::with('noteDetails')->get();
+
+        // Load existing images
+        $this->existingThumbnail = $this->itemModel->getFirstMedia('item-thumbnail');
+        $this->existingImages = $this->itemModel->getMedia('item-images');
 
         $this->item = [
             'name' => $this->itemModel->name,
@@ -105,6 +120,9 @@ new class extends Component {
             'unitRows.*.u_val' => 'required|numeric|min:0.0001',
             'unitRows.*.unit_id' => 'required|exists:units,id|distinct',
             'unitRows.*.prices.*' => 'required|numeric|min:0',
+            // Image validation
+            'itemThumbnail' => 'nullable|image|max:2048',
+            'itemImages.*' => 'nullable|image|max:2048',
         ];
     }
 
@@ -149,6 +167,36 @@ new class extends Component {
         $this->unitRows = array_values($this->unitRows);
     }
 
+    public function removeNewImage($index)
+    {
+        if (isset($this->itemImages[$index])) {
+            unset($this->itemImages[$index]);
+            $this->itemImages = array_values($this->itemImages);
+        }
+    }
+
+    public function deleteExistingImage($mediaId, $type = 'gallery')
+    {
+        try {
+            $media = Media::find($mediaId);
+            if ($media && $media->model_id === $this->itemModel->id) {
+                $media->delete();
+                
+                // Refresh the existing images
+                if ($type === 'thumbnail') {
+                    $this->existingThumbnail = null;
+                } else {
+                    $this->existingImages = $this->itemModel->fresh()->getMedia('item-images');
+                }
+                
+                session()->flash('success', __('items.image_deleted_successfully'));
+            }
+        } catch (\Exception $e) {
+            Log::error('Error deleting image: ' . $e->getMessage());
+            session()->flash('error', __('common.error_occurred'));
+        }
+    }
+
     public function update()
     {
         $this->validate();
@@ -161,12 +209,39 @@ new class extends Component {
             $this->syncBarcodes();
             $this->syncPrices();
             $this->syncNotes();
+            $this->updateItemImages();
 
             DB::commit();
             $this->handleSuccess();
         } catch (\Exception $e) {
             DB::rollBack();
             $this->handleError($e);
+        }
+    }
+
+    private function updateItemImages()
+    {
+        // Save new thumbnail image
+        if ($this->itemThumbnail) {
+            // Delete old thumbnail if exists
+            if ($this->existingThumbnail) {
+                $this->existingThumbnail->delete();
+            }
+            
+            $this->itemModel->addMedia($this->itemThumbnail->getRealPath())
+                ->usingFileName($this->itemThumbnail->getClientOriginalName())
+                ->toMediaCollection('item-thumbnail');
+        }
+
+        // Save new additional images
+        if (!empty($this->itemImages) && is_array($this->itemImages)) {
+            foreach ($this->itemImages as $image) {
+                if ($image && method_exists($image, 'getRealPath')) {
+                    $this->itemModel->addMedia($image->getRealPath())
+                        ->usingFileName($image->getClientOriginalName())
+                        ->toMediaCollection('item-images');
+                }
+            }
         }
     }
 
@@ -538,6 +613,17 @@ new class extends Component {
                         </div>
                     </div>
                 </fieldset>
+
+                <!-- Image Upload Section -->
+                <fieldset class="shadow-sm mt-3">
+                    <legend class="p-3 mb-0">
+                        <h6 class="font-hold fw-bold mb-0">{{ __('items.item_images') }}</h6>
+                    </legend>
+                    <div class="col-md-12 p-3">
+                        @include('livewire.item-management.items.partials.image-upload')
+                    </div>
+                </fieldset>
+
                 @include('livewire.item-management.items.partials.units-repeater')
 
                 <div class="mt-3">

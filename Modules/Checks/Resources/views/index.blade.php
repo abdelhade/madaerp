@@ -271,9 +271,9 @@
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                                 @if($check->status == 'pending')
-                                                    <button class="btn btn-outline-success" onclick="clearCheck({{ $check->id }})" title="تصفية">
+                                                    <a href="{{ route('checks.collect', $check) }}" class="btn btn-outline-success" title="تحصيل">
                                                         <i class="fas fa-check"></i>
-                                                    </button>
+                                                    </a>
                                                 @endif
                                                 <button class="btn btn-outline-danger" onclick="deleteCheck({{ $check->id }})" title="حذف">
                                                     <i class="fas fa-trash"></i>

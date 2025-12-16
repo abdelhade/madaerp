@@ -2,19 +2,24 @@
 
 namespace App\Models;
 
-use Modules\Branches\Models\Branch;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Enums\ItemType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Branches\Models\Branch;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-
-class Item extends Model
+class Item extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
+
     protected $table = 'items';
+
     protected $guarded = ['id'];
+
     protected $casts = [
         'type' => ItemType::class,
     ];
@@ -70,6 +75,44 @@ class Item extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    /**
+     * Register media collections for item images
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('item-images')
+            ->useFallbackUrl(asset('images/no-image.png'))
+            ->useFallbackPath(public_path('images/no-image.png'));
+
+        $this->addMediaCollection('item-thumbnail')
+            ->singleFile()
+            ->useFallbackUrl(asset('images/no-image.png'))
+            ->useFallbackPath(public_path('images/no-image.png'));
+    }
+
+    /**
+     * Register media conversions for image optimization
+     */
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(150)
+            ->height(150)
+            ->sharpen(10)
+            ->nonQueued();
+
+        $this->addMediaConversion('preview')
+            ->width(400)
+            ->height(400)
+            ->sharpen(5)
+            ->nonQueued();
+
+        $this->addMediaConversion('large')
+            ->width(800)
+            ->height(800)
+            ->sharpen(3)
+            ->nonQueued();
+    }
 
     // public function getCurrentQuantityAttribute()
     // {

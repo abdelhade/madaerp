@@ -9,6 +9,7 @@ use Modules\Accounts\Models\AccHead;
 use Modules\Checks\Http\Requests\BatchCancelRequest;
 use Modules\Checks\Http\Requests\BatchCollectRequest;
 use Modules\Checks\Http\Requests\ClearCheckRequest;
+use Modules\Checks\Http\Requests\CollectCheckRequest;
 use Modules\Checks\Http\Requests\StoreCheckRequest;
 use Modules\Checks\Http\Requests\UpdateCheckRequest;
 use Modules\Checks\Models\Check;
@@ -322,7 +323,10 @@ class ChecksController extends Controller
 
             $this->checkService->createCheck($validated);
 
-            return redirect()->route('checks.index')->with('success', 'تم إضافة الشيك وإنشاء القيد المحاسبي بنجاح');
+            // Redirect to the appropriate index page based on check type
+            $routeName = $validated['type'] === 'incoming' ? 'checks.incoming' : 'checks.outgoing';
+
+            return redirect()->route($routeName)->with('success', 'تم إضافة الشيك وإنشاء القيد المحاسبي بنجاح');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'حدث خطأ: '.$e->getMessage()])->withInput();
         }
@@ -336,7 +340,10 @@ class ChecksController extends Controller
         try {
             $this->checkService->updateCheck($check, $request->validated());
 
-            return redirect()->route('checks.index')->with('success', 'تم تحديث الشيك بنجاح');
+            // Redirect to the appropriate index page based on check type
+            $routeName = $check->type === 'incoming' ? 'checks.incoming' : 'checks.outgoing';
+
+            return redirect()->route($routeName)->with('success', 'تم تحديث الشيك بنجاح');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'حدث خطأ: '.$e->getMessage()])->withInput();
         }
@@ -353,6 +360,70 @@ class ChecksController extends Controller
             return response()->json(['success' => true, 'message' => 'تم حذف الشيك بنجاح']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'حدث خطأ: '.$e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Show collect check page (صفحة تحصيل الورقة)
+     */
+    public function collect(Check $check)
+    {
+        if ($check->status !== Check::STATUS_PENDING) {
+            return redirect()->route('checks.incoming')
+                ->with('error', 'لا يمكن تحصيل ورقة غير معلقة');
+        }
+
+        // تحميل حسابات البنوك
+        $bankAccounts = AccHead::where('is_basic', 0)
+            ->where('isdeleted', 0)
+            ->where('code', 'like', '1102%')
+            ->select('id', 'aname', 'code', 'balance')
+            ->orderBy('code')
+            ->get();
+
+        // تحميل حسابات الصناديق
+        $cashAccounts = AccHead::where('is_basic', 0)
+            ->where('isdeleted', 0)
+            ->where(function ($query) {
+                $query->where('is_fund', 1)
+                    ->orWhere('is_cash', 1)
+                    ->orWhere('code', 'like', '1101%');
+            })
+            ->select('id', 'aname', 'code', 'balance')
+            ->orderBy('code')
+            ->get();
+
+        $pageTitle = $check->type === 'incoming' ? 'تحصيل ورقة قبض' : 'تحصيل ورقة دفع';
+
+        return view('checks::collect', compact('check', 'bankAccounts', 'cashAccounts', 'pageTitle'));
+    }
+
+    /**
+     * Store collect check (تنفيذ تحصيل الورقة)
+     */
+    public function storeCollect(CollectCheckRequest $request, Check $check)
+    {
+        try {
+            if ($check->status !== Check::STATUS_PENDING) {
+                return redirect()->route('checks.collect', $check)
+                    ->with('error', 'لا يمكن تحصيل ورقة غير معلقة');
+            }
+
+            $validated = $request->validated();
+
+            $this->accountingService->collectCheck(
+                $check,
+                $validated['account_type'],
+                $validated['account_id'],
+                $validated['collection_date'],
+                $validated['branch_id']
+            );
+
+            return redirect()->route('checks.incoming')
+                ->with('success', 'تم تحصيل الورقة بنجاح وإنشاء القيد المحاسبي');
+        } catch (\Exception $e) {
+            return redirect()->route('checks.collect', $check)
+                ->with('error', 'حدث خطأ: '.$e->getMessage());
         }
     }
 

@@ -444,6 +444,35 @@
                 // تحديث الحالة الأولية
                 updateSelectAllSelectiveState();
             }
+
+            // إصلاح مشكلة عدم إرسال checkboxes المخفية في tabs
+            // نستخدم طريقة مختلفة: نجعل جميع الـ checkboxes مرئية قبل الإرسال
+            const form = document.querySelector('form[action*="users"]');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    console.log('Form submit event triggered');
+                    
+                    // جعل جميع tab panes مرئية مؤقتاً
+                    const tabPanes = document.querySelectorAll('.tab-pane');
+                    tabPanes.forEach(pane => {
+                        pane.style.display = 'block';
+                        pane.style.visibility = 'visible';
+                    });
+                    
+                    // جمع جميع checkboxes المحددة
+                    const allCheckboxes = form.querySelectorAll('input[name="permissions[]"]:checked');
+                    console.log('Found checked checkboxes:', allCheckboxes.length);
+                    
+                    // طباعة أول 10 IDs
+                    allCheckboxes.forEach((checkbox, index) => {
+                        if (index < 10) {
+                            console.log(`Checkbox ${index}: ${checkbox.value}`);
+                        }
+                    });
+                });
+            } else {
+                console.error('Form not found!');
+            }
         });
     </script>
 @endpush

@@ -160,6 +160,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('varibals', VaribalController::class)->names('varibals')->middleware('can:view varibals');
     Route::get('varibalValues/{varibalId?}', [VaribalValueController::class, 'index'])->name('varibalValues.index')->middleware('can:view varibalsValues');
+    // Items statistics routes (must be BEFORE resource route to avoid conflicts)
+    Route::get('items/statistics', [ItemController::class, 'getStatistics'])->name('items.statistics');
+    Route::get('items/statistics/refresh', [ItemController::class, 'refresh'])->name('items.statistics.refresh');
     Route::resource('items', ItemController::class)->names('items')->only('index', 'show', 'create', 'edit');
     Route::get('items/{id}/json', [ItemController::class, 'getItemJson'])->name('items.json');
     Route::get('items/print', [ItemController::class, 'printItems'])->name('items.print');
@@ -246,9 +249,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/sales/statistics', [InvoiceController::class, 'salesStatistics'])->name('sales.statistics');
     Route::get('/purchases/statistics', [InvoiceController::class, 'purchasesStatistics'])->name('purchases.statistics');
     Route::get('/inventory/statistics', [InvoiceController::class, 'inventoryStatistics'])->name('inventory.statistics');
-
-    Route::get('/items/statistics', [ItemController::class, 'getStatistics'])->name('items.statistics');
-    Route::get('/items/statistics/refresh', [ItemController::class, 'refresh'])->name('items.statistics.refresh');
 
     require __DIR__.'/modules/magicals.php';
     require __DIR__.'/modules/cheques.php';
