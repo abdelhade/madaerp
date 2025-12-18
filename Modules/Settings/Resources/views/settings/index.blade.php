@@ -5,99 +5,120 @@
 @endsection
 
 @section('content')
-    <div class="container-fluid p-3">
-        <!-- Compact Header -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="d-flex align-items-center">
-                <div class="settings-icon-wrapper me-3">
-                    <i class="bi bi-sliders2"></i>
+    @can('view General Settings')
+        <div class="container-fluid p-3">
+            <!-- Compact Header -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="settings-icon-wrapper me-3">
+                        <i class="bi bi-sliders2"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold">{{ __('System Settings') }}</h5>
+                        <small class="text-muted">{{ __('Application Management') }}</small>
+                    </div>
                 </div>
-                <div>
-                    <h5 class="mb-0 fw-bold">إعدادات النظام</h5>
-                    <small class="text-muted">إدارة التطبيق</small>
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text bg-light border-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="settingSearch" class="form-control border-0 bg-light"
+                        placeholder="{{ __('Quick search...') }}">
                 </div>
             </div>
-            <div class="input-group" style="max-width: 300px;">
-                <span class="input-group-text bg-light border-0">
-                    <i class="bi bi-search"></i>
-                </span>
-                <input type="text" id="settingSearch" class="form-control border-0 bg-light" placeholder="بحث سريع...">
-            </div>
-        </div>
 
-        <form action="{{ route('mysettings.update') }}" method="POST">
-            @csrf
-            @method('POST')
+            <form action="{{ route('mysettings.update') }}" method="POST" id="settings-form">
+                @csrf
+                @method('POST')
 
-            <!-- Modern Tabs Navigation -->
-            <div class="settings-tabs mb-3">
-                <div class="tabs-wrapper">
-                    @foreach ($cateries as $index => $category)
+                <!-- Modern Tabs Navigation -->
+                <div class="settings-tabs mb-3">
+                    <div class="tabs-wrapper">
+                        @foreach ($categories as $index => $category)
+                            @if ($category->publicSettings->count())
+                                <button class="tab-button {{ $index === 0 ? 'active' : '' }}" id="tab-{{ $category->id }}"
+                                    data-bs-toggle="pill" data-bs-target="#content-{{ $category->id }}" type="button"
+                                    role="tab">
+                                    <i class="bi bi-folder2 me-2"></i>
+                                    <span>{{ $category->name }}</span>
+                                    <span
+                                        class="badge bg-white text-primary ms-2">{{ $category->publicSettings->count() }}</span>
+                                </button>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content bg-white rounded-3 shadow-sm p-3" id="categoryTabContent">
+                    @foreach ($categories as $index => $category)
                         @if ($category->publicSettings->count())
-                            <button class="tab-button {{ $index === 0 ? 'active' : '' }}" id="tab-{{ $category->id }}"
-                                data-bs-toggle="pill" data-bs-target="#content-{{ $category->id }}" type="button"
-                                role="tab">
-                                <i class="bi bi-folder2 me-2"></i>
-                                <span>{{ $category->name }}</span>
-                                <span
-                                    class="badge bg-white text-primary ms-2">{{ $category->publicSettings->count() }}</span>
-                            </button>
+                            <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" id="content-{{ $category->id }}"
+                                role="tabpanel">
+                                @php $settings = $category->publicSettings->values(); @endphp
+
+                                <div class="settings-grid">
+                                    @foreach ($settings as $setting)
+                                        <div class="setting-item">
+                                            <div class="setting-content">
+                                                <div class="setting-label">
+                                                    <i class="bi bi-dot text-primary"></i>
+                                                    <span class="fw-semibold">{{ $setting->label }}</span>
+                                                </div>
+                                                <div class="setting-input">
+                                                    @if ($setting->input_type === 'boolean')
+                                                        <input type="hidden" name="settings[{{ $setting->key }}]"
+                                                            value="0">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                                name="settings[{{ $setting->key }}]" value="1"
+                                                                id="switch-{{ $setting->key }}"
+                                                                {{ $setting->value ? 'checked' : '' }}>
+                                                        </div>
+                                                    @else
+                                                        <input
+                                                            type="{{ $setting->input_type === 'number' ? 'number' : $setting->input_type }}"
+                                                            name="settings[{{ $setting->key }}]" value="{{ $setting->value }}"
+                                                            class="form-control form-control-sm">
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
                         @endif
                     @endforeach
                 </div>
-            </div>
 
-            <!-- Tab Content -->
-            <div class="tab-content bg-white rounded-3 shadow-sm p-3" id="categoryTabContent">
-                @foreach ($cateries as $index => $category)
-                    @if ($category->publicSettings->count())
-                        <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" id="content-{{ $category->id }}"
-                            role="tabpanel">
-                            @php $settings = $category->publicSettings->values(); @endphp
-
-                            <div class="settings-grid">
-                                @foreach ($settings as $setting)
-                                    <div class="setting-item">
-                                        <div class="setting-content">
-                                            <div class="setting-label">
-                                                <i class="bi bi-dot text-primary"></i>
-                                                <span class="fw-semibold">{{ $setting->label }}</span>
-                                            </div>
-                                            <div class="setting-input">
-                                                @if ($setting->input_type === 'boolean')
-                                                    <input type="hidden" name="settings[{{ $setting->key }}]"
-                                                        value="0">
-                                                    <div class="form-check form-switch">
-                                                        <input class="form-check-input" type="checkbox" role="switch"
-                                                            name="settings[{{ $setting->key }}]" value="1"
-                                                            id="switch-{{ $setting->key }}"
-                                                            {{ $setting->value ? 'checked' : '' }}>
-                                                    </div>
-                                                @else
-                                                    <input
-                                                        type="{{ $setting->input_type === 'number' ? 'number' : $setting->input_type }}"
-                                                        name="settings[{{ $setting->key }}]" value="{{ $setting->value }}"
-                                                        class="form-control form-control-sm">
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-                @endforeach
+                <!-- Compact Save Button -->
+                @can('edit General Settings')
+                    <div class="d-flex justify-content-end mt-3 gap-2">
+                        <button type="submit" class="btn btn-bg btn-primary btn-lg"
+                            style="padding: 15px 40px; font-size: 18px; border-radius: 10px;">
+                            <i class="bi bi-check-lg me-1"></i>{{ __('Save Changes') }}
+                        </button>
+                    </div>
+                @else
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle me-2"></i>{{ __('You have read-only access to these settings') }}
+                    </div>
+                @endcan
+            </form>
+        </div>
+    @else
+        {{-- No Permission Page --}}
+        <div class="container">
+            <div class="alert alert-danger text-center py-5">
+                <i class="fas fa-ban fa-3x mb-3"></i>
+                <h3>{{ __('Access Denied') }}</h3>
+                <p>{{ __('You do not have permission to access this page') }}</p>
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-primary mt-3">
+                    <i class="fas fa-home"></i> {{ __('Back to Dashboard') }}
+                </a>
             </div>
-
-            <!-- Compact Save Button -->
-            <div class="d-flex justify-content-end mt-3 gap-2">
-                <button type="submit" class="btn btn-bg btn-primary btn-lg"
-                    style="padding: 15px 40px; font-size: 18px; border-radius: 10px;">
-                    <i class="bi bi-check-lg me-1"></i>حفظ التغييرات
-                </button>
-            </div>
-        </form>
-    </div>
+        </div>
+    @endcan
 
     <style>
         /* Header Icon */
@@ -313,51 +334,46 @@
         }
     </style>
 
-    <script>
-        // Tab switching functionality
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', function() {
-                // Remove active class from all tabs
-                document.querySelectorAll('.tab-button').forEach(btn => {
-                    btn.classList.remove('active');
+    @push('scripts')
+        <script>
+            // Tab switching functionality
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab-button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+
+                    // Hide all tab panes
+                    document.querySelectorAll('.tab-pane').forEach(pane => {
+                        pane.classList.remove('show', 'active');
+                    });
+
+                    // Show target tab pane
+                    const targetId = this.getAttribute('data-bs-target');
+                    const targetPane = document.querySelector(targetId);
+                    if (targetPane) {
+                        targetPane.classList.add('show', 'active');
+                    }
                 });
+            });
 
-                // Add active class to clicked tab
-                this.classList.add('active');
+            // Search Functionality
+            document.getElementById("settingSearch").addEventListener("input", function() {
+                let value = this.value.toLowerCase();
 
-                // Hide all tab panes
-                document.querySelectorAll('.tab-pane').forEach(pane => {
-                    pane.classList.remove('show', 'active');
+                document.querySelectorAll(".setting-item").forEach(item => {
+                    let text = item.innerText.toLowerCase();
+                    if (text.includes(value)) {
+                        item.style.display = "flex";
+                    } else {
+                        item.style.display = "none";
+                    }
                 });
-
-                // Show target tab pane
-                const targetId = this.getAttribute('data-bs-target');
-                const targetPane = document.querySelector(targetId);
-                if (targetPane) {
-                    targetPane.classList.add('show', 'active');
-                }
             });
-        });
-
-        // Search Functionality
-        document.getElementById("settingSearch").addEventListener("input", function() {
-            let value = this.value.toLowerCase();
-
-            document.querySelectorAll(".setting-item").forEach(item => {
-                let text = item.innerText.toLowerCase();
-                if (text.includes(value)) {
-                    item.style.display = "flex";
-                } else {
-                    item.style.display = "none";
-                }
-            });
-        });
-
-        // Reset button functionality
-        document.querySelector('.btn-light').addEventListener('click', function() {
-            if (confirm('هل تريد إعادة تعيين جميع الإعدادات؟')) {
-                location.reload();
-            }
-        });
-    </script>
+        </script>
+    @endpush
 @endsection

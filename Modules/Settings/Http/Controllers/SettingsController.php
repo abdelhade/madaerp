@@ -3,21 +3,29 @@
 namespace Modules\Settings\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Modules\Settings\Models\Category;
-use RealRashid\SweetAlert\Facades\Alert;
-use Modules\Settings\Models\PublicSetting;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
+use Modules\Settings\Models\Category;
+use Modules\Settings\Models\PublicSetting;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class SettingsController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Apply permissions middleware
+     */
+    public function __construct()
+    {
+        $this->middleware('permission:view General Settings')->only(['index']);
+        $this->middleware('permission:edit General Settings')->only(['update']);
+    }
+
+    /**
+     * Display general settings page
      */
     public function index()
     {
-        // dd('Settings Index');
-        $cateries = Category::with('publicSettings')->get();
+        $categories = Category::with('publicSettings')->get();
         $publicSettings = PublicSetting::with('category')->get();
         return view('settings::settings.index', get_defined_vars());
     }
@@ -54,15 +62,28 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
-        foreach ($request->input('settings', []) as $key => $value) {
-            PublicSetting::where('key', $key)->update([
-                'value' => is_array($value) ? json_encode($value) : trim($value)
-            ]);
-        }
-        Cache::forget('public_settings');
-        Alert::toast('تم تحديث الإعدادات بنجاح', 'success');
-        return redirect()->back();
-    }
+        try {
+            $settings = $request->input('settings', []);
 
-    public function destroy($id) {}
+            if (empty($settings)) {
+                Alert::toast(__('No settings to update'), 'warning');
+                return redirect()->back();
+            }
+
+            foreach ($settings as $key => $value) {
+                PublicSetting::where('key', $key)->update([
+                    'value' => is_array($value) ? json_encode($value) : trim($value)
+                ]);
+            }
+
+            // Clear settings cache
+            Cache::forget('public_settings');
+
+            Alert::toast(__('Settings updated successfully'), 'success');
+            return redirect()->back();
+        } catch (\Exception) {
+            Alert::toast(__('An error occurred while updating settings'), 'error');
+            return redirect()->back();
+        }
+    }
 }

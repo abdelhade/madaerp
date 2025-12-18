@@ -5,11 +5,21 @@ namespace Modules\Settings\Http\Controllers;
 use Illuminate\Routing\Controller;
 use Modules\Settings\Models\BarcodePrintSetting;
 use Modules\Settings\Http\Requests\BarcodePrintSettingRequest;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class BarcodePrintSettingController extends Controller
 {
     /**
-     * Show the form for editing the specified resource.
+     * Apply permissions middleware
+     */
+    public function __construct()
+    {
+        $this->middleware('permission:view Barcode Settings')->only(['edit']);
+        $this->middleware('permission:edit Barcode Settings')->only(['update']);
+    }
+
+    /**
+     * Show the form for editing barcode print settings
      */
     public function edit()
     {
@@ -18,14 +28,20 @@ class BarcodePrintSettingController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update barcode print settings
      */
     public function update(BarcodePrintSettingRequest $request)
     {
-        $settings = BarcodePrintSetting::where('is_default', true)->firstOrFail();
+        try {
+            $settings = BarcodePrintSetting::where('is_default', true)->firstOrFail();
 
-        $settings->update($request->validated());
+            $settings->update($request->validated());
 
-        return redirect()->back()->with('success', 'تم تحديث الإعدادات بنجاح');
+            Alert::toast(__('Settings updated successfully'), 'success');
+            return redirect()->back();
+        } catch (\Exception) {
+            Alert::toast(__('An error occurred while updating settings'), 'error');
+            return redirect()->back();
+        }
     }
 }
