@@ -3,13 +3,29 @@
 namespace Modules\Settings\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Http;
-use Modules\Settings\Models\{Currency, ExchangeRate};
+use RealRashid\SweetAlert\Facades\Alert;
 use Modules\Settings\Http\Requests\CurrencyRequest;
+use Modules\Settings\Models\{Currency, ExchangeRate};
 
 class CurrencyController extends Controller
 {
+    /**
+     * Apply permissions middleware
+     */
+    public function __construct()
+    {
+        $this->middleware('permission:view Currencies')->only(['index']);
+        $this->middleware('permission:create Currencies')->only(['create', 'store']);
+        $this->middleware('permission:edit Currencies')->only(['edit', 'update']);
+        $this->middleware('permission:delete Currencies')->only(['destroy']);
+        $this->middleware('permission:edit Exchange Rates')->only(['updateRate', 'fetchLiveRate', 'updateMode']);
+    }
+
+    /**
+     * Display currencies list
+     */
     public function index()
     {
         $currencies = Currency::with('latestRate')
@@ -20,11 +36,17 @@ class CurrencyController extends Controller
         return view('settings::currencies.index', compact('currencies'));
     }
 
+    /**
+     * Show create currency form
+     */
     public function create()
     {
         return view('settings::currencies.create');
     }
 
+    /**
+     * Store new currency
+     */
     public function store(CurrencyRequest $request)
     {
         $currency = Currency::create($request->validated());
@@ -37,38 +59,52 @@ class CurrencyController extends Controller
             ]);
         }
 
-        return redirect()
-            ->route('currencies.index')
-            ->with('success', 'Currency added successfully');
+        Alert::toast(__('Currency added successfully'), 'success');
+        return redirect()->route('currencies.index');
     }
 
+    /**
+     * Show edit currency form
+     */
     public function edit(Currency $currency)
     {
         return view('settings::currencies.edit', compact('currency'));
     }
 
+    /**
+     * Update currency
+     */
     public function update(CurrencyRequest $request, Currency $currency)
     {
         $currency->update($request->validated());
 
-        return redirect()
-            ->route('currencies.index')
-            ->with('success', 'Currency updated successfully');
+        Alert::toast(__('Currency updated successfully'), 'success');
+        return redirect()->route('currencies.index');
     }
 
+    /**
+     * Delete currency
+     */
     public function destroy(Currency $currency)
     {
-        if ($currency->is_default) {
-            return back()->with('error', 'Cannot delete default currency');
+        try {
+            if ($currency->is_default) {
+                Alert::toast(__('Cannot delete default currency'), 'error');
+                return back();
+            }
+
+            $currency->delete();
+            Alert::toast(__('Currency deleted successfully'), 'success');
+        } catch (\Exception) {
+            Alert::toast(__('An error occurred while deleting the currency'), 'error');
         }
 
-        $currency->delete();
-
-        return redirect()
-            ->route('currencies.index')
-            ->with('success', 'Currency deleted successfully');
+        return redirect()->route('currencies.index');
     }
 
+    /**
+     * Update exchange rate manually
+     */
     public function updateRate(Request $request, Currency $currency)
     {
         try {
@@ -88,25 +124,28 @@ class CurrencyController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Rate updated successfully',
+                'message' => __('Rate updated successfully'),
                 'rate' => number_format($request->rate, $currency->decimal_places),
                 'rate_raw' => $request->rate
             ]);
         } catch (\Exception) {
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred'
+                'message' => __('An error occurred')
             ], 500);
         }
     }
 
+    /**
+     * Fetch live rate from API
+     */
     public function fetchLiveRate(Currency $currency)
     {
         try {
             if ($currency->is_default) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Default currency does not need exchange rate'
+                    'message' => __('Default currency does not need exchange rate')
                 ], 400);
             }
 
@@ -115,7 +154,7 @@ class CurrencyController extends Controller
             if (!$baseCurrency) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Default currency must be set first'
+                    'message' => __('Default currency must be set first')
                 ], 400);
             }
 
@@ -136,22 +175,25 @@ class CurrencyController extends Controller
                     'success' => true,
                     'rate' => number_format($rate, $currency->decimal_places),
                     'rate_raw' => $rate,
-                    'message' => 'Rate updated from API successfully'
+                    'message' => __('Rate updated from API successfully')
                 ]);
             }
 
             return response()->json([
                 'success' => false,
-                'message' => "Failed to fetch rate from API"
+                'message' => __("Failed to fetch rate from API")
             ], 500);
         } catch (\Exception) {
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred'
+                'message' => __('An error occurred')
             ], 500);
         }
     }
 
+    /**
+     * Get exchange rate from API
+     */
     private function getExchangeRateFromApi($baseCurrency, $targetCurrency)
     {
         try {
@@ -199,6 +241,9 @@ class CurrencyController extends Controller
         }
     }
 
+    /**
+     * Get available currencies from API (No permission required - public endpoint)
+     */
     public function getAvailableCurrencies()
     {
         try {
@@ -256,6 +301,9 @@ class CurrencyController extends Controller
         }
     }
 
+    /**
+     * Fallback currencies list
+     */
     private function getFallbackCurrencies()
     {
         return [
@@ -303,6 +351,9 @@ class CurrencyController extends Controller
         ];
     }
 
+    /**
+     * Update rate mode (automatic/manual)
+     */
     public function updateMode(Request $request, Currency $currency)
     {
         $request->validate([
@@ -315,7 +366,7 @@ class CurrencyController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Rate mode updated successfully'
+            'message' => __('Rate mode updated successfully')
         ]);
     }
 }

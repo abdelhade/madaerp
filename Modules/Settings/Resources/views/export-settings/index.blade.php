@@ -209,101 +209,122 @@
             }
         </style>
     @endpush
-    <div class="container">
-        <div class="download-card">
-            <div class="download-icon">
-                <i class="fas fa-cloud-download-alt"></i>
-            </div>
-
-            <h2 style="color: #333; margin-bottom: 20px;">تنزيل بيانات النظام</h2>
-
-            <p class="info-text">
-                يمكنك تنزيل جميع بيانات نظام الـ ERP لحفظها محلياً على جهازك.
-                البيانات ستكون محمية ومضغوطة في ملف واحد.
-            </p>
-
-            <!-- خيارات التنزيل -->
-            <div class="download-options">
-                <button class="option-btn active" data-type="json" onclick="selectOption('json', this)">
-                    <i class="fas fa-file-code"></i> JSON/CSV
-                </button>
-                <button class="option-btn" data-type="sql" onclick="selectOption('sql', this)">
-                    <i class="fas fa-database"></i> SQL Database
-                </button>
-            </div>
-            <br>
-
-            <!-- زر التنزيل الرئيسي -->
-            <button class="download-btn" id="downloadBtn" onclick="startDownload()">
-                <i class="fas fa-download"></i>
-                <span id="btnText">تنزيل البيانات</span>
-            </button>
-
-            <!-- مؤشر التحميل -->
-            <div class="spinner" id="loadingSpinner">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">جاري التحميل...</span>
+    {{-- Check permission --}}
+    @can('view Export Data')
+        <div class="container">
+            <div class="download-card">
+                <div class="download-icon">
+                    <i class="fas fa-cloud-download-alt"></i>
                 </div>
-                <p class="mt-2">جاري تحضير البيانات للتنزيل...</p>
-            </div>
 
-            <!-- شريط التقدم -->
-            <div class="progress-container" id="progressContainer">
-                <div class="progress">
-                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
-                </div>
-                <small class="text-muted mt-2 d-block">جاري ضغط الملفات...</small>
-            </div>
+                <h2 style="color: #333; margin-bottom: 20px;">{{ __('Download System Data') }}</h2>
 
-            <!-- رسائل النجاح والخطأ -->
-            <div class="success-message" id="successMessage">
-                <i class="fas fa-check-circle"></i>
-                تم تنزيل البيانات بنجاح!
-            </div>
+                <p class="info-text">
+                    {{ __('You can download all ERP system data to save it locally on your device. The data will be protected and compressed in a single file.') }}
+                </p>
 
-            <div class="error-message" id="errorMessage">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span id="errorText">حدث خطأ أثناء التنزيل</span>
-            </div>
+                {{-- Download Options --}}
+                @can('edit Export Data')
+                    <div class="download-options">
+                        <button class="option-btn active" data-type="json" onclick="selectOption('json', this)">
+                            <i class="fas fa-file-code"></i> JSON/CSV
+                        </button>
+                        <button class="option-btn" data-type="sql" onclick="selectOption('sql', this)">
+                            <i class="fas fa-database"></i> SQL Database
+                        </button>
+                    </div>
+                    <br>
 
-            <!-- إحصائيات وهمية للعرض -->
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-number">1,247</div>
-                    <div class="stat-label">سجل</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">15</div>
-                    <div class="stat-label">جدول</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">2.4</div>
-                    <div class="stat-label">ميجا بايت</div>
+                    {{-- Main Download Button --}}
+                    <button class="download-btn" id="downloadBtn" onclick="startDownload()">
+                        <i class="fas fa-download"></i>
+                        <span id="btnText">{{ __('Download Data') }}</span>
+                    </button>
+
+                    {{-- Loading Spinner --}}
+                    <div class="spinner" id="loadingSpinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">{{ __('Loading...') }}</span>
+                        </div>
+                        <p class="mt-2">{{ __('Preparing data for download...') }}</p>
+                    </div>
+
+                    {{-- Progress Bar --}}
+                    <div class="progress-container" id="progressContainer">
+                        <div class="progress">
+                            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted mt-2 d-block">{{ __('Compressing files...') }}</small>
+                    </div>
+
+                    {{-- Success and Error Messages --}}
+                    <div class="success-message" id="successMessage">
+                        <i class="fas fa-check-circle"></i>
+                        {{ __('Data downloaded successfully!') }}
+                    </div>
+
+                    <div class="error-message" id="errorMessage">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="errorText">{{ __('An error occurred during download') }}</span>
+                    </div>
+                @else
+                    <div class="alert alert-warning mt-4">
+                        <i class="fas fa-lock"></i>
+                        {{ __('You do not have permission to export data') }}
+                    </div>
+                @endcan
+
+                {{-- Statistics --}}
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="recordsCount">-</div>
+                        <div class="stat-label">{{ __('Records') }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="tablesCount">-</div>
+                        <div class="stat-label">{{ __('Tables') }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="dbSize">-</div>
+                        <div class="stat-label">{{ __('Megabytes') }}</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    @else
+        {{-- No Permission Page --}}
+        <div class="container">
+            <div class="alert alert-danger text-center py-5">
+                <i class="fas fa-ban fa-3x mb-3"></i>
+                <h3>{{ __('Access Denied') }}</h3>
+                <p>{{ __('You do not have permission to access this page') }}</p>
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-primary mt-3">
+                    <i class="fas fa-home"></i> {{ __('Back to Dashboard') }}
+                </a>
+            </div>
+        </div>
+    @endcan
+
     @push('scripts')
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
         <script>
             let selectedType = 'json';
 
             function selectOption(type, button) {
-                // إزالة الـ active من جميع الأزرار
+                // Remove active from all buttons
                 document.querySelectorAll('.option-btn').forEach(btn => {
                     btn.classList.remove('active');
                 });
 
-                // إضافة active للزر المختار
+                // Add active to selected button
                 button.classList.add('active');
                 selectedType = type;
 
-                // تحديث نص الزر
+                // Update button text
                 const btnText = document.getElementById('btnText');
                 if (type === 'json') {
-                    btnText.innerHTML = '<i class="fas fa-download"></i> تنزيل JSON/CSV';
+                    btnText.innerHTML = '<i class="fas fa-download"></i> {{ __('Download JSON/CSV') }}';
                 } else {
-                    btnText.innerHTML = '<i class="fas fa-download"></i> تنزيل SQL Database';
+                    btnText.innerHTML = '<i class="fas fa-download"></i> {{ __('Download SQL Database') }}';
                 }
             }
 
@@ -314,20 +335,20 @@
                 const successMessage = document.getElementById('successMessage');
                 const errorMessage = document.getElementById('errorMessage');
 
-                // إخفاء الرسائل السابقة
+                // Hide previous messages
                 successMessage.style.display = 'none';
                 errorMessage.style.display = 'none';
 
-                // تعطيل الزر وإظهار التحميل
+                // Disable button and show loading
                 downloadBtn.disabled = true;
                 spinner.style.display = 'block';
 
-                // محاكاة عملية التحضير
+                // Simulate preparation
                 setTimeout(() => {
                     spinner.style.display = 'none';
                     progressContainer.style.display = 'block';
 
-                    // بدء شريط التقدم
+                    // Start progress bar
                     const progressBar = document.getElementById('progressBar');
                     let width = 0;
                     const interval = setInterval(() => {
@@ -337,7 +358,7 @@
                         if (width >= 100) {
                             clearInterval(interval);
 
-                            // محاكاة التنزيل الفعلي
+                            // Simulate actual download
                             setTimeout(() => {
                                 downloadFile();
                             }, 500);
@@ -352,15 +373,15 @@
                 const errorMessage = document.getElementById('errorMessage');
                 const downloadBtn = document.getElementById('downloadBtn');
 
-                // تحديد الـ URL حسب النوع المختار
+                // Determine URL based on selected type
                 let downloadUrl;
                 if (selectedType === 'json') {
-                    downloadUrl = '/settings/export-data'; // استبدل بالـ route الصحيح
+                    downloadUrl = '/settings/export-data';
                 } else {
-                    downloadUrl = '/settings/export-sql'; // استبدل بالـ route الصحيح
+                    downloadUrl = '/settings/export-sql';
                 }
 
-                // محاولة التنزيل الفعلي
+                // Attempt actual download
                 fetch(downloadUrl, {
                         method: 'GET',
                         headers: {
@@ -370,12 +391,12 @@
                     })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('فشل في تنزيل البيانات');
+                            throw new Error('{{ __('Failed to download data') }}');
                         }
                         return response.blob();
                     })
                     .then(blob => {
-                        // إنشاء رابط التنزيل
+                        // Create download link
                         const url = window.URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.style.display = 'none';
@@ -387,11 +408,11 @@
                         window.URL.revokeObjectURL(url);
                         document.body.removeChild(a);
 
-                        // إظهار رسالة النجاح
+                        // Show success message
                         progressContainer.style.display = 'none';
                         successMessage.style.display = 'block';
 
-                        // إعادة تفعيل الزر
+                        // Re-enable button
                         setTimeout(() => {
                             downloadBtn.disabled = false;
                             successMessage.style.display = 'none';
@@ -400,12 +421,12 @@
                     .catch(error => {
                         console.error('Error:', error);
 
-                        // إظهار رسالة الخطأ
+                        // Show error message
                         progressContainer.style.display = 'none';
                         errorMessage.style.display = 'block';
                         document.getElementById('errorText').textContent = error.message;
 
-                        // إعادة تفعيل الزر
+                        // Re-enable button
                         setTimeout(() => {
                             downloadBtn.disabled = false;
                             errorMessage.style.display = 'none';
@@ -413,28 +434,27 @@
                     });
             }
 
-            // محاكاة تحديث الإحصائيات (اختياري)
+            // Update statistics
             function updateStats() {
-                // يمكنك استدعاء API للحصول على الإحصائيات الفعلية
                 fetch('/api/export-stats')
                     .then(response => response.json())
                     .then(data => {
                         if (data.records) {
-                            document.querySelector('.stat-number').textContent = data.records.toLocaleString();
+                            document.getElementById('recordsCount').textContent = data.records.toLocaleString();
                         }
                         if (data.tables) {
-                            document.querySelectorAll('.stat-number')[1].textContent = data.tables;
+                            document.getElementById('tablesCount').textContent = data.tables;
                         }
                         if (data.size) {
-                            document.querySelectorAll('.stat-number')[2].textContent = data.size + ' MB';
+                            document.getElementById('dbSize').textContent = data.size;
                         }
                     })
                     .catch(error => console.log('Stats update failed:', error));
             }
 
-            // تحديث الإحصائيات عند تحميل الصفحة
+            // Update statistics on page load
             document.addEventListener('DOMContentLoaded', function() {
-                // updateStats(); // قم بتفعيل هذا إذا كان لديك API للإحصائيات
+                updateStats();
             });
         </script>
     @endpush

@@ -10,33 +10,56 @@ use Modules\Settings\Http\Controllers\{
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::get('mysettings', [SettingsController::class, 'index'])->name('mysettings.index')->middleware('can:view settings');
-    Route::post('/mysettings/update', [SettingsController::class, 'update'])->name('mysettings.update')->middleware('can:edit settings');
+    Route::get('mysettings', [SettingsController::class, 'index'])
+        ->name('mysettings.index')
+        ->middleware('permission:view General Settings');
 
-    Route::get('/barcode-print-settings/edit', [BarcodePrintSettingController::class, 'edit'])->name('barcode.print.settings.edit');
-    Route::put('/barcode-print-settings', [BarcodePrintSettingController::class, 'update'])->name('barcode.print.settings.update');
+    Route::post('/mysettings/update', [SettingsController::class, 'update'])
+        ->name('mysettings.update')
+        ->middleware('permission:edit General Settings');
+
+    Route::get('/barcode-print-settings/edit', [BarcodePrintSettingController::class, 'edit'])
+        ->name('barcode.print.settings.edit')
+        ->middleware('permission:view Barcode Settings');
+
+    Route::put('/barcode-print-settings', [BarcodePrintSettingController::class, 'update'])
+        ->name('barcode.print.settings.update')
+        ->middleware('permission:edit Barcode Settings');
 
     Route::get('/export-settings', function () {
         return view('settings::export-settings.index');
-    })->name('export-settings');
+    })->name('export-settings')
+        ->middleware('permission:view Export Data');
 
     Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(function () {
-        Route::get('/export-data', [DataExportController::class, 'exportAllData'])->name('export-data');
-        Route::get('/export-sql', [DataExportController::class, 'exportSqlDump'])->name('export-sql');
-        Route::get('/export-stats', [DataExportController::class, 'getExportStats'])->name('export-stats');
+        Route::get('/export-data', [DataExportController::class, 'exportAllData'])
+            ->name('export-data')
+            ->middleware('permission:edit Export Data');
+
+        Route::get('/export-sql', [DataExportController::class, 'exportSqlDump'])
+            ->name('export-sql')
+            ->middleware('permission:edit Export Data');
+
+        Route::get('/export-stats', [DataExportController::class, 'getExportStats'])
+            ->name('export-stats')
+            ->middleware('permission:view Export Data');
     });
 
     Route::get('currencies/available', [CurrencyController::class, 'getAvailableCurrencies'])
         ->name('currencies.available');
 
     Route::post('currencies/{currency}/update-rate', [CurrencyController::class, 'updateRate'])
-        ->name('currencies.update-rate');
+        ->name('currencies.update-rate')
+        ->middleware('permission:edit Exchange Rates');
 
     Route::post('currencies/{currency}/fetch-live-rate', [CurrencyController::class, 'fetchLiveRate'])
-        ->name('currencies.fetch-live-rate');
+        ->name('currencies.fetch-live-rate')
+        ->middleware('permission:edit Exchange Rates');
 
     Route::post('currencies/{currency}/update-mode', [CurrencyController::class, 'updateMode'])
-        ->name('currencies.update-mode');
+        ->name('currencies.update-mode')
+        ->middleware('permission:edit Exchange Rates');
 
-    Route::resource('currencies', CurrencyController::class)->names('currencies');
+    Route::resource('currencies', CurrencyController::class)
+        ->names('currencies');
 });
