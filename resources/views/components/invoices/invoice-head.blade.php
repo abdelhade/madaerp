@@ -117,13 +117,36 @@
                         {{-- ✅ Label فوق الحقل --}}
                         <label class="form-label">{{ $acc1Role }}</label>
 
-                        {{-- ✅ Searchable Select مع الزر ملزوق --}}
+                        {{-- ✅ Async Select مع الزر ملزوق --}}
                         <div class="input-group">
                             <div class="flex-grow-1">
-                                <livewire:app::searchable-select :model="'Modules\\Accounts\\Models\\AccHead'" :label="null" :labelField="'aname'"
-                                    :placeholder="__('Search for ') . $acc1Role . __('...')" :wireModel="'acc1_id'" :selectedId="$acc1_id" :where="$this->getAcc1WhereConditions()"
-                                    :searchFields="['code', 'aname']" :allowCreate="false" :key="'acc1-search-' . $type . '-' . $branch_id" />
+                                <livewire:async-select
+                                    name="acc1_id"
+                                    wire:model.live="acc1_id"
+                                    endpoint="/api/accounts/search?type={{ $type }}&branch_id={{ $branch_id }}"
+                                    selected-endpoint="/api/accounts/search?type={{ $type }}&branch_id={{ $branch_id }}"
+                                    :selected="$acc1_id"
+                                    placeholder="{{ __('Search for ') . $acc1Role . __('...') }}"
+                                    value-field="id"
+                                    label-field="name"
+                                    min-search-length="0"
+                                    :autoload="true"
+                                    ui="bootstrap"
+                                    :key="'acc1-async-' . $type . '-' . $branch_id"
+                                />
                             </div>
+
+                            <livewire:async-select
+                            :options="[
+                                ['value' => 'active', 'label' => 'Active'],
+                                ['value' => 'inactive', 'label' => 'Inactive'],
+                                ['value' => 'pending', 'label' => 'Pending']
+                            ]"
+                                placeholder="Select user..."
+                                value-field="value"
+                                label-field="label"
+                                min-search-length="0"
+                            />
 
                             @canany(['create ' . $titles[$type], 'create invoices'])
                                 <livewire:accounts::account-creator :type="$accountType" :button-class="'btn btn-success'" :button-text="'+'"
@@ -133,9 +156,20 @@
                     @else
                         {{-- ✅ بدون زر إضافة --}}
                         <label class="form-label">{{ $acc1Role }}</label>
-                        <livewire:app::searchable-select :model="'Modules\\Accounts\\Models\\AccHead'" :label="null" :labelField="'aname'"
-                            :placeholder="__('Search for ') . $acc1Role . __('...')" :wireModel="'acc1_id'" :selectedId="$acc1_id" :where="$this->getAcc1WhereConditions()"
-                            :searchFields="['code', 'aname']" :allowCreate="false" :key="'acc1-search-' . $type . '-' . $branch_id" />
+                        <livewire:async-select
+                            name="acc1_id"
+                            wire:model.live="acc1_id"
+                            endpoint="/api/accounts/search?type={{ $type }}&branch_id={{ $branch_id }}"
+                            selected-endpoint="/api/accounts/search?type={{ $type }}&branch_id={{ $branch_id }}"
+                            :selected="$acc1_id"
+                            placeholder="{{ __('Search for ') . $acc1Role . __('...') }}"
+                            value-field="id"
+                            label-field="name"
+                            min-search-length="0"
+                            :autoload="true"
+                            ui="bootstrap"
+                            :key="'acc1-async-' . $type . '-' . $branch_id"
+                        />
                     @endif
 
                     @error('acc1_id')
@@ -260,70 +294,3 @@
     </div>
 
 
-    <script>
-        // Initialize TomSelect only once
-        document.addEventListener('DOMContentLoaded', () => {
-            const select = document.getElementById('acc1-select');
-            if (select && !select.tomselect) {
-                new TomSelect(select, {
-                    plugins: {
-                        dropdown_input: {
-                            class: 'font-hold fw-bold font-14'
-                        },
-                        remove_button: {
-                            title: "{{ __('Remove Selected') }}"
-                        }
-                    },
-                    placeholder: "{{ __('Select') }}",
-                    onChange: (value) => {
-                        console.log('TomSelect changed:', value);
-                        // التحقق من وجود Livewire قبل الاستخدام
-                        if (typeof Livewire !== 'undefined' && typeof Livewire.dispatch === 'function') {
-                            Livewire.dispatch('input', {
-                                name: 'acc1_id',
-                                value: value
-                            });
-                        }
-                    }
-                });
-            }
-        });
-
-
-        // Handle branch change event
-        // التحقق من وجود Livewire قبل الاستخدام
-        if (typeof Livewire !== 'undefined' && typeof Livewire.on === 'function') {
-            Livewire.on('branch-changed-completed', (event) => {
-            const select = document.getElementById('acc1-select');
-            if (select) {
-                const instance = select.tomselect;
-                if (instance) {
-                    instance.clearOptions();
-                    instance.clear();
-
-
-                    event.acc1List.forEach(option => {
-                        instance.addOption({
-                            value: option.value,
-                            text: option.text
-                        });
-                    });
-
-
-                    const newValue = event.acc1_id;
-                    if (newValue) {
-                        instance.setValue(newValue, true);
-                    } else {
-                        instance.clear(true);
-                    }
-
-
-                    const balanceElement = document.querySelector('.text-primary');
-                    if (balanceElement) {
-                        balanceElement.textContent = new Intl.NumberFormat().format(event.currentBalance);
-                    }
-                }
-            }
-        });
-        }
-    </script>

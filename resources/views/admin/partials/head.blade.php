@@ -42,6 +42,8 @@
         <meta name="user-id" content="{{ auth()->id() }}">
     @endauth
     
+    <!-- Livewire Async Select Styles -->
+    @asyncSelectStyles
     <!-- Livewire Styles -->
     @livewireStyles
 

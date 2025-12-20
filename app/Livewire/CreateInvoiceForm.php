@@ -343,9 +343,9 @@ class CreateInvoiceForm extends Component
 
         // تحديث قائمة الحسابات
         if ($type === 'client' || $type === 'supplier') {
-            // إعادة تحميل acc1List حسب الفرع أيضاً
+        // إعادة تحميل acc1List حسب الفرع أيضاً
             $this->acc1_id = $account['id'];
-            $this->dispatch('refreshItems')->to('app::searchable-select');
+            // ✅ لا حاجة لـ dispatch refreshItems - async-select يستخدم wire:model مباشرة
 
             if ($type === 'client') {
                 $this->acc1List = $this->getAccountsByCodeAndBranch('1103%', $this->branch_id);
@@ -422,15 +422,8 @@ class CreateInvoiceForm extends Component
             ->get();
 
         $this->calculateTotals();
-
-        $this->dispatch('branch-changed-completed', [
-            'branch_id' => $branchId,
-            'acc1_id' => $this->acc1_id,
-            'acc1List' => $this->acc1List->map(fn($item) => ['value' => $item->id, 'text' => $item->aname])->toArray(),
-            'currentBalance' => $this->currentBalance,
-        ]);
-
-        $this->dispatch('refreshItems')->to('app::searchable-select');
+        // ✅ لا حاجة لـ dispatch branch-changed-completed أو refreshItems
+        // async-select يعيد التحميل تلقائياً عند تغيير key
     }
 
     // private function getFilteredItems()
