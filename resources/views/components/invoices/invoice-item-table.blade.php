@@ -133,8 +133,9 @@
                                             @if ($isIncomingInvoice)
                                                 {{-- 🟢 في فواتير الشراء: الحقل مفتوح للكتابة --}}
                                                 <input type="text"
+                                                    id="batch_number-{{ $index }}"
                                                     wire:model.blur="invoiceItems.{{ $index }}.batch_number"
-                                                    class="form-control text-center"
+                                                    class="form-control text-center invoice-field"
                                                     placeholder="{{ __('Batch Number') }}"
                                                     style="font-size: 0.85em; height: 2em; padding: 1px 4px;" />
                                             @elseif (
@@ -145,8 +146,9 @@
                                             )
                                                 {{-- 🔵 في فواتير البيع + وضع "عرض الكل": قائمة منسدلة --}}
                                                 <select
+                                                    id="batch_number-{{ $index }}"
                                                     wire:change="selectBatch({{ $index }}, $event.target.value)"
-                                                    class="form-control"
+                                                    class="form-control invoice-field"
                                                     style="font-size: 0.85em; height: 2em; padding: 1px 4px;">
                                                     <option value="">{{ __('Select Batch...') }}</option>
                                                     @foreach ($this->availableBatches[$row['item_id']] ?? [] as $batch)
@@ -179,8 +181,9 @@
                                             @if ($isIncomingInvoice)
                                                 {{-- 🟢 في فواتير الشراء: حقل date مفتوح --}}
                                                 <input type="date"
+                                                    id="expiry_date-{{ $index }}"
                                                     wire:model.live="invoiceItems.{{ $index }}.expiry_date"
-                                                    class="form-control text-center"
+                                                    class="form-control text-center invoice-field"
                                                     style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
                                                     value="{{ $row['expiry_date'] ?? '' }}" />
                                             @else
@@ -228,10 +231,11 @@
                                     @if ($this->shouldShowColumn('length'))
                                         <td style="width: 10%; font-size: 1.2em;">
                                             <input type="number" step="0.01" min="0"
+                                                id="length-{{ $index }}"
                                                 wire:model.blur="invoiceItems.{{ $index }}.length"
                                                 placeholder="{{ __('Length') }} ({{ $dimensionsUnit }})"
                                                 style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
-                                                class="form-control" @if (!$enableDimensionsCalculation) disabled @endif>
+                                                class="form-control invoice-field" @if (!$enableDimensionsCalculation) disabled @endif>
                                         </td>
                                     @endif
 
@@ -240,10 +244,11 @@
                                     @if ($this->shouldShowColumn('width'))
                                         <td style="width: 10%; font-size: 1.2em;">
                                             <input type="number" step="0.01" min="0"
+                                                id="width-{{ $index }}"
                                                 wire:model.blur="invoiceItems.{{ $index }}.width"
                                                 placeholder="{{ __('Width') }} ({{ $dimensionsUnit }})"
                                                 style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
-                                                class="form-control" @if (!$enableDimensionsCalculation) disabled @endif>
+                                                class="form-control invoice-field" @if (!$enableDimensionsCalculation) disabled @endif>
                                         </td>
                                     @endif
 
@@ -252,10 +257,11 @@
                                     @if ($this->shouldShowColumn('height'))
                                         <td style="width: 10%; font-size: 1.2em;">
                                             <input type="number" step="0.01" min="0"
+                                                id="height-{{ $index }}"
                                                 wire:model.blur="invoiceItems.{{ $index }}.height"
                                                 placeholder="{{ __('Height') }} ({{ $dimensionsUnit }})"
                                                 style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
-                                                class="form-control" @if (!$enableDimensionsCalculation) disabled @endif>
+                                                class="form-control invoice-field" @if (!$enableDimensionsCalculation) disabled @endif>
                                         </td>
                                     @endif
 
@@ -264,10 +270,11 @@
                                     @if ($this->shouldShowColumn('density'))
                                         <td style="width: 10%; font-size: 1.2em;">
                                             <input type="number" step="0.01" min="0.01"
+                                                id="density-{{ $index }}"
                                                 wire:model.blur="invoiceItems.{{ $index }}.density"
                                                 placeholder="{{ __('Density') }}" value="{{ $row['density'] ?? 1 }}"
                                                 style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
-                                                class="form-control"
+                                                class="form-control invoice-field"
                                                 @if (!$enableDimensionsCalculation) disabled @endif>
                                         </td>
                                     @endif

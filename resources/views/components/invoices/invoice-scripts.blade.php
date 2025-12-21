@@ -489,6 +489,8 @@
             async addItemFast(item) {
                 if (!item?.id) return;
                 
+                // ✅ إخفاء النتائج فوراً لمنع الوميض (Flickering)
+                this.showResults = false;
                 this.loading = true;
                 
                 try {
@@ -529,6 +531,8 @@
             async createNewItem() {
                 if (!this.searchTerm?.trim()) return;
                 
+                // ✅ إخفاء النتائج فوراً
+                this.showResults = false;
                 const itemName = this.searchTerm.trim();
                 this.clearSearch();
                 
@@ -595,7 +599,7 @@
             invoiceType: initialData.invoiceType || 10,
             isCashAccount: initialData.isCashAccount || false,
             items: initialData.items || [],
-            editableFieldsOrder: initialData.editableFieldsOrder || ['quantity', 'price', 'discount', 'sub_value'],
+            editableFieldsOrder: initialData.editableFieldsOrder || ['unit', 'quantity', 'batch_number', 'expiry_date', 'length', 'width', 'height', 'density', 'price', 'discount', 'sub_value'],
             currentBalance: parseFloat(initialData.currentBalance) || 0,
             calculatedBalanceAfter: parseFloat(initialData.currentBalance) || 0,
             
@@ -634,6 +638,9 @@
                 // ✅ مراقبة تغييرات القيم المحسوبة لتحديث store
                 this.setupStoreWatchers();
                 
+                // ✅ إعداد نظام التنقل بالكيبورد
+                this.setupTableNavigation();
+
                 // ✅ مراقبة وحساب الرصيد
                 this.setupBalanceWatchers();
 
@@ -690,6 +697,9 @@
                 
                 // حساب أولي
                 this.calculateTotalsFromData();
+                
+                // ✅ إعداد التنقل بالأسهم
+                this.setupTableNavigation();
             },
             
             /**
@@ -1019,80 +1029,109 @@
             },
 
             /**
-             * التنقل بالكيبورد بين الحقول
-             * يستخدم الترتيب الديناميكي من Template
+             * التنقل بالكيبورد بين الحقول (يدعم الأسهم والـ Enter)
              */
-            moveToNextField(event) {
-                if (!event?.target) return;
+            setupTableNavigation() {
+                // استخدام مستمع أحداث على النافذة ليكون أكثر مرونة مع تغيرات DOM
+                window.addEventListener('keydown', (e) => {
+                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(e.key)) {
+                        this.handleKeyboardNavigation(e);
+                    }
+                }, true); // true للالتقاط في مرحلة Capture
+            },
+
+            handleKeyboardNavigation(e) {
+                const field = e.target;
+                if (!field || !field.classList?.contains('invoice-field')) return;
+
+                // استخراج معرف الحقل والصف
+                const id = field.id;
+                if (!id) return;
                 
-                event.preventDefault();
-                event.stopPropagation();
-                
-                const currentField = event.target;
-                const currentId = currentField.id;
-                if (!currentId) return;
-                
-                // استخراج اسم الحقل ورقم الصف
-                const parts = currentId.split('-');
+                const parts = id.split('-');
                 if (parts.length < 2) return;
-                
+
                 const fieldName = parts[0];
                 const rowIndex = parseInt(parts[1]);
                 if (isNaN(rowIndex)) return;
+
+                // دمج ترتيب الحقول من السيرفر مع الحقول الممكنة الأخرى لضمان المسار الكامل
+                const baseFields = ['unit', 'quantity', 'batch_number', 'expiry_date', 'length', 'width', 'height', 'density', 'price', 'discount', 'sub_value'];
+                const fieldOrder = this.editableFieldsOrder || baseFields;
                 
-                // ✅ استخدام ترتيب الحقول الديناميكي
-                const fieldOrder = this.editableFieldsOrder || ['quantity', 'price', 'discount', 'sub_value'];
+                // التأكد من أن الحقل الحالي موجود في القائمة، وإلا أضفه مؤقتاً
+                if (fieldOrder.indexOf(fieldName) === -1) {
+                    fieldOrder.push(fieldName);
+                }
+
                 const currentFieldIndex = fieldOrder.indexOf(fieldName);
                 
-                // إذا كان الحقل unit، اذهب للكمية مباشرة
-                if (fieldName === 'unit') {
-                    const quantityField = document.getElementById(`quantity-${rowIndex}`);
-                    if (quantityField && this.isElementAccessible(quantityField)) {
-                        setTimeout(() => {
-                            quantityField.focus();
-                            quantityField.select?.();
-                        }, 50);
+                // تعريف اتجاهات الحركة [deltaField, deltaRow]
+                const directions = {
+                    'ArrowUp': [0, -1],
+                    'ArrowDown': [0, 1],
+                    'ArrowRight': [-1, 0],
+                    'Enter': [1, 0],
+                    'ArrowLeft': [1, 0]
+                };
+
+                const dir = directions[e.key];
+                if (!dir) return;
+
+                // منع السلوك الافتراضي للانتر والأسهم
+                if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Enter'].includes(e.key)) {
+                    e.preventDefault();
+                }
+
+                let targetRow = rowIndex;
+                let targetFieldIdx = currentFieldIndex;
+                const itemsCount = this.items?.length || 0;
+
+                // محاولات البحث عن حقل متاح (بحد أقصى 100 خطوة لتجنب التعليق)
+                for (let i = 0; i < 100; i++) {
+                    targetFieldIdx += dir[0];
+                    targetRow += dir[1];
+
+                    // معالجة الانتقال بين الصفوف عند الوصول لنهاية الحقول يميناً أو يساراً
+                    if (targetFieldIdx >= fieldOrder.length) {
+                        targetFieldIdx = 0;
+                        targetRow++;
+                    } else if (targetFieldIdx < 0) {
+                        targetFieldIdx = fieldOrder.length - 1;
+                        targetRow--;
+                    }
+
+                    // التحقق من الحدود القصوى والدنيا للصفوف
+                    if (targetRow < 0) break;
+                    if (targetRow >= itemsCount) {
+                        // الانتقال لحقل البحث عند الوصول للنهاية
+                        if (dir[1] > 0 || dir[0] > 0) {
+                            const searchInput = document.getElementById('search-input') || document.getElementById('barcode-search');
+                            if (searchInput) {
+                                e.preventDefault();
+                                searchInput.focus();
+                                searchInput.select?.();
+                            }
+                        }
+                        break;
+                    }
+
+                    const nextId = `${fieldOrder[targetFieldIdx]}-${targetRow}`;
+                    const nextEl = document.getElementById(nextId);
+
+                    if (nextEl && this.isElementAccessible(nextEl)) {
+                        e.preventDefault(); // تأكيد منع السلوك الافتراضي قبل التركيز
+                        nextEl.focus();
+                        nextEl.select?.();
                         return;
                     }
                 }
-                
-                if (currentFieldIndex === -1) return;
-                
-                // البحث عن الحقل التالي في نفس الصف
-                let nextField = null;
-                for (let i = currentFieldIndex + 1; i < fieldOrder.length; i++) {
-                    const nextFieldId = `${fieldOrder[i]}-${rowIndex}`;
-                    nextField = document.getElementById(nextFieldId);
-                    if (nextField && this.isElementAccessible(nextField)) break;
-                    nextField = null;
-                }
-                
-                // إذا لم يوجد، ابحث في الصف التالي
-                if (!nextField) {
-                    const nextRowIndex = rowIndex + 1;
-                    for (const fname of fieldOrder) {
-                        const nextFieldId = `${fname}-${nextRowIndex}`;
-                        nextField = document.getElementById(nextFieldId);
-                        if (nextField && this.isElementAccessible(nextField)) break;
-                        nextField = null;
-                    }
-                }
-                
-                // إذا لم يوجد صف تالي، ارجع لحقل البحث
-                if (!nextField) {
-                    nextField = document.getElementById('search-input') || document.getElementById('barcode-search');
-                }
-                
-                // التركيز على الحقل التالي
-                if (nextField) {
-                    setTimeout(() => {
-                        try {
-                            nextField.focus();
-                            nextField.select?.();
-                        } catch (e) {
-                            console.error('Error focusing field:', e);
-                        }
-                    }, 50);
+            },
+
+            moveToNextField(event) {
+                if (event) {
+                    // تحويل الاستدعاء إلى نظام التنقل الموحد
+                    this.handleKeyboardNavigation(event);
                 }
             },
 
@@ -1106,7 +1145,7 @@
                 try {
                     const style = window.getComputedStyle(element);
                     if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
-                    if (element.disabled || element.readOnly) return false;
+                    if (element.disabled) return false;
                     
                     const rect = element.getBoundingClientRect();
                     return rect.width > 0 && rect.height > 0;
