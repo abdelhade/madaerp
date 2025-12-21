@@ -70,28 +70,20 @@
                     <div class="row" style="min-width: 400px">
                         <div class="col-6">
                             <label>{{ __('Current Balance: ') }}</label>
-                            <span class="fw-bold text-primary">{{ number_format($currentBalance) }}</span>
+                            <span class="fw-bold text-primary" x-text="window.formatNumberFixed(currentBalance)">{{ number_format($currentBalance) }}</span>
                         </div>
                         <div class="col-6">
                             <label>{{ __('Balance After Invoice: ') }}</label>
-                            <span class="fw-bold {{ $balanceAfterInvoice < 0 ? 'text-danger' : 'text-success' }}">
+                            <span class="fw-bold" 
+                                :class="calculatedBalanceAfter < 0 ? 'text-danger' : 'text-success'"
+                                x-text="window.formatNumberFixed(calculatedBalanceAfter)">
                                 {{ number_format($balanceAfterInvoice) }}
                             </span>
                         </div>
                     </div>
 
 
-                    @if ($received_from_client > 0 && $received_from_client != $total_after_additional)
-                        <div class="row mt-1">
-                            <div class="col-6">
-                                <label>{{ __('Amount Due: ') }}</label>
-                                <span
-                                    class="fw-bold {{ $total_after_additional - $received_from_client < 0 ? 'text-success' : 'text-danger' }}">
-                                    {{ number_format($total_after_additional - $received_from_client) }}
-                                </span>
-                            </div>
-                        </div>
-                    @endif
+
                 </div>
             @endif
         @endif
@@ -117,12 +109,17 @@
                         {{-- ✅ Label فوق الحقل --}}
                         <label class="form-label">{{ $acc1Role }}</label>
 
-                        {{-- ✅ Searchable Select مع الزر ملزوق --}}
+                        {{-- ✅ Async Select مع الزر ملزوق (استخدام options بدلاً من endpoint) --}}
                         <div class="input-group">
                             <div class="flex-grow-1">
-                                <livewire:app::searchable-select :model="'Modules\\Accounts\\Models\\AccHead'" :label="null" :labelField="'aname'"
-                                    :placeholder="__('Search for ') . $acc1Role . __('...')" :wireModel="'acc1_id'" :selectedId="$acc1_id" :where="$this->getAcc1WhereConditions()"
-                                    :searchFields="['code', 'aname']" :allowCreate="false" :key="'acc1-search-' . $type . '-' . $branch_id" />
+                                <livewire:async-select
+                                    name="acc1_id"
+                                    wire:model.live="acc1_id"
+                                    :options="$acc1Options"
+                                    placeholder="{{ __('Search for ') . $acc1Role . __('...') }}"
+                                    ui="bootstrap"
+                                    :key="'acc1-async-add-' . $type . '-' . $branch_id . '-' . count($acc1Options)"
+                                />
                             </div>
 
                             @canany(['create ' . $titles[$type], 'create invoices'])
@@ -131,11 +128,16 @@
                             @endcanany
                         </div>
                     @else
-                        {{-- ✅ بدون زر إضافة --}}
+                        {{-- ✅ بدون زر إضافة (استخدام options بدلاً من endpoint) --}}
                         <label class="form-label">{{ $acc1Role }}</label>
-                        <livewire:app::searchable-select :model="'Modules\\Accounts\\Models\\AccHead'" :label="null" :labelField="'aname'"
-                            :placeholder="__('Search for ') . $acc1Role . __('...')" :wireModel="'acc1_id'" :selectedId="$acc1_id" :where="$this->getAcc1WhereConditions()"
-                            :searchFields="['code', 'aname']" :allowCreate="false" :key="'acc1-search-' . $type . '-' . $branch_id" />
+                        <livewire:async-select
+                            name="acc1_id"
+                            wire:model.live="acc1_id"
+                            :options="$acc1Options"
+                            placeholder="{{ __('Search for ') . $acc1Role . __('...') }}"
+                            ui="bootstrap"
+                            :key="'acc1-async-' . $type . '-' . $branch_id . '-' . count($acc1Options)"
+                        />
                     @endif
 
                     @error('acc1_id')
@@ -260,64 +262,3 @@
     </div>
 
 
-    <script>
-        // Initialize TomSelect only once
-        document.addEventListener('DOMContentLoaded', () => {
-            const select = document.getElementById('acc1-select');
-            if (select && !select.tomselect) {
-                new TomSelect(select, {
-                    plugins: {
-                        dropdown_input: {
-                            class: 'font-hold fw-bold font-14'
-                        },
-                        remove_button: {
-                            title: "{{ __('Remove Selected') }}"
-                        }
-                    },
-                    placeholder: "{{ __('Select') }}",
-                    onChange: (value) => {
-                        console.log('TomSelect changed:', value);
-                        Livewire.dispatch('input', {
-                            name: 'acc1_id',
-                            value: value
-                        });
-                    }
-                });
-            }
-        });
-
-
-        // Handle branch change event
-        Livewire.on('branch-changed-completed', (event) => {
-            const select = document.getElementById('acc1-select');
-            if (select) {
-                const instance = select.tomselect;
-                if (instance) {
-                    instance.clearOptions();
-                    instance.clear();
-
-
-                    event.acc1List.forEach(option => {
-                        instance.addOption({
-                            value: option.value,
-                            text: option.text
-                        });
-                    });
-
-
-                    const newValue = event.acc1_id;
-                    if (newValue) {
-                        instance.setValue(newValue, true);
-                    } else {
-                        instance.clear(true);
-                    }
-
-
-                    const balanceElement = document.querySelector('.text-primary');
-                    if (balanceElement) {
-                        balanceElement.textContent = new Intl.NumberFormat().format(event.currentBalance);
-                    }
-                }
-            }
-        });
-    </script>

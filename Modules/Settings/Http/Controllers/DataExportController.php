@@ -3,13 +3,19 @@
 namespace Modules\Settings\Http\Controllers;
 
 use ZipArchive;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\Controller;
 use RealRashid\SweetAlert\Facades\Alert;
 
 class DataExportController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('permission:view Export Data')->only(['getExportStats']);
+        $this->middleware('permission:edit Export Data')->only(['exportSqlDump', 'exportAllData']);
+    }
+
     /**
      * Export database as proper SQL dump using mysqldump
      */
@@ -47,11 +53,6 @@ class DataExportController extends Controller
 
             // التحقق من نجاح التنفيذ
             if ($returnVar !== 0 || !file_exists($filePath)) {
-                \Log::error('mysqldump failed', [
-                    'output' => $output,
-                    'return_var' => $returnVar
-                ]);
-
                 // Fallback: استخدم PHP إذا mysqldump غير متاح
                 return $this->exportSqlDumpFallback();
             }
@@ -62,9 +63,8 @@ class DataExportController extends Controller
             file_put_contents($filePath, $header . "\n\n" . $content);
 
             return response()->download($filePath)->deleteFileAfterSend(true);
-        } catch (\Exception $e) {
-            \Log::error('Export SQL Error: ' . $e->getMessage());
-            Alert::toast('حدث خطأ: ' . $e->getMessage(), 'error');
+        } catch (\Exception) {
+            Alert::toast('حدث خطأ: ', 'error');
             return back();
         }
     }
@@ -143,7 +143,6 @@ class DataExportController extends Controller
 
             return response()->download($filePath)->deleteFileAfterSend(true);
         } catch (\Exception $e) {
-            \Log::error('Fallback Export Error: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -215,9 +214,8 @@ class DataExportController extends Controller
             } else {
                 throw new \Exception('فشل في إنشاء ملف ZIP');
             }
-        } catch (\Exception $e) {
-            \Log::error('Export Data Error: ' . $e->getMessage());
-            Alert::toast('حدث خطأ: ' . $e->getMessage(), 'error');
+        } catch (\Exception) {
+            Alert::toast('حدث خطأ: ', 'error');
             return back();
         }
     }

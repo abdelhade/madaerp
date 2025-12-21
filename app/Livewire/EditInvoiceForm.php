@@ -22,10 +22,15 @@ class EditInvoiceForm extends Component
     public $operationId;
 
     public $operation;
-
     public $type;
-
     public $acc1_id;
+
+    protected $listeners = [
+        'account-created' => 'handleAccountCreated',
+        'branch-changed' => 'handleBranchChange',
+        'batch-selected' => 'selectBatch',
+    ];
+
 
     public $acc2_id;
 
@@ -98,6 +103,8 @@ class EditInvoiceForm extends Component
     public $acc1Role;
 
     public $acc2Role;
+
+    public $isCurrentAccountCash = false;
 
     public $cashAccounts;
 
@@ -226,33 +233,12 @@ class EditInvoiceForm extends Component
             ->select('id', 'aname')
             ->get();
 
-        $clientsAccounts = $this->getAccountsByCode('1103%');
-        $suppliersAccounts = $this->getAccountsByCode('2101%');
-        $stores = $this->getAccountsByCode('1104%');
-        $employees = $this->getAccountsByCode('2102%');
-        $wasted = $this->getAccountsByCode('55%');
-        $accounts = $this->getAccountsByCode('%');
-        $map = [
-            10 => ['acc1' => 'clientsAccounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'],
-            11 => ['acc1' => 'suppliersAccounts', 'acc1_role' => 'دائن', 'acc2_role' => 'مدين'],
-            12 => ['acc1' => 'clientsAccounts', 'acc1_role' => 'دائن', 'acc2_role' => 'مدين'],
-            13 => ['acc1' => 'suppliersAccounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'],
-            14 => ['acc1' => 'clientsAccounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'],
-            15 => ['acc1' => 'suppliersAccounts', 'acc1_role' => 'دائن', 'acc2_role' => 'مدين'],
-            16 => ['acc1' => 'clientsAccounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'],
-            17 => ['acc1' => 'suppliersAccounts', 'acc1_role' => 'دائن', 'acc2_role' => 'مدين'],
-            18 => ['acc1' => 'wasted', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'],
-            19 => ['acc1' => 'accounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'],
-            20 => ['acc1' => 'accounts', 'acc1_role' => 'دائن', 'acc2_role' => 'مدين'],
-            21 => ['acc1' => 'stores', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'],
-            22 => ['acc1' => 'clientsAccounts', 'acc1_role' => 'مدين', 'acc2_role' => 'دائن'],
-            25 => ['acc1' => 'suppliersAccounts', 'acc1_role' => 'دائن', 'acc2_role' => 'مدين'],
-        ];
-        $this->acc1List = isset($map[$this->type]) ? ${$map[$this->type]['acc1']} : collect();
-        $this->acc2List = $stores;
-        $this->acc1Role = $map[$this->type]['acc1_role'] ?? 'مدين';
-        $this->acc2Role = $map[$this->type]['acc2_role'] ?? 'دائن';
-        $this->employees = $employees;
+        // ✅ تحميل قوائم الحسابات حسب الفرع ونوع الفاتورة
+        $this->loadBranchFilteredData($this->branch_id);
+
+        // ✅ التحقق من حالة الحساب النقدي
+        $this->checkCashAccount($this->acc1_id);
+
         $this->priceTypes = Price::pluck('name', 'id')->toArray();
         $this->searchResults = collect();
         $this->barcodeSearchResults = collect();
@@ -335,6 +321,33 @@ class EditInvoiceForm extends Component
     }
 
     /**
+     * ✅ الحصول على ترتيب الحقول القابلة للتحرير ديناميكياً من Template
+     * يُستخدم في Alpine.js للتنقل بالكيبورد بين الحقول
+     * 
+     * @return array ترتيب أسماء الحقول القابلة للتحرير
+     */
+    public function getEditableFieldsOrder(): array
+    {
+        // الحقول القابلة للتحرير بالترتيب الافتراضي
+        $defaultEditableFields = ['quantity', 'price', 'discount', 'sub_value'];
+        
+        if (! $this->currentTemplate) {
+            return $defaultEditableFields;
+        }
+
+        // جلب الأعمدة المرتبة من Template
+        $orderedColumns = $this->currentTemplate->getOrderedColumns();
+        
+        // فلترة الأعمدة للحصول على القابلة للتحرير فقط
+        $editableColumns = array_filter($orderedColumns, function ($column) {
+            return in_array($column, ['quantity', 'price', 'discount', 'sub_value']);
+        });
+
+        // إرجاع الحقول المرتبة أو الافتراضية إذا كانت فارغة
+        return ! empty($editableColumns) ? array_values($editableColumns) : $defaultEditableFields;
+    }
+
+    /**
      * Get where conditions for acc1 based on invoice type
      */
     public function getAcc1WhereConditions(): array
@@ -371,6 +384,92 @@ class EditInvoiceForm extends Component
             ->where('code', 'like', $code)
             ->select('id', 'aname')
             ->get();
+    }
+
+    protected static array $accountCache = [];
+
+    protected function loadBranchFilteredData($branchId)
+    {
+        if (!$branchId) return;
+
+        $clientsAccounts = $this->getAccountsByCodeAndBranch('1103%', $branchId);
+        $suppliersAccounts = $this->getAccountsByCodeAndBranch('2101%', $branchId);
+        $employeesAccounts = $this->getAccountsByCodeAndBranch('2102%', $branchId);
+        $wasted = $this->getAccountsByCodeAndBranch('55%', $branchId);
+        $accounts = $this->getAccountsByCodeAndBranch('1108%', $branchId);
+        $stores = $this->getAccountsByCodeAndBranch('1104%', $branchId);
+
+        // ✅ تعيين أسماء الحسابات حسب نوع الفاتورة
+        $map = [
+            10 => ['acc1_role' => 'عميل', 'acc2_role' => 'مخزن'],
+            11 => ['acc1_role' => 'مورد', 'acc2_role' => 'مخزن'],
+            12 => ['acc1_role' => 'عميل', 'acc2_role' => 'مخزن'],
+            13 => ['acc1_role' => 'مورد', 'acc2_role' => 'مخزن'],
+            14 => ['acc1_role' => 'عميل', 'acc2_role' => 'مخزن'],
+            15 => ['acc1_role' => 'مورد', 'acc2_role' => 'مخزن'],
+            16 => ['acc1_role' => 'عميل', 'acc2_role' => 'مخزن'],
+            17 => ['acc1_role' => 'مورد', 'acc2_role' => 'مخزن'],
+            18 => ['acc1_role' => 'تالف', 'acc2_role' => 'مخزن'],
+            19 => ['acc1_role' => 'حساب', 'acc2_role' => 'مخزن'],
+            20 => ['acc1_role' => 'حساب', 'acc2_role' => 'مخزن'],
+            21 => ['acc1_role' => 'مخزن من', 'acc2_role' => 'مخزن إلى'],
+            22 => ['acc1_role' => 'عميل', 'acc2_role' => 'مخزن'],
+            24 => ['acc1_role' => 'مصروف', 'acc2_role' => 'مورد'],
+            25 => ['acc1_role' => 'مصروف', 'acc2_role' => 'مخزن'],
+            26 => ['acc1_role' => 'عميل', 'acc2_role' => 'مخزن'],
+        ];
+        $this->acc1Role = $map[$this->type]['acc1_role'] ?? 'الحساب الأول';
+        $this->acc2Role = $map[$this->type]['acc2_role'] ?? 'الحساب الثاني';
+
+        // ✅ تحقق من الإعداد
+        $allowAllClientTypes = setting('invoice_enable_all_client_types') == '1';
+
+        // القيم المجمعة (للاستخدام عند تفعيل الإعداد)
+        $mergedAccounts = null;
+        if ($allowAllClientTypes) {
+             $mergedAccounts = collect()
+                ->merge($clientsAccounts)
+                ->merge($suppliersAccounts)
+                ->merge($employeesAccounts)
+                ->unique('id')
+                ->values();
+        }
+
+        // تحديد acc1 حسب نوع الفاتورة
+        if (in_array($this->type, [10, 12, 14, 16, 22])) {
+            $this->acc1List = $allowAllClientTypes ? $mergedAccounts : $clientsAccounts;
+        } elseif (in_array($this->type, [11, 13, 15, 17])) {
+            $this->acc1List = $allowAllClientTypes ? $mergedAccounts : $suppliersAccounts;
+        } elseif ($this->type == 18) {
+            $this->acc1List = $wasted;
+        } elseif (in_array($this->type, [19, 20])) {
+            $this->acc1List = $accounts;
+        } elseif ($this->type == 21) {
+            $this->acc1List = $stores;
+        } elseif ($this->type == 25) {
+            $this->acc1List = $this->getAccountsByCodeAndBranch('53%', $branchId);
+        } elseif ($this->type == 24) {
+            $this->acc1List = $this->getAccountsByCodeAndBranch('5%', $branchId);
+        }
+
+        $this->acc2List = $this->type == 24 ? $suppliersAccounts : $stores;
+        $this->employees = $this->getAccountsByCodeAndBranch('2102%', $branchId);
+        $this->deliverys = $this->getAccountsByCodeAndBranch('2102%', $branchId);
+    }
+
+    protected function getAccountsByCodeAndBranch(string $code, $branchId)
+    {
+        $cacheKey = $code . '_' . $branchId;
+        if (!isset(static::$accountCache[$cacheKey])) {
+            static::$accountCache[$cacheKey] = AccHead::where('isdeleted', 0)
+                ->where('is_basic', 0)
+                ->where('code', 'like', $code)
+                ->where('branch_id', $branchId)
+                ->select('id', 'code', 'aname')
+                ->orderBy('id')
+                ->get();
+        }
+        return static::$accountCache[$cacheKey];
     }
 
     private function getAccountBalance($accountId)
@@ -501,10 +600,48 @@ class EditInvoiceForm extends Component
 
     public function updatedAcc1Id($value)
     {
+        // ✅ إعادة تعيين القيم عند تغيير العميل
+        $this->discount_percentage = 0;
+        $this->discount_value = 0;
+        $this->additional_percentage = 0;
+        $this->additional_value = 0;
+        $this->received_from_client = 0;
+
+        // ✅ التحقق من الحساب النقدي وتحديث الحالة
+        $this->checkCashAccount($value);
+
+        // ✅ إعادة حساب الإجماليات
+        $this->calculateTotals();
+
+        // ✅ إرسال حدث للـ Alpine.js لتصفير القيم فوراً في الواجهة
+        $this->dispatch('reset-invoice-parameters');
+
         if ($this->showBalance) {
             $this->currentBalance = $this->getAccountBalance($value);
             $this->calculateBalanceAfterInvoice();
         }
+    }
+
+    public function checkCashAccount($accountId)
+    {
+        if (!$accountId) {
+            $this->isCurrentAccountCash = false;
+            return;
+        }
+
+        $cashClientIds = AccHead::where('isdeleted', 0)
+            ->where('is_basic', 0)
+            ->where('code', 'like', '110301%')
+            ->pluck('id')
+            ->toArray();
+
+        $cashSupplierIds = AccHead::where('isdeleted', 0)
+            ->where('is_basic', 0)
+            ->where('code', 'like', '210101%')
+            ->pluck('id')
+            ->toArray();
+
+        $this->isCurrentAccountCash = in_array($accountId, $cashClientIds) || in_array($accountId, $cashSupplierIds);
     }
 
     public function calculateBalanceAfterInvoice()
@@ -533,7 +670,13 @@ class EditInvoiceForm extends Component
 
     public function createItemFromPrompt($name, $barcode)
     {
+        // ✅ استدعاء createNewItem وإرجاع النتيجة
         $this->createNewItem($name, $barcode);
+        // ✅ إرجاع نتيجة نجاح (EditInvoiceForm لا يرجع index مثل CreateInvoiceForm)
+        return [
+            'success' => true,
+            'message' => 'تم إنشاء الصنف بنجاح'
+        ];
     }
 
     public function addItemByBarcode()
@@ -991,8 +1134,9 @@ class EditInvoiceForm extends Component
         $this->subtotal = collect($this->invoiceItems)->sum('sub_value');
         $discountPercentage = (float) ($this->discount_percentage ?? 0);
         $additionalPercentage = (float) ($this->additional_percentage ?? 0);
-        $this->discount_value = ($this->subtotal * $discountPercentage) / 100;
-        $this->additional_value = ($this->subtotal * $additionalPercentage) / 100;
+        
+        $this->discount_value = round(($this->subtotal * $discountPercentage) / 100, 2);
+        $this->additional_value = round(($this->subtotal * $additionalPercentage) / 100, 2);
         $this->total_after_additional = round($this->subtotal - $this->discount_value + $this->additional_value, 2);
     }
 
@@ -1027,44 +1171,9 @@ class EditInvoiceForm extends Component
         $this->barcodeTerm = '';
     }
 
-    public function updatedDiscountPercentage()
-    {
-        // ✅ الحساب في Alpine.js - هنا للتحقق فقط
-        $discountPercentage = (float) ($this->discount_percentage ?? 0);
-        $this->discount_value = ($this->subtotal * $discountPercentage) / 100;
-        $this->calculateTotals();
-        $this->calculateBalanceAfterInvoice();
-    }
-
-    public function updatedDiscountValue()
-    {
-        // ✅ الحساب في Alpine.js - هنا للتحقق فقط
-        if ($this->discount_value >= 0 && $this->subtotal > 0) {
-            $this->discount_percentage = ($this->discount_value * 100) / $this->subtotal;
-            $this->calculateTotals();
-            $this->calculateBalanceAfterInvoice();
-        }
-    }
-
-    public function updatedAdditionalPercentage()
-    {
-        // ✅ الحساب في Alpine.js - هنا للتحقق فقط
-        $additionalPercentage = (float) ($this->additional_percentage ?? 0);
-        $this->additional_value = ($this->subtotal * $additionalPercentage) / 100;
-        $this->calculateTotals();
-        $this->calculateBalanceAfterInvoice();
-    }
-
-    public function updatedAdditionalValue()
-    {
-        // ✅ الحساب في Alpine.js - هنا للتحقق فقط
-        $afterDiscount = $this->subtotal - $this->discount_value;
-        if ($this->additional_value >= 0 && $afterDiscount > 0) {
-            $this->additional_percentage = ($this->additional_value * 100) / $afterDiscount;
-            $this->calculateTotals();
-            $this->calculateBalanceAfterInvoice();
-        }
-    }
+    // ✅ تم نقل حسابات الخصم والإضافي إلى Alpine.js component (invoiceCalculations)
+    // تم حذف: updatedDiscountPercentage, updatedDiscountValue, updatedAdditionalPercentage, updatedAdditionalValue
+    // جميع الحسابات تتم في Alpine.js والمزامنة تتم عبر syncFromAlpine() قبل الحفظ
 
     public function handleKeyDown()
     {
@@ -1110,10 +1219,62 @@ class EditInvoiceForm extends Component
         }
     }
 
+    /**
+     * ✅ استقبال البيانات من Alpine.js قبل الحفظ
+     * يُستدعى من @submit.prevent="syncToLivewire()" في النموذج
+     * 
+     * @param array $alpineData البيانات المحسوبة في Alpine.js
+     */
+    public function syncFromAlpine(array $alpineData): void
+    {
+        // مزامنة القيم الحسابية من Alpine.js
+        if (isset($alpineData['subtotal'])) {
+            $this->subtotal = (float) $alpineData['subtotal'];
+        }
+        if (isset($alpineData['discount_percentage'])) {
+            $this->discount_percentage = (float) $alpineData['discount_percentage'];
+        }
+        if (isset($alpineData['discount_value'])) {
+            $this->discount_value = (float) $alpineData['discount_value'];
+        }
+        if (isset($alpineData['additional_percentage'])) {
+            $this->additional_percentage = (float) $alpineData['additional_percentage'];
+        }
+        if (isset($alpineData['additional_value'])) {
+            $this->additional_value = (float) $alpineData['additional_value'];
+        }
+        if (isset($alpineData['total_after_additional'])) {
+            $this->total_after_additional = (float) $alpineData['total_after_additional'];
+        }
+        if (isset($alpineData['received_from_client'])) {
+            $this->received_from_client = (float) $alpineData['received_from_client'];
+        }
+
+        // مزامنة بيانات الأصناف إذا تم إرسالها
+        if (isset($alpineData['invoiceItems']) && is_array($alpineData['invoiceItems'])) {
+            foreach ($alpineData['invoiceItems'] as $index => $item) {
+                if (isset($this->invoiceItems[$index])) {
+                    if (isset($item['sub_value'])) {
+                        $this->invoiceItems[$index]['sub_value'] = (float) $item['sub_value'];
+                    }
+                    if (isset($item['quantity'])) {
+                        $this->invoiceItems[$index]['quantity'] = (float) $item['quantity'];
+                    }
+                    if (isset($item['price'])) {
+                        $this->invoiceItems[$index]['price'] = (float) $item['price'];
+                    }
+                    if (isset($item['discount'])) {
+                        $this->invoiceItems[$index]['discount'] = (float) $item['discount'];
+                    }
+                }
+            }
+        }
+    }
+
     public function updateForm()
     {
         // تحقق من وجود العملية
-        if (!$this->operation || !$this->operationId) {
+        if (! $this->operation || ! $this->operationId) {
             $this->dispatch('alert', [
                 'type' => 'error',
                 'message' => 'لا توجد فاتورة لتحريرها.',
@@ -1121,7 +1282,50 @@ class EditInvoiceForm extends Component
             return false;
         }
 
-        // استدعاء خدمة الحفظ مع تمرير العلم isEdit = true
+        // ✅ 1. إعادة حساب جميع الإجماليات للتأكد من صحتها
+        $this->recalculateSubValues();
+        $this->calculateTotals();
+        
+        // ✅ 2. Validation نهائي
+        if (empty($this->invoiceItems)) {
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'يجب إضافة صنف واحد على الأقل.',
+            ]);
+            return false;
+        }
+        
+        // التحقق من صحة الأصناف
+        foreach ($this->invoiceItems as $index => $item) {
+            $quantity = (float) ($item['quantity'] ?? 0);
+            $price = (float) ($item['price'] ?? 0);
+            
+            if ($quantity <= 0) {
+                $this->dispatch('alert', [
+                    'type' => 'error',
+                    'message' => "الكمية في الصف " . ($index + 1) . " يجب أن تكون أكبر من صفر.",
+                ]);
+                return false;
+            }
+            
+            if ($price < 0) {
+                $this->dispatch('alert', [
+                    'type' => 'error',
+                    'message' => "السعر في الصف " . ($index + 1) . " لا يمكن أن يكون سالباً.",
+                ]);
+                return false;
+            }
+        }
+        
+        if (($this->settings['allow_zero_invoice_total'] ?? '0') != '1' && $this->total_after_additional == 0) {
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'قيمة الفاتورة لا يمكن أن تكون صفرًا.',
+            ]);
+            return false;
+        }
+
+        // ✅ 3. الحفظ
         $service = new \App\Services\SaveInvoiceService;
         $result = $service->saveInvoice($this, true);
 
@@ -1186,9 +1390,39 @@ class EditInvoiceForm extends Component
         }
     }
 
+    public function getAcc1OptionsProperty()
+    {
+        return collect($this->acc1List ?? [])->map(function ($account) {
+            $id = is_array($account) ? ($account['id'] ?? null) : ($account->id ?? null);
+            $name = is_array($account) ? ($account['aname'] ?? '') : ($account->aname ?? '');
+            $code = is_array($account) ? ($account['code'] ?? '') : ($account->code ?? '');
+            
+            $group = 'أخرى';
+            if (str_starts_with($code, '1103')) {
+                $group = 'العملاء';
+            } elseif (str_starts_with($code, '2101')) {
+                $group = 'الموردين';
+            } elseif (str_starts_with($code, '2102')) {
+                $group = 'الموظفين';
+            } elseif (str_starts_with($code, '1104')) {
+                $group = 'المخازن';
+            } elseif (str_starts_with($code, '53')) {
+                $group = 'المصروفات';
+            }
+            
+            return [
+                'value' => $id,
+                'label' => $name,
+                'group' => $group,
+            ];
+        })->values()->toArray();
+    }
+
     public function render()
     {
-        return view('livewire.invoices.edit-invoice-form');
+        return view('livewire.invoices.edit-invoice-form', [
+            'acc1Options' => $this->acc1Options
+        ]);
     }
 
     private function updateAccountsForNewType()
