@@ -6,12 +6,21 @@
 
     <!-- Plan Summary -->
     <div class="card">
-        <div class="card-header">
-            <h4 class="card-title">{{ __('Plan Summary') }}</h4>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">{{ __('Plan Summary') }}</h4>
+            <div>
+                <a href="{{ route('installments.plans.edit', $plan->id) }}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit"></i> تعديل الخطة
+                </a>
+                <button wire:click="deletePlan" wire:confirm="هل أنت متأكد من حذف هذه الخطة؟ سيتم حذف جميع الأقساط والقيود المحاسبية المرتبطة بها." class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash"></i> حذف الخطة
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-4"><strong>{{ __('Client') }}:</strong> {{ $plan->account->aname ?? 'N/A' }} ({{ $plan->account->code ?? '' }})</div>
+                <div class="col-md-4"><strong>{{ __('Client') }}:</strong> {{ $plan->account->aname ?? 'N/A' }}
+                    ({{ $plan->account->code ?? '' }})</div>
                 <div class="col-md-4"><strong>{{ __('Current Balance') }}:</strong>
                     {{ number_format($plan->amount_to_be_installed - $plan->payments->sum('amount_paid'), 2) }}</div>
                 <div class="col-md-4"><strong>{{ __('Status') }}:</strong> <span
@@ -60,10 +69,22 @@
                                     @if ($payment->status != 'paid')
                                         <button class="btn btn-success btn-sm"
                                             wire:click="openPaymentModal({{ $payment->id }})">
-                                            {{ __('Record Payment') }}
+                                            <i class="fas fa-check"></i> تسجيل دفع
+                                        </button>
+                                        <button class="btn btn-danger btn-sm"
+                                            wire:click="deletePayment({{ $payment->id }})"
+                                            wire:confirm="هل أنت متأكد من حذف هذا القسط؟">
+                                            <i class="fas fa-trash"></i> حذف
                                         </button>
                                     @else
-                                        <i class="fas fa-check-circle text-success"></i>
+                                        <span class="badge bg-success me-2">
+                                            <i class="fas fa-check-circle"></i> مدفوع
+                                        </span>
+                                        <button class="btn btn-warning btn-sm"
+                                            wire:click="cancelPayment({{ $payment->id }})"
+                                            wire:confirm="هل أنت متأكد من إلغاء هذه الدفعة؟ سيتم حذف القيد المحاسبي المرتبط بها.">
+                                            <i class="fas fa-undo"></i> إلغاء
+                                        </button>
                                     @endif
                                 </td>
                             </tr>

@@ -196,6 +196,7 @@ class CreateInstallmentPlan extends Component
         $clients = $this->getClientAccounts();
         return view('installments::livewire.create-installment-plan', [
             'clients' => $clients,
+            'existingPlans' => $this->existingPlans,
         ]);
     }
 

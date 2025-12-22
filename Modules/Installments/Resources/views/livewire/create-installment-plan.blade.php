@@ -223,7 +223,7 @@
             const plans = @json($existingPlans);
 
             let html = '<div class="table-responsive text-end"><table class="table table-sm">';
-            html += '<thead><tr><th>رقم الخطة</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th></tr></thead>';
+            html += '<thead><tr><th>رقم الخطة</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead>';
             html += '<tbody>';
 
             plans.forEach(plan => {
@@ -240,6 +240,11 @@
             <td>${parseFloat(plan.total_amount).toFixed(2)} ريال</td>
             <td><span class="${statusClass}">${status}</span></td>
             <td>${date}</td>
+            <td>
+                <a href="/installments/plans/${plan.id}" class="btn btn-sm btn-info">
+                    <i class="fas fa-eye"></i> عرض
+                </a>
+            </td>
         </tr>`;
             });
 
@@ -248,7 +253,7 @@
             Swal.fire({
                 title: 'الخطط الموجودة',
                 html: html,
-                width: '600px',
+                width: '700px',
                 confirmButtonText: 'إغلاق',
                 customClass: {
                     popup: 'text-end'

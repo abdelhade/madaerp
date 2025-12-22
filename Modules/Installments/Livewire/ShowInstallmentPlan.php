@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Installments\Livewire;
 
 use Carbon\Carbon;
@@ -156,6 +158,146 @@ class ShowInstallmentPlan extends Component
             DB::commit();
         } catch (\Exception) {
             DB::rollBack();
+        }
+    }
+
+    /**
+     * Delete an unpaid payment
+     */
+    public function deletePayment($paymentId)
+    {
+        try {
+            $payment = InstallmentPayment::findOrFail($paymentId);
+
+            if ($payment->status === 'paid') {
+                $this->dispatch('payment-error', [
+                    'title' => 'خطأ',
+                    'text' => 'لا يمكن حذف قسط مدفوع. استخدم زر "إلغاء" بدلاً من ذلك',
+                ]);
+                return;
+            }
+
+            $payment->delete();
+            $this->plan->refresh();
+
+            $this->dispatch('payment-success', [
+                'title' => 'تم الحذف',
+                'text' => 'تم حذف القسط بنجاح',
+            ]);
+        } catch (\Exception) {
+            $this->dispatch('payment-error', [
+                'title' => 'خطأ',
+                'text' => 'حدث خطأ أثناء حذف القسط: ',
+            ]);
+        }
+    }
+
+    /**
+     * Cancel a paid payment and delete its journal entry
+     */
+    public function cancelPayment($paymentId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $payment = InstallmentPayment::findOrFail($paymentId);
+
+            if ($payment->status !== 'paid') {
+                $this->dispatch('payment-error', [
+                    'title' => 'خطأ',
+                    'text' => 'هذا القسط غير مدفوع',
+                ]);
+                return;
+            }
+
+            // Find and delete the journal entry
+            $this->deleteJournalEntry($payment);
+
+            // Reset payment
+            $payment->update([
+                'amount_paid' => 0,
+                'payment_date' => null,
+                'status' => 'pending',
+                'notes' => ($payment->notes ?? '') . ' [تم الإلغاء]',
+            ]);
+
+            DB::commit();
+
+            $this->plan->refresh();
+
+            $this->dispatch('payment-success', [
+                'title' => 'تم الإلغاء',
+                'text' => 'تم إلغاء الدفعة وحذف القيد المحاسبي بنجاح',
+            ]);
+        } catch (\Exception) {
+            DB::rollBack();
+
+            $this->dispatch('payment-error', [
+                'title' => 'خطأ',
+                'text' => 'حدث خطأ أثناء إلغاء الدفعة: ',
+            ]);
+        }
+    }
+
+    /**
+     * Delete journal entry for a payment
+     */
+    private function deleteJournalEntry(InstallmentPayment $payment)
+    {
+        $plan = $payment->plan;
+
+        // Find the OperHead for this payment
+        $operHead = OperHead::where('acc1', 'like', '%')
+            ->where('acc2', $plan->acc_head_id)
+            ->where('details', 'like', "%قسط رقم {$payment->installment_number}%")
+            ->where('details', 'like', "%خطة رقم {$plan->id}%")
+            ->first();
+
+        if ($operHead) {
+            // Delete JournalDetails
+            JournalDetail::where('op_id', $operHead->id)->delete();
+
+            // Delete JournalHead
+            JournalHead::where('op_id', $operHead->id)->delete();
+
+            // Delete OperHead
+            $operHead->delete();
+        }
+    }
+
+    /**
+     * Delete entire installment plan
+     */
+    public function deletePlan()
+    {
+        try {
+            DB::beginTransaction();
+
+            // Cancel all paid payments (delete their journal entries)
+            $paidPayments = $this->plan->payments()->where('status', 'paid')->get();
+            foreach ($paidPayments as $payment) {
+                $this->deleteJournalEntry($payment);
+            }
+
+            // Delete all payments
+            $this->plan->payments()->delete();
+
+            // Delete the plan
+            $planId = $this->plan->id;
+            $this->plan->delete();
+
+            DB::commit();
+
+            // Redirect to plans index with success message
+            session()->flash('message', 'تم حذف الخطة وجميع الأقساط والقيود المحاسبية بنجاح');
+            return redirect()->route('installments.plans.index');
+        } catch (\Exception) {
+            DB::rollBack();
+
+            $this->dispatch('payment-error', [
+                'title' => 'خطأ',
+                'text' => 'حدث خطأ أثناء حذف الخطة: ',
+            ]);
         }
     }
 
