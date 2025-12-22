@@ -11,7 +11,7 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-4"><strong>{{ __('Client') }}:</strong> {{ $plan->client->name ?? 'N/A' }}</div>
+                <div class="col-md-4"><strong>{{ __('Client') }}:</strong> {{ $plan->account->aname ?? 'N/A' }} ({{ $plan->account->code ?? '' }})</div>
                 <div class="col-md-4"><strong>{{ __('Current Balance') }}:</strong>
                     {{ number_format($plan->amount_to_be_installed - $plan->payments->sum('amount_paid'), 2) }}</div>
                 <div class="col-md-4"><strong>{{ __('Status') }}:</strong> <span
@@ -141,6 +141,36 @@
 
             @this.on('close-modal', (event) => {
                 modal.hide();
+            });
+
+            // Listen for payment success
+            Livewire.on('payment-success', (data) => {
+                const d = Array.isArray(data) ? data[0] : data;
+                Swal.fire({
+                    icon: 'success',
+                    title: d.title || 'نجح',
+                    text: d.text,
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#28a745',
+                    customClass: {
+                        popup: 'text-end'
+                    }
+                });
+            });
+
+            // Listen for payment error
+            Livewire.on('payment-error', (data) => {
+                const d = Array.isArray(data) ? data[0] : data;
+                Swal.fire({
+                    icon: 'error',
+                    title: d.title || 'خطأ',
+                    text: d.text,
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#d33',
+                    customClass: {
+                        popup: 'text-end'
+                    }
+                });
             });
         });
     </script>

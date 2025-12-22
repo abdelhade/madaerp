@@ -4,6 +4,12 @@ namespace Modules\Installments\Livewire;
 
 use Carbon\Carbon;
 use Livewire\Component;
+use App\Models\OperHead;
+use App\Models\JournalHead;
+use App\Models\JournalDetail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Modules\Accounts\Models\AccHead;
 use Modules\Installments\Models\InstallmentPlan;
 use Modules\Installments\Models\InstallmentPayment;
 
@@ -18,7 +24,7 @@ class ShowInstallmentPlan extends Component
 
     public function mount(InstallmentPlan $plan)
     {
-        $this->plan = $plan->load('payments', 'client');
+        $this->plan = $plan->load('payments', 'account');
     }
 
     public function openPaymentModal($paymentId)
@@ -43,24 +49,114 @@ class ShowInstallmentPlan extends Component
             'notes' => 'nullable|string',
         ]);
 
-        $payment->update([
-            'amount_paid' => $payment->amount_paid + $validated['paymentAmount'],
-            'payment_date' => $validated['paymentDate'],
-            'notes' => $validated['notes'],
-        ]);
+        try {
+            DB::beginTransaction();
+            // Update payment record
+            $payment->update([
+                'amount_paid' => $payment->amount_paid + $validated['paymentAmount'],
+                'payment_date' => $validated['paymentDate'],
+                'notes' => $validated['notes'],
+            ]);
 
-        // تحديث حالة القسط
-        if ($payment->amount_paid >= $payment->amount_due) {
-            $payment->status = 'paid';
+            // Update payment status
+            if ($payment->amount_paid >= $payment->amount_due) {
+                $payment->status = 'paid';
+            }
+            $payment->save();
+
+            // Create journal entry for the payment
+            $this->createJournalEntry($payment, $validated['paymentAmount'], $validated['paymentDate'], $validated['notes']);
+
+            DB::commit();
+
+            // Refresh plan
+            $this->plan->refresh();
+
+            // Close modal and show success message
+            $this->dispatch('close-modal', 'paymentModal');
+            $this->dispatch('payment-success', [
+                'title' => 'تم التسجيل بنجاح',
+                'text' => 'تم تسجيل الدفعة وإنشاء القيد المحاسبي بنجاح',
+            ]);
+        } catch (\Exception) {
+            DB::rollBack();
+
+            $this->dispatch('payment-error', [
+                'title' => 'خطأ',
+                'text' => 'حدث خطأ أثناء تسجيل الدفعة: ',
+            ]);
         }
-        $payment->save();
+    }
 
-        // تحديث الخطة بعد الدفع
-        $this->plan->refresh();
+    /**
+     * Create journal entry for installment payment
+     */
+    private function createJournalEntry(InstallmentPayment $payment, float $amount, string $date, ?string $notes)
+    {
+        try {
+            DB::beginTransaction();
+            $plan = $payment->plan;
 
-        // إرسال حدث للمتصفح لإغلاق النافذة
-        $this->dispatch('close-modal', 'paymentModal');
-        session()->flash('message', 'تم تسجيل الدفعة بنجاح!');
+            // Get the cash/bank account
+            $cashAccount = AccHead::where('code', 'like', '1101%')
+                ->where('is_basic', 0)
+                ->where('isdeleted', 0)
+                ->first();
+
+            if (!$cashAccount) {
+                throw new \Exception('لم يتم العثور على حساب الصندوق (1101)');
+            }
+
+            // Create OperHead record
+            $operHead = OperHead::create([
+                'pro_date' => $date,
+                'pro_type' => 5, // Daily Entry type
+                'acc1' => $cashAccount->id,
+                'acc2' => $plan->acc_head_id,
+                'total' => $amount,
+                'details' => $notes ?? "دفعة قسط رقم {$payment->installment_number} - خطة رقم {$plan->id}",
+                'user' => Auth::id(),
+                'branch_id' => Auth::user()->branch_id ?? 1,
+            ]);
+
+            // Get next journal_id
+            $lastJournal = JournalHead::orderBy('journal_id', 'desc')->first();
+            $journalId = $lastJournal ? $lastJournal->journal_id + 1 : 1;
+
+            JournalHead::create([
+                'journal_id' => $journalId,
+                'op_id' => $operHead->id,
+                'total' => $amount,
+                'date' => $date,
+                'details' => "دفعة قسط رقم {$payment->installment_number} - خطة رقم {$plan->id}",
+                'branch_id' => $operHead->branch_id,
+            ]);
+
+            JournalDetail::create([
+                'journal_id' => $journalId,
+                'op_id' => $operHead->id,
+                'account_id' => $cashAccount->id,
+                'debit' => $amount,
+                'credit' => 0,
+                'type' => 1,
+                'info' => "استلام دفعة قسط رقم {$payment->installment_number}",
+                'branch_id' => $operHead->branch_id,
+            ]);
+
+            JournalDetail::create([
+                'journal_id' => $journalId,
+                'op_id' => $operHead->id,
+                'account_id' => $plan->acc_head_id,
+                'debit' => 0,
+                'credit' => $amount,
+                'type' => 2,
+                'info' => "سداد قسط رقم {$payment->installment_number}",
+                'branch_id' => $operHead->branch_id,
+            ]);
+            DB::commit();
+        } catch (\Exception) {
+            DB::rollBack();
+        }
     }
 
     public function render()

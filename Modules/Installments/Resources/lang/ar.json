@@ -52,5 +52,11 @@
     "Close": "إغلاق",
     "Save Payment": "حفظ الدفعة",
     "View Installment Plan": "عرض خطة التقسيط",
-    "View Plan No.": "عرض الخطة رقم"
+    "View Plan No.": "عرض الخطة رقم",
+    "Total Balance": "إجمالي الرصيد",
+    "Existing Plans": "خطط موجودة",
+    "Available for Installments": "المتاح للتقسيط",
+    "Cannot create installment plan - Insufficient balance": "لا يمكن إنشاء خطة تقسيط - الرصيد غير كافٍ",
+    "View Existing Plans": "عرض الخطط الموجودة",
+    "SAR": "ر.س"
 }
