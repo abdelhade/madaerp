@@ -1328,7 +1328,9 @@ class EditInvoiceForm extends Component
         }
 
         // ✅ 3. الحفظ
-        $service = new \App\Services\SaveInvoiceService;
+        $calculator = new \App\Services\Invoice\DetailValueCalculator();
+        $validator = new \App\Services\Invoice\DetailValueValidator();
+        $service = new \App\Services\SaveInvoiceService($calculator, $validator);
         $result = $service->saveInvoice($this, true);
 
         if ($result) {

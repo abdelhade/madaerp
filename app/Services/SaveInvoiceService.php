@@ -708,8 +708,19 @@ class SaveInvoiceService
     private function calculateItemDetailValues(array $items, array $invoiceData): array
     {
         try {
+            // Transform items to match calculator expected format
+            // Map Livewire field names to calculator expected names
+            $transformedItems = array_map(function ($item) {
+                return [
+                    'item_price' => $item['price'] ?? 0,  // Map 'price' to 'item_price'
+                    'quantity' => $item['quantity'] ?? 0,
+                    'item_discount' => $item['discount'] ?? 0,
+                    'additional' => $item['additional'] ?? 0,
+                ];
+            }, $items);
+
             // Calculate invoice subtotal from all items
-            $invoiceSubtotal = $this->detailValueCalculator->calculateInvoiceSubtotal($items);
+            $invoiceSubtotal = $this->detailValueCalculator->calculateInvoiceSubtotal($transformedItems);
 
             Log::info('Calculating detail values for invoice items', [
                 'item_count' => count($items),
@@ -721,13 +732,8 @@ class SaveInvoiceService
             // Calculate detail_value for each item
             $calculatedItems = [];
             foreach ($items as $index => $item) {
-                // Prepare item data for calculator
-                $itemData = [
-                    'item_price' => $item['price'] ?? 0,
-                    'quantity' => $item['quantity'] ?? 0,
-                    'item_discount' => $item['discount'] ?? 0,
-                    'additional' => $item['additional'] ?? 0,
-                ];
+                // Use the transformed item data for calculation
+                $itemData = $transformedItems[$index];
 
                 // Calculate detail_value with distributed invoice discounts/additions
                 $calculation = $this->detailValueCalculator->calculate(
