@@ -110,6 +110,18 @@
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
                                                         @endcan
+                                                        
+                                                        @can('edit My Drafts')
+                                                            <form action="{{ route('inquiries.drafts.publish', $draft->id) }}" method="POST"
+                                                                class="d-inline"
+                                                                onsubmit="return confirm('{{ __('Are you sure you want to publish this inquiry?') }}');">
+                                                                @csrf
+                                                                <button type="submit" class="btn btn-sm btn-success"
+                                                                    title="{{ __('Publish Inquiry') }}">
+                                                                    <i class="fas fa-check-circle"></i>
+                                                                </button>
+                                                            </form>
+                                                        @endcan
 
                                                         @can('delete My Drafts')
                                                             <button type="button" class="btn btn-sm btn-danger"

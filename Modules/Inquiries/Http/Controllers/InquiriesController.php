@@ -46,6 +46,10 @@ class InquiriesController extends Controller
             'assignedEngineers',
             'pricingStatus',
         ]);
+
+        // Exclude drafts from main list
+        $query->where('is_draft', false);
+
         // $query->assignedToUser($user->id);
 
         // تطبيق الفلاتر
@@ -486,6 +490,27 @@ class InquiriesController extends Controller
             Alert::toast(__('Draft updated successfully'), 'success');
             return redirect()->route('inquiries.drafts')->with('success', __('Draft updated successfully'));
         } catch (Exception $e) {
+            Alert::toast(__('Draft not found'), 'error');
+            return redirect()->route('inquiries.drafts')->with('error', __('Draft not found'));
+        }
+    }
+
+    public function publishDraft($id)
+    {
+        try {
+            $inquiry = Inquiry::findOrFail($id);
+
+            if (!$inquiry->is_draft) {
+                Alert::toast(__('This is not a draft'), 'error');
+                return redirect()->route('inquiries.drafts')->with('error', __('This is not a draft'));
+            }
+
+            $inquiry->is_draft = false;
+            $inquiry->save();
+
+            Alert::toast(__('Inquiry Published Successfully'), 'success');
+            return redirect()->route('inquiries.index')->with('success', __('Inquiry Published Successfully'));
+        } catch (Exception) {
             Alert::toast(__('Draft not found'), 'error');
             return redirect()->route('inquiries.drafts')->with('error', __('Draft not found'));
         }
