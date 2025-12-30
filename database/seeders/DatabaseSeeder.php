@@ -42,7 +42,6 @@ use Modules\Settings\Database\Seeders\AddNationalAddressAndTaxNumberSeeder;
 use Modules\Settings\Database\Seeders\InvoiceOptionsSeeder;
 use Modules\Settings\Database\Seeders\SettingSeeder;
 use Modules\Settings\Database\Seeders\SettingsPermissionsSeeder;
-use Modules\Settings\Database\Seeders\SystemSettingsSeeder;
 use Modules\Shipping\Database\Seeders\ShippingPermissionsSeeder;
 use Modules\Zatca\Database\Seeders\ZatcaPermissionsSeeder;
 
@@ -77,7 +76,6 @@ class DatabaseSeeder extends Seeder
             // ItemSeeder::class,
             InvoiceOptionsSeeder::class,
             InvoiceTemplatesSeeder::class,
-            SystemSettingsSeeder::class,
             InvoiceDimensionsSeeder::class,
             LeadStatusSeeder::class,
             KpiSeeder::class,
