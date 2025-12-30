@@ -2,21 +2,29 @@
 
 namespace Modules\Inquiries\Livewire;
 
-use App\Models\User;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use App\Models\{City, Town};
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Modules\Inquiries\Models\ProjectSize;
-use Modules\Inquiries\Models\PricingStatus;
+use Illuminate\Support\Facades\{DB, Auth};
 use Modules\Progress\Models\ProjectProgress;
-use Modules\Inquiries\Models\InquiryDocument;
-use Modules\Inquiries\Models\{Contact, InquirieRole};
 use Modules\Inquiries\Services\DistanceCalculatorService;
 use Modules\Inquiries\Enums\{KonTitle, StatusForKon, InquiryStatus, KonPriorityEnum, ClientPriorityEnum};
-use Modules\Inquiries\Models\{WorkType, Inquiry, InquirySource, SubmittalChecklist, ProjectDocument, WorkCondition, InquiryComment, QuotationType};
+use Modules\Inquiries\Models\{
+    WorkType,
+    Inquiry,
+    InquirySource,
+    SubmittalChecklist,
+    // ProjectDocument,
+    WorkCondition,
+    InquiryComment,
+    QuotationType,
+    ProjectSize,
+    PricingStatus,
+    InquiryDocument,
+    Contact,
+    InquirieRole
+};
 
 class CreateInquiry extends Component
 {
@@ -24,8 +32,6 @@ class CreateInquiry extends Component
 
     public $inquiryId;
     public $isDraft = false;
-    public $autoSaveEnabled = true;
-    public $lastAutoSaveTime = null;
 
     public $selectedEngineers = [];
     public $availableEngineers = [];
@@ -420,8 +426,9 @@ class CreateInquiry extends Component
 
         // DB::commit();
 
-        $this->lastAutoSaveTime = now()->format('H:i:s');
-        session()->flash('success', __('Draft saved successfully at ') . $this->lastAutoSaveTime);
+        // DB::commit();
+
+        session()->flash('success', __('Draft saved successfully'));
 
         $this->dispatch('draftSaved', ['inquiryId' => $inquiry->id]);
         // } catch (\Exception $e) {
@@ -564,7 +571,7 @@ class CreateInquiry extends Component
     {
         $this->validate([
             'newContact.name' => 'required|string|max:255',
-            'newContact.phone_1' => 'required|string|max:20',
+            'newContact.phone_1' => 'nullable|string|max:20',
             'newContact.email' => 'nullable|email|unique:contacts,email',
             'newContact.type' => 'required|in:person,company',
             'selectedRoles' => 'required|array|min:1',
@@ -789,9 +796,11 @@ class CreateInquiry extends Component
         // try {
         //     DB::beginTransaction();
 
+        $wasDraft = $this->isDraft;
+
         list($city, $town) = $this->storeLocationInDatabase();
 
-        $inquiry = Inquiry::create([
+        $inquiryData = [
             'project_id' => $this->projectId,
             'inquiry_date' => $this->inquiryDate,
             'req_submittal_date' => $this->reqSubmittalDate,
@@ -815,15 +824,31 @@ class CreateInquiry extends Component
             'estimation_finished_date' => $this->estimationFinishedDate,
             'submitting_date' => $this->submittingDate,
             'total_project_value' => $this->totalProjectValue,
-            // 'quotation_state' => $this->quotationState,
             'rejection_reason' => $this->quotationStateReason,
             'assigned_engineer_date' => $this->assignEngineerDate,
             'project_size_id' => $this->projectSize,
             'client_priority' => $this->clientPriority,
             'kon_priority' => $this->konPriority,
             'type_note' => $this->type_note,
-            'created_by' => Auth::id()
-        ]);
+            'is_draft' => false, // Ensure it is not a draft
+            'draft_data' => null // Clear draft data
+        ];
+
+        if ($this->inquiryId) {
+             $inquiry = Inquiry::findOrFail($this->inquiryId);
+             $inquiry->update($inquiryData);
+             // Detach relationships to avoid duplication or stale data, then re-attach below
+             $inquiry->contacts()->detach();
+             $inquiry->submittalChecklists()->detach();
+             $inquiry->workConditions()->detach();
+             $inquiry->projectDocuments()->detach();
+             $inquiry->quotationUnits()->detach();
+             $inquiry->workTypes()->detach();
+             // Assigned engineers logic might need care, but for now we re-sync
+        } else {
+             $inquiryData['created_by'] = Auth::id();
+             $inquiry = Inquiry::create($inquiryData);
+        }
 
         // حفظ Contacts مع أدوارهم
         foreach ($this->selectedContacts as $roleKey => $contactId) {
@@ -869,6 +894,8 @@ class CreateInquiry extends Component
         $this->saveAssignedEngineers($inquiry);
 
         // DB::commit();
+        $message = $wasDraft ? __('Inquiry Published Successfully') : __('Inquiry Saved Successfully');
+        session()->flash('success', $message);
         return redirect()->route('inquiries.index');
         // } catch (\Exception $e) {
         //     DB::rollBack();
