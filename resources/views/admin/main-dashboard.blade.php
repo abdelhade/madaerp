@@ -605,7 +605,7 @@
                     </a>
                 @endcan
                 {{-- التقدم اليومي --}}
-                @can('view Daily-Progress')
+             
                     <a href="{{ route('progress.projcet.index') }}" class="app-card">
                         <div class="app-icon" style="background-color: white;">
                             <i data-lucide="bar-chart-3"
@@ -613,7 +613,7 @@
                         </div>
                         <p class="app-name">التقدم اليومي</p>
                     </a>
-                @endcan
+           
                 {{-- عمليات الاصول  --}}
                 @can('view Asset-Operations')
                     <a href="{{ route('depreciation.index') }}" class="app-card">

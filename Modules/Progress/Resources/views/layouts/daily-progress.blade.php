@@ -2,34 +2,30 @@
 <html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 @include('admin.partials.head')
 
-<body>
+<body class="daily-progress-layout">
     {{-- YouTube-style Progress Bar Loader --}}
     <div id="page-loader" class="page-loader">
         <div class="loader-bar"></div>
     </div>
-    {{-- Dynamic Sidebar: كل صفحة تحدد الـ sidebar الخاص بها --}}
+    
+    {{-- Dynamic Sidebar --}}
     @hasSection('sidebar')
-        {{-- Sidebar Wrapper: يحتوي الـ structure الثابت --}}
         <div class="left-sidenav">
             <div class="menu-content h-100" data-simplebar>
                 <ul class="metismenu left-sidenav-menu">
-         
                     <li class="nav-item border-bottom pb-1 mb-2">
                         <a href="{{ route('admin.dashboard') }}"
-                            class="nav-link d-flex align-items-center gap-2 transition-base {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
-                            style="{{ request()->routeIs('admin.dashboard') ? 'background-color: rgba(52, 211, 163, 0.1); color: #34d3a3; font-weight: 600;' : 'color: var(--color-text-secondary);' }}">
-                            <i data-feather="home" style="color: {{ request()->routeIs('admin.dashboard') ? '#34d3a3' : '#6b7280' }}" class="menu-icon"></i>
+                            class="nav-link d-flex align-items-center gap-2 transition-base"
+                            style="color: var(--color-text-secondary);">
+                            <i data-feather="home" style="color: #6b7280" class="menu-icon"></i>
                             {{ __('navigation.home') }}
                         </a>
                     </li>
-
-                    {{-- Sidebar Content: يتم تعريفه في كل صفحة --}}
                     @yield('sidebar')
                 </ul>
             </div>
         </div>
     @else
-        {{-- Default Sidebar: للصفحات القديمة اللي ما عندهاش dynamic sidebar --}}
         @include('admin.partials.sidebar-default')
     @endif
 
@@ -48,5 +44,4 @@
     @include('admin.partials.scripts')
     @yield('script')
 </body>
-
 </html>

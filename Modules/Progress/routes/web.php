@@ -7,12 +7,24 @@ use Modules\Progress\Http\Controllers\{
     ProjectItemController,
     ProjectTypeController,
     ProjectTemplateController,
-    ProjectProgressController
+    ProjectProgressController,
+    WorkItemCategoryController,
+    IssueController,
+    ItemStatusController
 };
 
 Route::middleware(['auth'])->group(function () {
+    Route::resource('item-statuses', ItemStatusController::class)->names('item-statuses');
     Route::resource('project-types', ProjectTypeController::class)->names('project.types');
+    Route::post('work-items/reorder', [WorkItemController::class, 'reorder'])->name('work.items.reorder');
     Route::resource('work-items', WorkItemController::class)->names('work.items');
+    Route::resource('work-item-categories', WorkItemCategoryController::class)->names('work-item-categories');
+    Route::get('issues/kanban', [IssueController::class, 'kanban'])->name('issues.kanban');
+    Route::post('issues/update-status', [IssueController::class, 'updateStatus'])->name('issues.updateStatus');
+    Route::resource('issues', IssueController::class)->names('issues');
+    Route::post('issues/{issue}/comments', [IssueController::class, 'storeComment'])->name('issues.comments.store');
+    Route::delete('issues/comments/{comment}', [IssueController::class, 'destroyComment'])->name('issues.comments.destroy');
+    Route::delete('issues/attachments/{attachment}', [IssueController::class, 'destroyAttachment'])->name('issues.attachments.destroy');
     Route::resource('project-template', ProjectTemplateController::class)->names('project.template');
     // Route::resource('project-items', ProjectItemController::class)->names('project.items');
     Route::resource('progress-projcet', ProjectProgressController::class)->names('progress.projcet');
