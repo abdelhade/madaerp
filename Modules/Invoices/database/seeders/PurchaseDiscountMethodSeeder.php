@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Database\Seeders;
+namespace Modules\Invoices\database\seeders;
 
 use Illuminate\Database\Seeder;
 use Modules\Settings\Models\PublicSetting;
@@ -38,7 +38,7 @@ class PurchaseDiscountMethodSeeder extends Seeder
 
         // ==================== مستويات الخصم والإضافي والضرائب ====================
         // القيم المتاحة: disabled, invoice_level, item_level, both
-        
+
         PublicSetting::updateOrCreate(
             ['key' => 'discount_level'],
             [

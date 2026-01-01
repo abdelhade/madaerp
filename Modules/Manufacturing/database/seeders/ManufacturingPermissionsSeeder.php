@@ -13,7 +13,8 @@ class ManufacturingPermissionsSeeder extends Seeder
             'Manufacturing' => [
                 'Manufacturing Orders',
                 'Manufacturing Invoices',
-                'Manufacturing Stages'
+                'Manufacturing Stages',
+                'Manufacturing Reports',
             ],
         ];
 
