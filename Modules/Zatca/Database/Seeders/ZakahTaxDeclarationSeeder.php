@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Database\Seeders;
+namespace Modules\Zatca\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -16,8 +16,6 @@ class ZakahTaxDeclarationSeeder extends Seeder
         $clientExists = DB::table('clients')->where('id', 1)->exists();
 
         if (! $clientExists) {
-            $this->command->warn('⚠️  لا يوجد عميل برقم 1، تم تخطي ZakahTaxDeclarationSeeder');
-
             return;
         }
 

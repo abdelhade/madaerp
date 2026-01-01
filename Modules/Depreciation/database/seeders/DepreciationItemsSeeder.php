@@ -25,7 +25,6 @@ class DepreciationItemsSeeder extends Seeder
             ->get();
 
         if ($assetAccounts->isEmpty()) {
-            $this->command->info('No asset accounts found. Creating sample depreciation items without asset accounts.');
             $assetAccounts = collect([null, null, null]);
         }
 

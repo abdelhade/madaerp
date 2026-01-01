@@ -13,6 +13,9 @@ class InvoiceTemplatesDiscountsPermissionsSeeder extends Seeder
         $groupedPermissions = [
             'Invoice Templates' => [
                 'Invoice Templates',
+            ],
+
+            'Discounts' => [
                 'Allowed Discounts',
                 'Earned Discounts'
             ],

@@ -16,9 +16,9 @@ class RoleAndPermissionDatabaseSeeder extends Seeder
         $this->call([
             RoleAndPermissionSeeder::class,
             PermissionSelectiveOptionsSeeder::class,
-            PermissionSeeder::class,
+            // PermissionSeeder::class,
             HRPermissionsSeeder::class,
-            DashboardPermissionsSeeder::class,
+            // DashboardPermissionsSeeder::class,
         ]);
     }
 }

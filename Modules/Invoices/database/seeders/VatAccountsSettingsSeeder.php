@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders;
+namespace Modules\Invoices\database\seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +39,7 @@ class VatAccountsSettingsSeeder extends Seeder
         foreach ($settings as $setting) {
             // التحقق من عدم وجود الإعداد مسبقاً
             $exists = DB::table('public_settings')->where('key', $setting['key'])->exists();
-            
+
             if (!$exists) {
                 DB::table('public_settings')->insert([
                     'key' => $setting['key'],

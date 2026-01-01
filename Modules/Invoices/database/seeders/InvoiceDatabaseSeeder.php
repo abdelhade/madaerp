@@ -17,6 +17,8 @@ class InvoiceDatabaseSeeder extends Seeder
             InvoiceOptionsSeeder::class,
             InvoicesPermissionsSeeder::class,
             InvoiceDimensionsSeeder::class,
+            PurchaseDiscountMethodSeeder::class,
+            VatAccountsSettingsSeeder::class,
         ]);
     }
 }
