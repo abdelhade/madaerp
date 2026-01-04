@@ -32,7 +32,7 @@ class Edit extends Component
     {
         if ($processing->status !== 'pending') {
             session()->flash('error', 'يمكن تعديل المعالجة فقط إذا كانت قيد المراجعة');
-            $this->redirect(route('flexible-salary.processing.index'), navigate: true);
+            $this->redirect(route('hr.flexible-salary.processing.index'), navigate: true);
             return;
         }
 
@@ -69,7 +69,7 @@ class Edit extends Component
 
             DB::commit();
             session()->flash('success', 'تم تحديث المعالجة بنجاح');
-            $this->redirect(route('flexible-salary.processing.index'), navigate: true);
+            $this->redirect(route('hr.flexible-salary.processing.index'), navigate: true);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating flexible salary processing: '.$e->getMessage(), [

@@ -63,10 +63,10 @@
                     </div>
                 </div>
 
-                <div class="card-body p-4">
+                <div class="card-body p-4" wire:loading.class="is-loading">
                     <form wire:submit.prevent="processAttendance" wire:loading.attr="disabled">
                         {{-- Main Form Section --}}
-                        <div class="form-section">
+                        <div class="form-section" wire:loading.class="is-loading">
                             <div class="row g-4">
                                 {{-- Processing Type with Enhanced Design --}}
                                 <div class="col-12 col-lg-6">

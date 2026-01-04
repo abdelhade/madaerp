@@ -11,16 +11,13 @@
         'items' => [
             ['label' => __('الرئيسية'), 'url' => route('admin.dashboard')],
             ['label' => __('الموارد البشريه')],
-            ['label' => __('navigation.flexible_salary_processing'), 'url' => route('flexible-salary.processing.index')],
+            ['label' => __('navigation.flexible_salary_processing'), 'url' => route('hr.flexible-salary.processing.index')],
             ['label' => 'تعديل المعالجة'],
         ],
     ])
 
     @php
-        $processing = \App\Models\FlexibleSalaryProcessing::with('employee')->findOrFail(request()->route('processing'));
-    @endphp
-    @php
-        $processing = \App\Models\FlexibleSalaryProcessing::with('employee')->findOrFail(request()->route('processing'));
+        $processing = \Modules\HR\Models\FlexibleSalaryProcessing::with('employee')->findOrFail(request()->route('processing'));
     @endphp
     <livewire:hr::flexible-salary-processing.edit :processing="$processing" />
 

@@ -159,7 +159,7 @@ class Create extends Component
                 }
             } elseif (! empty($results)) {
                 session()->flash('success', 'تم معالجة الرواتب بنجاح لـ '.count($results).' موظف');
-                $this->redirect(route('flexible-salary.processing.index'), navigate: true);
+                $this->redirect(route('hr.flexible-salary.processing.index'), navigate: true);
                 return;
             } else {
                 session()->flash('error', 'لم يتم معالجة أي موظف. يرجى التحقق من البيانات المدخلة.');

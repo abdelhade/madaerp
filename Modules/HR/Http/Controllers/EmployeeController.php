@@ -74,6 +74,6 @@ class EmployeeController extends Controller
     public function destroy(int $id)
     {
         // Handled by Livewire component
-        return redirect()->route('hr.employees.index');
+        return redirect()->route('employees.index');
     }
 }

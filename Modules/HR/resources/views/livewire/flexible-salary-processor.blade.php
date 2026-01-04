@@ -371,7 +371,7 @@
                 </div>
                 <div class="modal-body">
                     @php
-                        $editingProcessing = $this->editingProcessingId ? \App\Models\FlexibleSalaryProcessing::with('employee')->find($this->editingProcessingId) : null;
+                        $editingProcessing = $this->editingProcessingId ? \Modules\HR\Models\FlexibleSalaryProcessing::with('employee')->find($this->editingProcessingId) : null;
                     @endphp
                     @if($editingProcessing)
                     <div class="row">
