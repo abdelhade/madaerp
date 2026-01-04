@@ -89,7 +89,7 @@
                                     جاري الحفظ...
                                 </span>
                             </button>
-                            <a href="{{ route('flexible-salary.processing.index') }}" class="btn btn-secondary">
+                            <a href="{{ route('hr.flexible-salary.processing.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> إلغاء
                             </a>
                         </div>

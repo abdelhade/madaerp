@@ -91,7 +91,7 @@
                                     <td>
                                         @if($processing->status === 'pending')
                                         <div class="btn-group" role="group">
-                                            <a href="{{ route('flexible-salary.processing.edit', $processing->id) }}" 
+                                            <a href="{{ route('hr.flexible-salary.processing.edit', $processing->id) }}" 
                                                 class="btn btn-sm btn-primary"
                                                 title="تعديل">
                                                 <i class="fas fa-edit"></i> تعديل
