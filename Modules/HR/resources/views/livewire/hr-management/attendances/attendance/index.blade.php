@@ -864,13 +864,13 @@ new class extends Component {
                         <div class="col-md-2">
                             <input type="date" 
                                    class="form-control font-hold" 
-                                   wire:model.blur="date_from"
+                                   wire:model.defer="date_from"
                                    placeholder="{{ __('hr.from_date') }}">
                         </div>
                         <div class="col-md-2">
                             <input type="date" 
                                    class="form-control font-hold" 
-                                   wire:model.blur="date_to"
+                                   wire:model.defer="date_to"
                                    placeholder="{{ __('hr.to_date') }}">
                         </div>
                         <div class="col-md-2 d-flex align-items-center mt-2 mt-md-0">
@@ -1000,7 +1000,7 @@ new class extends Component {
                             <div class="mb-3">
                                 <label class="form-label font-hold fw-bold">{{ __('hr.employee') }} <span class="text-danger">*</span></label>
                                 <select class="form-select font-hold fw-bold font-14"
-                                    wire:model.blur="form.employee_id" required>
+                                    wire:model.defer="form.employee_id" required>
                                     <option class="text-muted font-hold fw-bold font-14" value="">
                                         {{ __('hr.select_employee_option') }}
                                     </option>
@@ -1033,7 +1033,7 @@ new class extends Component {
                             <div class="mb-3">
                                 <label class="form-label font-hold">{{ __('النوع') }}</label>
                                 <select class="form-select font-hold fw-bold font-14"
-                                    wire:model.blur="form.type">
+                                    wire:model.defer="form.type">
                                     <option class="font-hold fw-bold font-14" value="check_in">
                                         {{ __('دخول') }}
                                     </option>
@@ -1048,7 +1048,7 @@ new class extends Component {
                             <div class="mb-3">
                                 <label class="form-label font-hold">{{ __('التاريخ') }}</label>
                                 <input type="date" class="form-control font-hold"
-                                    wire:model.blur="form.date">
+                                    wire:model.defer="form.date">
                                 @error('form.date')
                                     <span class="text-danger">{{ $message }}</span>
                                 @enderror
@@ -1064,7 +1064,7 @@ new class extends Component {
                                 <label
                                     class="form-label font-hold fw-bold font-14">{{ __('الحالة') }}</label>
                                 <select class="form-select font-hold fw-bold font-14"
-                                    wire:model.blur="form.status">
+                                    wire:model.defer="form.status">
                                     <option class="font-hold fw-bold font-14" value="pending">
                                         {{ __('قيد المراجعة') }}
                                     </option>
@@ -1082,7 +1082,7 @@ new class extends Component {
                             <div class="mb-3">
                                 <label
                                     class="form-label font-hold fw-bold font-14">{{ __('ملاحظات') }}</label>
-                                <textarea class="form-control font-hold fw-bold font-14" wire:model.blur="form.notes"></textarea>
+                                <textarea class="form-control font-hold fw-bold font-14" wire:model.defer="form.notes"></textarea>
                                 @error('form.notes')
                                     <span class="text-danger">{{ $message }}</span>
                                 @enderror
@@ -1114,7 +1114,7 @@ new class extends Component {
                             <div class="mb-3">
                                 <label class="form-label font-hold fw-bold font-14">{{ __('hr.employee') }} <span class="text-danger">*</span></label>
                                 <select class="form-select font-hold fw-bold font-14"
-                                    wire:model.blur="form.employee_id" required>
+                                    wire:model.defer="form.employee_id" required>
                                     <option class="text-muted font-hold fw-bold font-14" value="">
                                         {{ __('hr.select_employee_option') }}
                                     </option>
@@ -1152,7 +1152,7 @@ new class extends Component {
                             <div class="mb-3">
                                 <label class="form-label font-hold fw-bold font-14">{{ __('hr.type') }} <span class="text-danger">*</span></label>
                                 <select class="form-select font-hold fw-bold font-14"
-                                    wire:model.blur="form.type" required>
+                                    wire:model.defer="form.type" required>
                                     <option class="font-hold fw-bold font-14" value="check_in">
                                         {{ __('hr.check_in') }}
                                     </option>
@@ -1168,7 +1168,7 @@ new class extends Component {
                                 <label class="form-label font-hold fw-bold font-14">{{ __('hr.date') }} <span class="text-danger">*</span></label>
                                 <input type="date" 
                                        class="form-control font-hold fw-bold font-14"
-                                       wire:model.blur="form.date" 
+                                       wire:model.defer="form.date" 
                                        required>
                                 @error('form.date')
                                     <span class="text-danger">{{ $message }}</span>
@@ -1178,7 +1178,7 @@ new class extends Component {
                                 <label class="form-label font-hold fw-bold font-14">{{ __('hr.time') }} <span class="text-danger">*</span></label>
                                 <input type="time" 
                                        class="form-control font-hold fw-bold font-14"
-                                       wire:model.blur="form.time" 
+                                       wire:model.defer="form.time" 
                                        required>
                                 @error('form.time')
                                     <span class="text-danger">{{ $message }}</span>
@@ -1187,7 +1187,7 @@ new class extends Component {
                             <div class="mb-3">
                                 <label class="form-label font-hold fw-bold font-14">{{ __('hr.status') }} <span class="text-danger">*</span></label>
                                 <select class="form-select font-hold fw-bold font-14"
-                                    wire:model.blur="form.status" required>
+                                    wire:model.defer="form.status" required>
                                     <option class="font-hold fw-bold font-14" value="pending">
                                         {{ __('hr.under_review') }}
                                     </option>
@@ -1205,7 +1205,7 @@ new class extends Component {
                             <div class="mb-3">
                                 <label class="form-label font-hold fw-bold font-14">{{ __('hr.notes') }}</label>
                                 <textarea class="form-control font-hold fw-bold font-14" 
-                                          wire:model.blur="form.notes"
+                                          wire:model.defer="form.notes"
                                           rows="3"></textarea>
                                 @error('form.notes')
                                     <span class="text-danger">{{ $message }}</span>

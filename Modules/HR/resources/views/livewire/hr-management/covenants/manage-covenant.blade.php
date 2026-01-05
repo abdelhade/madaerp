@@ -600,7 +600,7 @@ new class extends Component {
                             <input type="text" 
                                    class="form-control @error('name') is-invalid @enderror" 
                                    id="name" 
-                                   wire:model.blur="name" 
+                                   wire:model.defer="name" 
                                    required>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -611,7 +611,7 @@ new class extends Component {
                             <label for="description" class="form-label">{{ __('hr.description') }}</label>
                             <textarea class="form-control @error('description') is-invalid @enderror" 
                                       id="description" 
-                                      wire:model.blur="description" 
+                                      wire:model.defer="description" 
                                       rows="3"></textarea>
                             @error('description')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -914,7 +914,7 @@ new class extends Component {
                                 </label>
                                 <select class="form-select @error('assign_employee_id') is-invalid @enderror" 
                                         id="assign_employee_id" 
-                                        wire:model.blur="assign_employee_id">
+                                        wire:model.defer="assign_employee_id">
                                     <option value="0">{{ __('hr.not_assigned') }}</option>
                                     @foreach($employeesList ?? [] as $employee)
                                         <option value="{{ $employee['id'] }}">{{ $employee['name'] }}</option>

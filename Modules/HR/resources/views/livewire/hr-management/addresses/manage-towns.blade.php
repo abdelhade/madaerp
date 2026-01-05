@@ -286,7 +286,7 @@ new class extends Component {
                                    min="0"
                                    class="form-control @error('distance') is-invalid @enderror font-hold fw-bold"
                                    id="distance" 
-                                   wire:model.blur="distance">
+                                   wire:model.defer="distance">
                             @error('distance')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

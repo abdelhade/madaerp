@@ -230,7 +230,7 @@ new class extends Component {
                             <label for="name" class="form-label font-hold fw-bold">{{ __('hr.kpi_name') }} <span
                                     class="text-danger">*</span></label>
                             <input type="text" 
-                                   wire:model.blur="name"
+                                   wire:model.defer="name"
                                    class="form-control @error('name') is-invalid @enderror font-hold" 
                                    id="name"
                                    required>
@@ -241,7 +241,7 @@ new class extends Component {
 
                         <div class="mb-3">
                             <label for="description" class="form-label font-hold fw-bold">{{ __('hr.description') }}</label>
-                            <textarea wire:model.blur="description" 
+                            <textarea wire:model.defer="description" 
                                       class="form-control @error('description') is-invalid @enderror font-hold" 
                                       id="description"
                                       rows="3"></textarea>
