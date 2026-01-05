@@ -261,7 +261,7 @@ new class extends Component {
                             </label>
                             <select class="form-control @error('state_id') is-invalid @enderror font-hold fw-bold"
                                     id="state_id" 
-                                    wire:model.blur="state_id" 
+                                    wire:model.defer="state_id" 
                                     required>
                                 <option value="">{{ __('Select State') }}</option>
                                 @foreach ($this->states as $state)

@@ -231,7 +231,7 @@ new class extends Component {
                             <input type="text"
                                    class="form-control @error('title') is-invalid @enderror font-hold fw-bold"
                                    id="title" 
-                                   wire:model.blur="title" 
+                                   wire:model.defer="title" 
                                    required>
                             @error('title')
                                 <div class="invalid-feedback">{{ $message }}</div>

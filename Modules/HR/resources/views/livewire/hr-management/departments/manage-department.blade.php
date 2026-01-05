@@ -370,7 +370,7 @@ new class extends Component
                             <input type="text"
                                    class="form-control @error('title') is-invalid @enderror font-hold fw-bold"
                                    id="title" 
-                                   wire:model.blur="title" 
+                                   wire:model.defer="title" 
                                    required>
                             @error('title')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -380,7 +380,7 @@ new class extends Component
                             <label for="parent_id" class="form-label font-hold fw-bold">
                                 {{ __('Parent') }}
                             </label>
-                            <select class="form-control @error('parent_id') is-invalid @enderror font-hold fw-bold" id="parent_id" wire:model.blur="parent_id">
+                            <select class="form-control @error('parent_id') is-invalid @enderror font-hold fw-bold" id="parent_id" wire:model.defer="parent_id">
                                 <option value="">{{ __('Select Parent') }}</option>
                                 @foreach ($this->departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->title }}</option>
@@ -394,7 +394,7 @@ new class extends Component
                             <label for="director_id" class="form-label font-hold fw-bold">
                                 {{ __('Director') }}
                             </label>
-                            <select class="form-control @error('director_id') is-invalid @enderror font-hold fw-bold" id="director_id" wire:model.blur="director_id">
+                            <select class="form-control @error('director_id') is-invalid @enderror font-hold fw-bold" id="director_id" wire:model.defer="director_id">
                                 <option value="">{{ __('Select Director') }}</option>
                                 @forelse ($this->employees($departmentId) as $employee)
                                     <option value="{{ $employee->id }}">{{ $employee->name }}@if($employee->job) - {{ $employee->job->title }}@endif</option>
@@ -410,7 +410,7 @@ new class extends Component
                             <label for="deputy_director_id" class="form-label font-hold fw-bold">
                                 {{ __('Deputy Director') }}
                             </label>
-                            <select class="form-control @error('deputy_director_id') is-invalid @enderror font-hold fw-bold" id="deputy_director_id" wire:model.blur="deputy_director_id">
+                            <select class="form-control @error('deputy_director_id') is-invalid @enderror font-hold fw-bold" id="deputy_director_id" wire:model.defer="deputy_director_id">
                                 <option value="">{{ __('Select Deputy Director') }}</option>
                                 @forelse ($this->employees($departmentId) as $employee)
                                     <option value="{{ $employee->id }}">{{ $employee->name }}@if($employee->job) - {{ $employee->job->title }}@endif</option>
@@ -429,7 +429,7 @@ new class extends Component
                             <input type="text"
                                    class="form-control @error('description') is-invalid @enderror font-hold fw-bold"
                                    id="description" 
-                                   wire:model.blur="description">
+                                   wire:model.defer="description">
                             @error('description')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -444,7 +444,7 @@ new class extends Component
                                    max="100"
                                    class="form-control @error('max_leave_percentage') is-invalid @enderror font-hold fw-bold"
                                    id="max_leave_percentage" 
-                                   wire:model.blur="max_leave_percentage"
+                                   wire:model.defer="max_leave_percentage"
                                    placeholder="{{ __('hr.max_leave_percentage_placeholder') }}">
                             <small class="form-text text-muted font-hold">
                                 {{ __('hr.max_leave_percentage_help') }}
