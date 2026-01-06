@@ -247,11 +247,14 @@
 
 
                         <div class="col-3">
-                            <input type="number" step="0.01" x-model.number="discountValue"
+                            <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*"
+                                x-model="discountValueText"
                                 onclick="this.select()"
-                                @input="updateDiscountFromValue()" @focus="$event.target.select()"
+                                @input.debounce.500ms="discountValue = parseFloat(discountValueText) || 0; updateDiscountFromValue()"
+                                @blur="discountValue = parseFloat(discountValueText) || 0; updateDiscountFromValue()"
+                                @focus="$event.target.select()"
                                 class="form-control form-control-sm"
-                                style="font-size: 0.95em; height: 2em; padding: 2px 6px;" min="0"
+                                style="font-size: 0.95em; height: 2em; padding: 2px 6px;"
                                 id="discount-value" :disabled="!fieldStates.discount.invoice"
                                 :class="{ 'bg-light': !fieldStates.discount.invoice }">
                         </div>
@@ -290,11 +293,14 @@
 
 
                         <div class="col-3">
-                            <input type="number" step="0.01" x-model.number="additionalValue"
+                            <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*"
+                                x-model="additionalValueText"
                                 onclick="this.select()"
-                                @input="updateAdditionalFromValue()" @focus="$event.target.select()"
+                                @input.debounce.500ms="additionalValue = parseFloat(additionalValueText) || 0; updateAdditionalFromValue()"
+                                @blur="additionalValue = parseFloat(additionalValueText) || 0; updateAdditionalFromValue()"
+                                @focus="$event.target.select()"
                                 class="form-control form-control-sm"
-                                style="font-size: 0.95em; height: 2em; padding: 2px 6px;" min="0"
+                                style="font-size: 0.95em; height: 2em; padding: 2px 6px;"
                                 id="additional-value" :disabled="!fieldStates.additional.invoice"
                                 :class="{ 'bg-light': !fieldStates.additional.invoice }">
                         </div>
