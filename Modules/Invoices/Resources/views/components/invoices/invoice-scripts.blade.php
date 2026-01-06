@@ -667,6 +667,10 @@
             totalAfterAdditional: initialData.totalAfterAdditional !== undefined ? initialData.totalAfterAdditional : 0,
             remaining: 0,
             
+            // Text inputs for smooth typing (prevent number conversion during typing)
+            discountValueText: String(initialData.discountValue || ''),
+            additionalValueText: String(initialData.additionalValue || ''),
+            
             // Internal flags (for logic control)
             _discountValueFromPercentage: false,
             _additionalValueFromPercentage: false,
@@ -714,8 +718,12 @@
                     this._discountValueFromPercentage = true;
                     this.calculateFinalTotals();
                 });
-                this.$watch('discountValue', () => {
+                this.$watch('discountValue', (newVal) => {
                     if (this.isInternalUpdate) return;
+                    // Update text input when value changes from percentage calculation
+                    if (this._discountValueFromPercentage) {
+                        this.discountValueText = String(newVal || '');
+                    }
                     if (!this._discountValueFromPercentage) this.calculateFinalTotals();
                 });
                 this.$watch('additionalPercentage', () => {
@@ -723,8 +731,12 @@
                     this._additionalValueFromPercentage = true;
                     this.calculateFinalTotals();
                 });
-                this.$watch('additionalValue', () => {
+                this.$watch('additionalValue', (newVal) => {
                     if (this.isInternalUpdate) return;
+                    // Update text input when value changes from percentage calculation
+                    if (this._additionalValueFromPercentage) {
+                        this.additionalValueText = String(newVal || '');
+                    }
                    if (!this._additionalValueFromPercentage) this.calculateFinalTotals();
                 });
                 this.$watch('vatPercentage', () => {
@@ -917,6 +929,7 @@
                 // 1. حساب قيمة الخصم
                 if (this._discountValueFromPercentage) {
                     this.discountValue = parseFloat(((this.subtotal * this.discountPercentage) / 100).toFixed(2));
+                    this.discountValueText = String(this.discountValue || '');
                 } else if (this.subtotal > 0) {
                     // We are updating FROM Value, so calculate Percentage. 
                     this.isInternalUpdate = true;
@@ -929,6 +942,7 @@
                 // 2. حساب القيمة الإضافية
                 if (this._additionalValueFromPercentage) {
                     this.additionalValue = parseFloat(((afterDiscount * this.additionalPercentage) / 100).toFixed(2));
+                    this.additionalValueText = String(this.additionalValue || '');
                 } else if (afterDiscount > 0) {
                     // We are updating FROM Value, so calculate Percentage.
                     this.isInternalUpdate = true;
