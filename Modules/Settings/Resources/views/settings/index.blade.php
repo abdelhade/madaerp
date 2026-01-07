@@ -203,7 +203,7 @@
                                                         </select>
                                                     @elseif (in_array($setting->key, ['vat_sales_account_code', 'vat_purchase_account_code', 'withholding_tax_account_code']))
                                                         <input type="text"
-                                                            name="settings[{{ $setting->key }}]" 
+                                                            name="settings[{{ $setting->key }}]"
                                                             value="{{ $setting->value }}"
                                                             class="form-control form-control-sm"
                                                             placeholder="أدخل كود الحساب">
@@ -257,7 +257,7 @@
         .settings-icon-wrapper {
             width: 45px;
             height: 45px;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            background: linear-gradient(135deg, #34d3a3 0%, #34d3a3 100%);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -302,7 +302,7 @@
         }
 
         .tab-button.active {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            background: linear-gradient(135deg, #34d3a3 0%, #34d3a3 100%);
             color: white;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
@@ -400,8 +400,8 @@
         }
 
         .form-switch .form-check-input:checked {
-            background-color: #6366f1;
-            border-color: #6366f1;
+            background-color: #34d3a3;
+            border-color: #34d3a3;
         }
 
         .form-switch .form-check-input:focus {
@@ -410,7 +410,7 @@
 
         /* Buttons */
         .btn-primary {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            background: linear-gradient(135deg, #34d3a3 0%, #34d3a3 100%);
             border: none;
             font-weight: 500;
         }

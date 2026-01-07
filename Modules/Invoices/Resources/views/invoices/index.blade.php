@@ -12,7 +12,7 @@
 
 @section('content')
     @include('components.breadcrumb', [
-        'title' => $invoiceTitle,
+        'title' => __($invoiceTitle),
         'items' => [
             ['label' => __('Dashboard'), 'url' => route('admin.dashboard')],
             ['label' => __($currentSection)],
