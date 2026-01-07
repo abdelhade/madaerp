@@ -36,13 +36,14 @@
                     <table class="table mb-0" style="background: transparent;">
                         <tbody>
                             @forelse ($invoiceItems as $index => $row)
-                                <tr wire:key="invoice-row-{{ $row['item_id'] }}">
+                                <tr wire:key="invoice-row-{{ $row['item_id'] }}"
+                                    wire:click="selectItemFromTable({{ $row['item_id'] ?? 0 }}, {{ $row['unit_id'] ?? 'null' }}, {{ $row['price'] ?? 0 }})"
+                                    style="cursor: pointer;">
                                     {{-- اسم الصنف --}}
                                     @if ($this->shouldShowColumn('item_name'))
                                         <td style="width: 18%; font-size: 1.2em;">
                                             <span class="form-control"
-                                                wire:click="selectItemFromTable({{ $row['item_id'] ?? 0 }}, {{ $row['unit_id'] ?? 'null' }}, {{ $row['price'] ?? 0 }})"
-                                                style="cursor: pointer; font-size: 0.85em; height: 2em; padding: 1px 4px; display: block;">
+                                                style="font-size: 0.85em; height: 2em; padding: 1px 4px; display: block;">
                                                 {{ $row['name'] ?? __('Not Specified') }}
                                             </span>
                                         </td>
@@ -83,6 +84,7 @@
                                                 wire:key="unit-select-{{ $index }}-{{ $row['item_id'] ?? 'default' }}"
                                                 @change="window.updatePriceClientSide && window.updatePriceClientSide({{ $index }}, $el)"
                                                 @keydown.enter.prevent="window.handleEnterNavigation && window.handleEnterNavigation($event)"
+                                                @click.stop
                                                 id="unit-{{ $index }}"
                                                 data-field="unit" data-row="{{ $index }}"
                                                 data-last-u-val="{{ $lastUVal }}"
@@ -110,6 +112,7 @@
                                                 data-field="quantity" data-row="{{ $index }}"
                                                 @focus="$event.target.select()"
                                                 @keydown.enter.prevent="window.handleEnterNavigation && window.handleEnterNavigation($event)"
+                                                @click.stop
                                                 placeholder="{{ __('Quantity') }}"
                                                 style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
                                                 class="form-control invoice-quantity invoice-field">
@@ -135,6 +138,7 @@
                                                 <input type="text"
                                                     id="batch_number-{{ $index }}"
                                                     wire:model.blur="invoiceItems.{{ $index }}.batch_number"
+                                                    @click.stop
                                                     class="form-control text-center invoice-field"
                                                     placeholder="{{ __('Batch Number') }}"
                                                     style="font-size: 0.85em; height: 2em; padding: 1px 4px;" />
@@ -148,6 +152,7 @@
                                                 <select
                                                     id="batch_number-{{ $index }}"
                                                     wire:change="selectBatch({{ $index }}, $event.target.value)"
+                                                    @click.stop
                                                     class="form-control invoice-field"
                                                     style="font-size: 0.85em; height: 2em; padding: 1px 4px;">
                                                     <option value="">{{ __('Select Batch...') }}</option>
@@ -183,6 +188,7 @@
                                                 <input type="date"
                                                     id="expiry_date-{{ $index }}"
                                                     wire:model.live="invoiceItems.{{ $index }}.expiry_date"
+                                                    @click.stop
                                                     class="form-control text-center invoice-field"
                                                     style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
                                                     value="{{ $row['expiry_date'] ?? '' }}" />
@@ -233,6 +239,7 @@
                                             <input type="number" step="0.01" min="0"
                                                 id="length-{{ $index }}"
                                                 wire:model.blur="invoiceItems.{{ $index }}.length"
+                                                @click.stop
                                                 placeholder="{{ __('Length') }} ({{ $dimensionsUnit }})"
                                                 style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
                                                 class="form-control invoice-field" @if (!$enableDimensionsCalculation) disabled @endif>
@@ -246,6 +253,7 @@
                                             <input type="number" step="0.01" min="0"
                                                 id="width-{{ $index }}"
                                                 wire:model.blur="invoiceItems.{{ $index }}.width"
+                                                @click.stop
                                                 placeholder="{{ __('Width') }} ({{ $dimensionsUnit }})"
                                                 style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
                                                 class="form-control invoice-field" @if (!$enableDimensionsCalculation) disabled @endif>
@@ -259,6 +267,7 @@
                                             <input type="number" step="0.01" min="0"
                                                 id="height-{{ $index }}"
                                                 wire:model.blur="invoiceItems.{{ $index }}.height"
+                                                @click.stop
                                                 placeholder="{{ __('Height') }} ({{ $dimensionsUnit }})"
                                                 style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
                                                 class="form-control invoice-field" @if (!$enableDimensionsCalculation) disabled @endif>
@@ -272,6 +281,7 @@
                                             <input type="number" step="0.01" min="0.01"
                                                 id="density-{{ $index }}"
                                                 wire:model.blur="invoiceItems.{{ $index }}.density"
+                                                @click.stop
                                                 placeholder="{{ __('Density') }}" value="{{ $row['density'] ?? 1 }}"
                                                 style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
                                                 class="form-control invoice-field"
@@ -288,6 +298,7 @@
                                                 data-field="price" data-row="{{ $index }}"
                                                 @focus="$event.target.select()"
                                                 @keydown.enter.prevent="window.handleEnterNavigation && window.handleEnterNavigation($event)"
+                                                @click.stop
                                                 class="form-control text-center invoice-price invoice-field"
                                                 step="0.01" @if ($this->type == 10 && !auth()->user()->can('allow_price_change')) readonly @endif />
                                         </td>
@@ -307,6 +318,7 @@
                                                 data-field="discount" data-row="{{ $index }}"
                                                 @focus="$event.target.select()"
                                                 @keydown.enter.prevent="window.handleEnterNavigation && window.handleEnterNavigation($event)"
+                                                @click.stop
                                                 class="form-control text-center invoice-discount invoice-field {{ (!$isDiscountItemEnabled || !$hasDiscountPermission) ? 'bg-light' : '' }}"
                                                 style="font-size: 0.85em; height: 2em; padding: 1px 4px; {{ (!$isDiscountItemEnabled || !$hasDiscountPermission) ? 'cursor: not-allowed;' : '' }}"
                                                 step="0.01"
@@ -328,6 +340,7 @@
                                                 data-row="{{ $index }}"
                                                 @focus="$event.target.select()"
                                                 @keydown.enter.prevent="window.handleEnterNavigation && window.handleEnterNavigation($event)"
+                                                @click.stop
                                                 placeholder="{{ __('Value') }}"
                                                 style="font-size: 0.85em; height: 2em; padding: 1px 4px;"
                                                 class="form-control invoice-field" readonly>
@@ -338,6 +351,7 @@
                                     {{-- زر الحذف --}}
                                     <td class="text-center" style="width: 10%; font-size: 1.2em;">
                                         <button type="button" wire:click="removeRow({{ $index }})"
+                                            @click.stop
                                             class="btn btn-danger btn-icon-square-sm"
                                             style="font-size: 0.85em; height: 2em; padding: 1px 4px;">
                                             <i class="fas fa-trash"></i>

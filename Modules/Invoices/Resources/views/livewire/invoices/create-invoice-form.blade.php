@@ -201,7 +201,7 @@
                             'invoiceTotal' => $total_after_additional ?? 0,
                             'clientAccountId' => $acc1_id ?? null,
                         ],
-                        key: 'installment-modal'
+                        'installment-modal'
                     )
                 </div>
             @endif
