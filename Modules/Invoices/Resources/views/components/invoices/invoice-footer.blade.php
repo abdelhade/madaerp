@@ -3,10 +3,8 @@
     $fieldStates = app(\Modules\Invoices\Services\Invoice\InvoiceFormStateManager::class)->getFieldStates();
     $jsConfig = app(\Modules\Invoices\Services\Invoice\InvoiceFormStateManager::class)->getJavaScriptConfig();
 @endphp
-<div style="height: 100px;"></div>
-<div class="position-sticky bottom-0 border-top  p-3 mt-4" style="z-index: 999; margin-left: -12px; margin-right: -12px;"
-    x-data="{ fieldStates: @js($fieldStates) }">
-    <div class="row">
+<div id="invoice-fixed-footer" class="p-3 mt-auto" style="z-index: 999; background: #fff;" x-data="{ fieldStates: @js($fieldStates) }">
+    <div class="row border border-secondary border-3 rounded p-3 mb-3">
         @if (setting('invoice_show_item_details'))
             <div class="col-3">
                 @if ($currentSelectedItem)
@@ -444,7 +442,7 @@
                                 </button>
                             @else
                                 @canany(['create ' . $titles[$type], 'create invoices'])
-                                    <button type="submit" class="btn btn-lg btn-main" wire:loading.attr="disabled">
+                                    <button type="submit" class="btn btn-lg btn-main">
                                         <i class="fas fa-save"></i> {{ __('Save Invoice') }}
                                     </button>
                                 @endcanany
