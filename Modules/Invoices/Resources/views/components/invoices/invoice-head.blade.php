@@ -28,7 +28,7 @@
 @endphp
 
 
-<div class="row">
+<div class="row card border border-secondary border-3">
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
         <div class="d-flex align-items-center">
             <h3 class="card-title fw-bold fs-2 m-0 ms-3">
@@ -99,11 +99,9 @@
         @endif
     </div>
 
-
-    <div class="card-body">
+    <div class="card-body ">
         <div class="row">
             <input type="hidden" wire:model="type">
-
 
             {{-- الحساب المتغير acc1 --}}
             <div class="col-lg-2" wire:key="acc1-{{ $branch_id }}">

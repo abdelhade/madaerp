@@ -5,6 +5,12 @@
 @endphp
 
 <div>
+    {{-- Hide Global Footer on this page only --}}
+    <style>
+        footer.footer {
+            display: none !important;
+        }
+    </style>
     @section('formAction', 'create')
     <div class="content-wrapper">
         <section class="content">
@@ -32,6 +38,8 @@
                 currentBalance: @js($currentBalance ?? 0),
                 fieldStates: @js($fieldStates)
             })"
+                class="d-flex flex-column g-0"
+                style="height: calc(100vh - 70px); overflow: hidden;"
                 @submit.prevent="
                     // ✅ 1. مزامنة جميع القيم من Alpine.js إلى Livewire
                     syncToLivewire();
@@ -52,7 +60,7 @@
                 <div id="invoice-config" data-is-cash="{{ $isCurrentAccountCash ? '1' : '0' }}"
                     wire:key="invoice-config-{{ $isCurrentAccountCash ? '1' : '0' }}" style="display:none;"></div>
 
-                <div class="row">
+                <div class="row border border-secondary border-bottom-0 border-3 rounded p-3 mb-3">
                     @if (setting('invoice_use_templates'))
                         @if ($availableTemplates->isNotEmpty())
                             <div class="col-lg-1">
@@ -184,8 +192,10 @@
 
                 </div>
 
-                <div class="row form-control">
-                    @include('invoices::components.invoices.invoice-item-table')
+                <div class="row flex-grow-1 overflow-hidden g-0">
+                    <div class="col-12 h-100">
+                        @include('invoices::components.invoices.invoice-item-table')
+                    </div>
                 </div>
 
                 @include('invoices::components.invoices.invoice-footer')
@@ -201,7 +211,7 @@
                             'invoiceTotal' => $total_after_additional ?? 0,
                             'clientAccountId' => $acc1_id ?? null,
                         ],
-                        key: 'installment-modal'
+                        'installment-modal'
                     )
                 </div>
             @endif

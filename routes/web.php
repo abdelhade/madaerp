@@ -3,7 +3,6 @@
 use Livewire\Volt\Volt;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RentalController;
-use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\JournalController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\VaribalController;
@@ -22,8 +21,6 @@ use App\Http\Controllers\PriceController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\InvoiceWorkflowController;
-use App\Http\Controllers\WorkPermissionController;
 use App\Http\Controllers\ProductionOrderController;
 use App\Http\Controllers\InventoryStartBalanceController;
 
