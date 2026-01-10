@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{AccHead, Project, OperHead};
+use App\Models\{Project, OperHead};
+use Modules\Accounts\Models\AccHead;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\{DB, Auth, Cache};

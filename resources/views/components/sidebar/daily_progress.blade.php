@@ -40,13 +40,13 @@
 </li>
 
 <li class="nav-item">
-    <a class="nav-link" href="{{ route('progress.projcet.index') }}">
+    <a class="nav-link" href="{{ route('progress.project.index') }}">
         <i class="ti-control-record"></i>{{ __('navigation.projects') }}
     </a>
 </li>
 
 <li class="nav-item">
-    <a class="nav-link" href="{{ route('daily.progress.index') }}">
+    <a class="nav-link" href="{{ route('daily_progress.index') }}">
         <i class="ti-control-record"></i>{{ __('navigation.daily_progress') }}
     </a>
 </li>

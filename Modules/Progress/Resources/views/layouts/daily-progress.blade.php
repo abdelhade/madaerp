@@ -8,29 +8,12 @@
         <div class="loader-bar"></div>
     </div>
     
-    {{-- Dynamic Sidebar --}}
-    @hasSection('sidebar')
-        <div class="left-sidenav">
-            <div class="menu-content h-100" data-simplebar>
-                <ul class="metismenu left-sidenav-menu">
-                    <li class="nav-item border-bottom pb-1 mb-2">
-                        <a href="{{ route('admin.dashboard') }}"
-                            class="nav-link d-flex align-items-center gap-2 transition-base"
-                            style="color: var(--color-text-secondary);">
-                            <i data-feather="home" style="color: #6b7280" class="menu-icon"></i>
-                            {{ __('navigation.home') }}
-                        </a>
-                    </li>
-                    @yield('sidebar')
-                </ul>
-            </div>
-        </div>
-    @else
-        @include('admin.partials.sidebar-default')
-    @endif
+    {{-- Custom Progress Sidebar --}}
+    @include('progress::layouts.sidebar')
 
     <div class="page-wrapper">
-        @include('admin.partials.topbar')
+        {{-- Custom Progress Navbar --}}
+        @include('progress::layouts.navbar')
         <div class="page-content">
             <div class="container-fluid">
                 <div class="row">

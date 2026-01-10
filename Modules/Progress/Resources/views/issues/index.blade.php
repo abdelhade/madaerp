@@ -1,7 +1,5 @@
-@extends('admin.dashboard')
-@section('sidebar')
-    @include('components.sidebar.daily_progress')
-@endsection
+@extends('progress::layouts.daily-progress')
+{{-- Sidebar is now handled by the layout itself --}}
 @section('title', 'Issues Management')
 
 @section('content')

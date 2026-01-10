@@ -606,7 +606,7 @@
                 @endcan
                 {{-- التقدم اليومي --}}
              
-                    <a href="{{ route('progress.projcet.index') }}" class="app-card">
+                    <a href="{{ route('progress.project.index') }}" class="app-card">
                         <div class="app-icon" style="background-color: white;">
                             <i data-lucide="bar-chart-3"
                                 style="color: #00695C; width: 24px; height: 24px; stroke-width: 2;"></i>
