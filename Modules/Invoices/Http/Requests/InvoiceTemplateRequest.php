@@ -12,6 +12,27 @@ class InvoiceTemplateRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        // تحويل القيم الفارغة في column_widths إلى null وتحويل القيم إلى integer
+        if ($this->has('column_widths') && is_array($this->column_widths)) {
+            $cleaned = [];
+            foreach ($this->column_widths as $key => $value) {
+                // إذا كانت القيمة فارغة أو null، تجاهلها
+                if ($value === '' || $value === null) {
+                    continue;
+                }
+                // تحويل القيمة إلى integer
+                $intValue = filter_var($value, FILTER_VALIDATE_INT);
+                // إذا نجح التحويل، أضف القيمة
+                if ($intValue !== false) {
+                    $cleaned[$key] = $intValue;
+                }
+            }
+            $this->merge(['column_widths' => $cleaned ?: null]);
+        }
+    }
+
     public function rules()
     {
         $templateId = $this->route('template')?->id ?? $this->route('invoice_template')?->id;
@@ -28,7 +49,7 @@ class InvoiceTemplateRequest extends FormRequest
             'visible_columns' => 'required|array|min:1',
             'visible_columns.*' => 'string',
             'column_widths' => 'nullable|array',
-            'column_widths.*' => 'nullable|integer|min:5|max:30',
+            'column_widths.*' => 'filled|integer|min:5|max:1000',
             'column_order' => 'nullable|array',
             'column_order.*' => 'nullable|string',
             'invoice_types' => 'required|array|min:1',

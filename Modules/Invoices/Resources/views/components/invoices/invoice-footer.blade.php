@@ -5,205 +5,7 @@
 @endphp
 <div id="invoice-fixed-footer" class="p-3 mt-auto" style="z-index: 999; background: #fff;" x-data="{ fieldStates: @js($fieldStates) }">
     <div class="row border border-secondary border-3 rounded p-3 mb-3">
-        @if (setting('invoice_show_item_details'))
-            <div class="col-3">
-                @if ($currentSelectedItem)
-                    <div class="card">
-                        <div class="card-header text-white">
-                            <h6 class="mb-0">
-                                <i class="fas fa-box"></i> {{ __('Item Details') }}
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row gx-4">
-
-
-                                <div class="col-md-6 border-end pe-3">
-
-
-                                    <div class="row mb-2">
-                                        <div class="col-5 fs-6">{{ __('Name:') }}</div>
-                                        <div class="col-7 fw-bold">
-                                            <span
-                                                class="badge bg-light text-dark">{{ $selectedItemData['name'] }}</span>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="row mb-2">
-                                        <div class="col-5 fs-6">{{ __('Store:') }}</div>
-                                        <div class="col-7">
-                                            <span
-                                                class="badge bg-light text-dark">{{ $selectedItemData['selected_store_name'] }}</span>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="row mb-2">
-                                        <div class="col-5 fs-6">{{ __('Available in Store:') }}</div>
-                                        <div class="col-7">
-                                            <span class="badge bg-light text-dark">
-                                                {{ $selectedItemData['available_quantity_in_store'] }}
-                                            </span>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="row mb-2">
-                                        <div class="col-6 fs-6">{{ __('Total in Stores:') }}</div>
-                                        <div class="col-6">
-                                            <span class="badge bg-light text-dark">
-                                                {{ $selectedItemData['total_available_quantity'] }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                                <div class="col-md-6 ps-3">
-
-
-                                    <div class="row mb-2">
-                                        <div class="col-6 fs-6">{{ __('Unit:') }}</div>
-                                        <div class="col-6">
-                                            <span
-                                                class="badge bg-light text-dark">{{ $selectedItemData['unit_name'] }}</span>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="row mb-2">
-                                        <div class="col-6 fs-6">{{ __('Price:') }}</div>
-                                        <div class="col-6 text-primary fw-bold">
-                                            <span class="badge bg-light text-dark">
-                                                {{ number_format($selectedItemData['price'], 2) }}
-                                            </span>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="row mb-2">
-                                        <div class="col-6 fs-6">{{ __('Last Purchase Price:') }}</div>
-                                        <div class="col-6 text-success">
-                                            <span class="badge bg-light text-dark">
-                                                {{ number_format($selectedItemData['last_purchase_price'] ?? 0, 2) }}
-                                            </span>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="row mb-2">
-                                        <div class="col-6 fs-6">{{ __('Average Purchase Price:') }}</div>
-                                        <div class="col-6 text-success">
-                                            <span class="badge bg-light text-dark main-num">
-                                                {{ number_format($selectedItemData['average_cost'], 2) }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                        </div>
-                    </div>
-                @else
-                    <div class="card">
-                        <div class="card-body text-center text-muted">
-                            <i class="fas fa-search fa-3x mb-3"></i>
-                            <p>{{ __('Search for an item to display its data here') }}</p>
-                        </div>
-                    </div>
-                @endif
-            </div>
-        @endif
-
-
-        @if (setting('invoice_show_recommended_items'))
-            @if ($type == 10)
-                <div class="col-2">
-                    <div class="card">
-                        <div class="card-header text-white">
-                            <h6 class="mb-0">
-                                <i class="fas fa-star"></i> {{ __('Recommendations (Top 5 Purchased Items)') }}
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            @if (!empty($recommendedItems) && $type == 10)
-                                <ul class="list-group">
-                                    @foreach ($recommendedItems as $item)
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span>{{ $item['name'] }} ({{ $item['total_quantity'] }}
-                                                {{ __('Unit') }})</span>
-                                            {{-- <button wire:click="addRecommendedItem({{ $item['id'] }})"
-                                        class="btn btn-sm btn-primary">
-                                        <i class="fas fa-plus"></i> {{ __('Add') }}
-                                    </button> --}}
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <p class="text-muted text-center">{{ __('No recommendations available') }}</p>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            @else
-                <div class="col-2">
-                </div>
-            @endif
-        @endif
-
-        @if ($type != 21)
-            <div class="col-2">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="form-group mb-3">
-                            <label for="cash_box_id" style="font-size: 1em;">{{ __('Cash Box') }}</label>
-                            <select wire:model="cash_box_id" class="form-control form-control-sm"
-                                style="font-size: 0.95em; height: 2em; padding: 2px 6px;">
-                                {{-- <option value="">{{ __('Choose Cash Box') }}</option> --}}
-                                @foreach ($cashAccounts as $account)
-                                    <option value="{{ $account->id }}">{{ $account->aname }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-
-
-                        <div class="form-group mb-3">
-                            @php
-                                // تحديد نوع الفاتورة: بيع أو شراء
-                                $isSalesInvoice = in_array($type, [10, 12, 14, 16, 19, 22]); // بيع
-                                $isPurchaseInvoice = in_array($type, [11, 13, 15, 17, 20, 24, 25]); // شراء
-                            @endphp
-                            @if ($isPurchaseInvoice)
-                                <label for="received_from_client"
-                                    style="font-size: 1em;">{{ __('Amount Paid to Supplier') }}</label>
-                            @else
-                                <label for="received_from_client"
-                                    style="font-size: 1em;">{{ __('Amount Received from Customer') }}</label>
-                            @endif
-                            <input type="number" step="0.01" x-model.number="receivedFromClient"
-                                @input="updateReceived()" :disabled="isCashAccount" :readonly="isCashAccount"
-                                id="received-from-client" class="form-control form-control-sm scnd"
-                                :class="{ 'bg-light': isCashAccount }"
-                                style="font-size: 0.95em; height: 2em; padding: 2px 6px;" min="0"
-                                :title="isCashAccount ? '{{ __('This field is automatically set for cash accounts') }}' : ''">
-                        </div>
-
-
-
-                        <div class="form-group mb-3">
-                            <label for="notes" style="font-size: 1em;">{{ __('Notes') }}</label>
-                            <textarea wire:model="notes" class="form-control form-control-sm" rows="1"
-                                placeholder="{{ __('Additional notes...') }}" style="font-size: 0.95em; padding: 6px;"></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        <div class="col-5 ms-auto">
+        <div class="col-5">
             <div class="card">
                 <div class="card-body">
                     @if ($type != 21)
@@ -554,5 +356,202 @@
                 </div>
             </div>
         </div>
+
+        @if ($type != 21)
+            <div class="col-2">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <label for="cash_box_id" style="font-size: 1em;">{{ __('Cash Box') }}</label>
+                            <select wire:model="cash_box_id" class="form-control form-control-sm"
+                                style="font-size: 0.95em; height: 2em; padding: 2px 6px;">
+                                {{-- <option value="">{{ __('Choose Cash Box') }}</option> --}}
+                                @foreach ($cashAccounts as $account)
+                                    <option value="{{ $account->id }}">{{ $account->aname }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+
+
+                        <div class="form-group mb-3">
+                            @php
+                                // تحديد نوع الفاتورة: بيع أو شراء
+                                $isSalesInvoice = in_array($type, [10, 12, 14, 16, 19, 22]); // بيع
+                                $isPurchaseInvoice = in_array($type, [11, 13, 15, 17, 20, 24, 25]); // شراء
+                            @endphp
+                            @if ($isPurchaseInvoice)
+                                <label for="received_from_client"
+                                    style="font-size: 1em;">{{ __('Amount Paid to Supplier') }}</label>
+                            @else
+                                <label for="received_from_client"
+                                    style="font-size: 1em;">{{ __('Amount Received from Customer') }}</label>
+                            @endif
+                            <input type="number" step="0.01" x-model.number="receivedFromClient"
+                                @input="updateReceived()" :disabled="isCashAccount" :readonly="isCashAccount"
+                                id="received-from-client" class="form-control form-control-sm scnd"
+                                :class="{ 'bg-light': isCashAccount }"
+                                style="font-size: 0.95em; height: 2em; padding: 2px 6px;" min="0"
+                                :title="isCashAccount ? '{{ __('This field is automatically set for cash accounts') }}' : ''">
+                        </div>
+
+
+
+                        <div class="form-group mb-3">
+                            <label for="notes" style="font-size: 1em;">{{ __('Notes') }}</label>
+                            <textarea wire:model="notes" class="form-control form-control-sm" rows="1"
+                                placeholder="{{ __('Additional notes...') }}" style="font-size: 0.95em; padding: 6px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if (setting('invoice_show_recommended_items'))
+            @if ($type == 10)
+                <div class="col-2">
+                    <div class="card">
+                        <div class="card-header text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-star"></i> {{ __('Recommendations (Top 5 Purchased Items)') }}
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            @if (!empty($recommendedItems) && $type == 10)
+                                <ul class="list-group">
+                                    @foreach ($recommendedItems as $item)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span>{{ $item['name'] }} ({{ $item['total_quantity'] }}
+                                                {{ __('Unit') }})</span>
+                                            {{-- <button wire:click="addRecommendedItem({{ $item['id'] }})"
+                                        class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus"></i> {{ __('Add') }}
+                                    </button> --}}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <p class="text-muted text-center">{{ __('No recommendations available') }}</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="col-2">
+                </div>
+            @endif
+        @endif
+
+        @if (setting('invoice_show_item_details'))
+            <div class="col-3 ms-auto">
+                @if ($currentSelectedItem)
+                    <div class="card">
+                        <div class="card-header text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-box"></i> {{ __('Item Details') }}
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row gx-4">
+
+
+                                <div class="col-md-6 border-end pe-3">
+
+
+                                    <div class="row mb-2">
+                                        <div class="col-5 fs-6">{{ __('Name:') }}</div>
+                                        <div class="col-7 fw-bold">
+                                            <span
+                                                class="badge bg-light text-dark">{{ $selectedItemData['name'] }}</span>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="row mb-2">
+                                        <div class="col-5 fs-6">{{ __('Store:') }}</div>
+                                        <div class="col-7">
+                                            <span
+                                                class="badge bg-light text-dark">{{ $selectedItemData['selected_store_name'] }}</span>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="row mb-2">
+                                        <div class="col-5 fs-6">{{ __('Available in Store:') }}</div>
+                                        <div class="col-7">
+                                            <span class="badge bg-light text-dark">
+                                                {{ $selectedItemData['available_quantity_in_store'] }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="row mb-2">
+                                        <div class="col-6 fs-6">{{ __('Total in Stores:') }}</div>
+                                        <div class="col-6">
+                                            <span class="badge bg-light text-dark">
+                                                {{ $selectedItemData['total_available_quantity'] }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="col-md-6 ps-3">
+
+
+                                    <div class="row mb-2">
+                                        <div class="col-6 fs-6">{{ __('Unit:') }}</div>
+                                        <div class="col-6">
+                                            <span
+                                                class="badge bg-light text-dark">{{ $selectedItemData['unit_name'] }}</span>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="row mb-2">
+                                        <div class="col-6 fs-6">{{ __('Price:') }}</div>
+                                        <div class="col-6 text-primary fw-bold">
+                                            <span class="badge bg-light text-dark">
+                                                {{ number_format($selectedItemData['price'], 2) }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="row mb-2">
+                                        <div class="col-6 fs-6">{{ __('Last Purchase Price:') }}</div>
+                                        <div class="col-6 text-success">
+                                            <span class="badge bg-light text-dark">
+                                                {{ number_format($selectedItemData['last_purchase_price'] ?? 0, 2) }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="row mb-2">
+                                        <div class="col-6 fs-6">{{ __('Average Purchase Price:') }}</div>
+                                        <div class="col-6 text-success">
+                                            <span class="badge bg-light text-dark main-num">
+                                                {{ number_format($selectedItemData['average_cost'], 2) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="card">
+                        <div class="card-body text-center text-muted">
+                            <i class="fas fa-search fa-3x mb-3"></i>
+                            <p>{{ __('Search for an item to display its data here') }}</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        @endif
     </div>
 </div>

@@ -405,7 +405,7 @@ new class extends Component {
     <td class="font-family-cairo">{{ number_format($before, 2) }}</td>
     <td class="font-family-cairo">{{ number_format($after, 2) }}</td>
     <td class="text-center">
-        <a href="{{ route('invoice.view', $movement->pro_id) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+        <a href="{{ route('invoices.show', $movement->pro_id) }}" target="_blank" class="btn btn-sm btn-outline-primary">
             <i class="fas fa-eye"></i>
         </a>
     </td>

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Modules\Accounts\Models\AccHead;
 use RealRashid\SweetAlert\Facades\Alert;
 use Modules\Invoices\Services\RecalculationServiceHelper;
+use Modules\Invoices\Http\Controllers\InvoiceApiController;
 
 class InvoiceController extends Controller
 {
@@ -122,9 +123,14 @@ class InvoiceController extends Controller
             abort(403, 'Untrusted request.');
         }
 
+        // Get create data from API controller
+        $apiController = new InvoiceApiController();
+        $createData = $apiController->getCreateDataArray($type);
+
         return view('invoices::invoices.create', [
             'type' => $type,
             'hash' => $expectedHash,
+            'createData' => $createData ?? [],
         ]);
     }
 
@@ -139,7 +145,7 @@ class InvoiceController extends Controller
             'employee',
             'type',
             'user',
-            'journalHead.journalDetails.accountHead',
+            'journalHead.journalDetails.accHead',
         ])->findOrFail($id);
 
         if (! $invoice || ($invoice->isdeleted ?? false)) {
@@ -185,12 +191,42 @@ class InvoiceController extends Controller
 
         $invoice->load(['operationItems.item.units', 'operationItems.item.prices', 'acc1Head', 'acc2Head', 'employee']);
 
-        return view('invoices::invoices.edit', compact('invoice'));
+        // Get edit data from API controller
+        $apiController = new InvoiceApiController();
+        $editData = $apiController->getEditDataArray($invoice->id);
+
+        return view('invoices::invoices.edit', compact('invoice', 'editData'));
     }
 
     public function update(Request $request, string $id)
     {
-        abort(404, 'Updates are handled through the Livewire component');
+        $operation = OperHead::findOrFail($id);
+
+        if ($operation->is_posted ?? false) {
+            Alert::toast('Cannot edit a posted invoice.', 'warning');
+            return redirect()->back();
+        }
+
+        $type = $operation->pro_type;
+        $permissionName = 'edit ' . ($this->titles[$type] ?? 'Unknown');
+        $user = Auth::user();
+        if (!($user instanceof User) || !$user->can($permissionName)) {
+            abort(403, 'You do not have permission to edit ' . ($this->titles[$type] ?? 'this invoice'));
+        }
+
+        // Forward to API controller for processing
+        $apiController = new InvoiceApiController();
+        $response = $apiController->update($request, $id);
+        
+        $responseData = json_decode($response->getContent(), true);
+        
+        if ($response->getStatusCode() === 200 && ($responseData['success'] ?? false)) {
+            Alert::toast(__('Invoice updated successfully'), 'success');
+            return redirect()->route('invoices.index', ['type' => $type]);
+        }
+
+        Alert::toast($responseData['message'] ?? __('Failed to update invoice'), 'error');
+        return redirect()->back()->withInput();
     }
 
     public function destroy(string $id)
@@ -305,7 +341,7 @@ class InvoiceController extends Controller
      */
     public function print(Request $request, $operation_id)
     {
-        $operation = OperHead::with('operationItems')->findOrFail($operation_id);
+        $operation = OperHead::with(['operationItems', 'invoiceTemplate'])->findOrFail($operation_id);
         $type = $operation->pro_type;
 
         if (! isset($this->titles[$type])) {
@@ -325,6 +361,10 @@ class InvoiceController extends Controller
 
         $acc1Role = in_array($operation->pro_type, [10, 12, 14, 16, 22, 26]) ? 'Debitor' : (in_array($operation->pro_type, [11, 13, 15, 17]) ? 'Creditor' : (in_array($operation->pro_type, [18, 19, 20, 21]) ? 'Debitor' : 'Undefined'));
 
+        // Get invoice template and column widths
+        $template = $operation->invoiceTemplate;
+        $columnWidths = $template ? ($template->column_widths ?? []) : [];
+
         return view('invoices::invoices.print-invoice-2', [
             'pro_id' => $operation->pro_id,
             'pro_date' => $operation->pro_date,
@@ -340,6 +380,7 @@ class InvoiceController extends Controller
             'acc2List' => $acc2List,
             'employees' => $employees,
             'items' => $items,
+            'columnWidths' => $columnWidths,
             'invoiceItems' => $operation->operationItems->map(function ($item) {
                 $unit = \App\Models\Unit::find($item->unit_id);
 

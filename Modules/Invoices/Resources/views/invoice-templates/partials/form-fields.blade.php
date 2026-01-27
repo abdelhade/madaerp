@@ -127,21 +127,19 @@
                             </div>
 
 
-                            <div class="col-6">
-                                <div class="form-group mb-0">
-                                    <label class="small">{{ __('Column Width (%)') }}</label>
-                                    <input type="range" name="column_widths[{{ $columnKey }}]"
-                                        class="custom-range column-width-slider" min="5" max="30"
-                                        step="1" value="{{ $columnWidths[$columnKey] ?? 10 }}"
-                                        data-column="{{ $columnKey }}">
+                            <div class="col-8">
+                                <div class="form-group mb-0 d-flex align-items-center gap-2">
+                                    <label class="small mb-0">{{ __('Column Width (%)') }}</label>
+                                    <input type="text" name="column_widths[{{ $columnKey }}]"
+                                        class="form-control column-width-slider" 
+                                        pattern="[0-9]+"
+                                        inputmode="numeric"
+                                        min="5" max="700"
+                                        value="{{ $columnWidths[$columnKey] ?? 10 }}"
+                                        data-column="{{ $columnKey }}"
+                                        onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value && (parseInt(this.value) < 5 || parseInt(this.value) > 700)) this.setCustomValidity('القيمة يجب أن تكون بين 5 و 700'); else this.setCustomValidity('');">
                                 </div>
-                            </div>
-
-
-                            <div class="col-2 text-center">
-                                <span class="badge badge-primary width-display" id="width_{{ $columnKey }}">
-                                    {{ $columnWidths[$columnKey] ?? 10 }}%
-                                </span>
                             </div>
                         </div>
 
@@ -173,19 +171,18 @@
                             </div>
 
 
-                            <div class="col-6">
-                                <div class="form-group mb-0">
-                                    <label class="small">{{ __('Column Width (%)') }}</label>
-                                    <input type="range" name="column_widths[{{ $columnKey }}]"
-                                        class="custom-range column-width-slider" min="5" max="30"
-                                        step="1" value="10" data-column="{{ $columnKey }}">
+                            <div class="col-8">
+                                <div class="form-group mb-0 d-flex align-items-center gap-2">
+                                    <label class="small mb-0">{{ __('Column Width (%)') }}</label>
+                                    <input type="text" name="column_widths[{{ $columnKey }}]"
+                                        class="form-control column-width-slider" 
+                                        pattern="[0-9]+"
+                                        inputmode="numeric"
+                                        min="5" max="700"
+                                        value="150" data-column="{{ $columnKey }}"
+                                        onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value && (parseInt(this.value) < 5 || parseInt(this.value) > 700)) this.setCustomValidity('القيمة يجب أن تكون بين 5 و 700'); else this.setCustomValidity('');">
                                 </div>
-                            </div>
-
-
-                            <div class="col-2 text-center">
-                                <span class="badge badge-primary width-display"
-                                    id="width_{{ $columnKey }}">10%</span>
                             </div>
                         </div>
 
@@ -203,72 +200,3 @@
         <span class="text-danger">{{ $message }}</span>
     @enderror
 </div>
-
-
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <script>
-        // Wait for jQuery to be loaded before executing
-        (function() {
-            function initInvoiceTemplateForm() {
-                // Check if jQuery is loaded
-                if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
-                    // Retry after a short delay
-                    setTimeout(initInvoiceTemplateForm, 100);
-                    return;
-                }
-                
-                // Use jQuery safely
-                jQuery(document).ready(function($) {
-            // تفعيل السحب والإفلات
-            var sortable = new Sortable(document.getElementById('sortable-columns'), {
-                animation: 150,
-                handle: '.fa-grip-vertical',
-                onEnd: function() {
-                    updateColumnOrder();
-                }
-            });
-
-
-            // تحديث ترتيب الأعمدة
-            function updateColumnOrder() {
-                $('#sortable-columns .column-item').each(function(index) {
-                    $(this).find('.column-order-input').val($(this).data('column'));
-                });
-            }
-
-
-            // تحديث عرض العمود عند تحريك السلايدر
-            $('.column-width-slider').on('input', function() {
-                var columnKey = $(this).data('column');
-                var width = $(this).val();
-                $('#width_' + columnKey).text(width + '%');
-            });
-
-
-            // إظهار/إخفاء خيار الافتراضي لأنواع الفواتير
-            $('.invoice-type-checkbox').each(function() {
-                const typeId = $(this).val();
-                if ($(this).is(':checked')) {
-                    $('#default_' + typeId).show();
-                }
-            });
-
-
-            $('.invoice-type-checkbox').on('change', function() {
-                const typeId = $(this).val();
-                if ($(this).is(':checked')) {
-                    $('#default_' + typeId).slideDown();
-                } else {
-                    $('#default_' + typeId).slideUp();
-                    $('#default_switch_' + typeId).prop('checked', false);
-                }
-            });
-                });
-            }
-            
-            // Start initialization
-            initInvoiceTemplateForm();
-        })();
-    </script>
-@endpush

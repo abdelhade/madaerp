@@ -288,7 +288,7 @@ new class extends Component {
                                             $operation = OperHead::find($movement->op_id);
                                         @endphp
                                         @if ($operation && in_array($operation->pro_type, [10, 11, 12, 13]))
-                                            <a href="{{ route('invoice.view', $movement->op_id) }}"
+                                            <a href="{{ route('invoices.show', $movement->op_id) }}"
                                                 class="btn btn-xs btn-info" target="_blank">
                                                 <i class="fas fa-eye"></i> {{ __('عرض') }}
                                             </a>

@@ -8,7 +8,8 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/design-system.css',
-                'resources/css/app.css', 
+                'resources/css/app.css',
+                'resources/css/global-styles.css',
                 'resources/js/app.js',
                 'resources/js/components/employee-form-scripts.js'
                 // ✅ Alpine components moved to inline Blade templates for proper timing

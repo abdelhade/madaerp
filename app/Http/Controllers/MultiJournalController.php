@@ -131,7 +131,7 @@ class MultiJournalController extends Controller
     public function show($id)
     {
         $oper = OperHead::with([
-            'journalHead.journalDetails.accountHead',
+            'journalHead.journalDetails.accHead',
             'acc1Head',
             'acc2Head',
             'employee',

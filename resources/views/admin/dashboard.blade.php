@@ -17,8 +17,8 @@
                     <li class="nav-item border-bottom pb-1 mb-2">
                         <a href="{{ route('admin.dashboard') }}"
                             class="nav-link d-flex align-items-center gap-2 transition-base {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
-                            style="{{ request()->routeIs('admin.dashboard') ? 'background-color: rgba(52, 211, 163, 0.1); color: #34d3a3; font-weight: 600;' : 'color: var(--color-text-secondary);' }}">
-                            <i data-feather="home" style="color: {{ request()->routeIs('admin.dashboard') ? '#34d3a3' : '#6b7280' }}" class="menu-icon"></i>
+                            style="{{ request()->routeIs('admin.dashboard') ? 'background-color: rgba(30, 64, 175, 0.1); color: #1e40af; font-weight: 600;' : 'color: var(--color-text-secondary);' }}">
+                            <i data-feather="home" style="color: {{ request()->routeIs('admin.dashboard') ? '#1e40af' : '#6b7280' }}" class="menu-icon"></i>
                             {{ __('navigation.home') }}
                         </a>
                     </li>

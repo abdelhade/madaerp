@@ -92,7 +92,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         loadNotifications();
-        setInterval(loadNotifications, 30000); // تحديث كل 30 ثانية كاحتياط
+        // setInterval(loadNotifications, 30000); // تم إيقاف التحديث التلقائي - سيتم الاعتماد على WebSockets فقط
         listenForNotifications();
 
         document.getElementById('markAllRead').addEventListener('click', function() {

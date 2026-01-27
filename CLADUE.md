@@ -47,5 +47,9 @@ Follow these rules STRICTLY:
    take care permissions seeders at modules
    give the permission to the default user 
 
+10) Before executing ANY action:
+    - Ask "انفذ يا هندسة؟"
+    - Wait for explicit confirmation before proceeding
 
-Reply “READY” when you understand
+
+Reply "READY" when you understand

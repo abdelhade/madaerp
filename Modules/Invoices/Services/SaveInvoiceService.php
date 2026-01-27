@@ -11,6 +11,9 @@ use App\Models\OperationItems;
 use App\Models\OperHead;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Modules\Accounts\Models\AccHead;
 use Modules\Invoices\Services\Invoice\DetailValueCalculator;
 use Modules\Invoices\Services\Invoice\DetailValueValidator;
@@ -24,6 +27,11 @@ use Modules\Invoices\Services\Invoice\DetailValueValidator;
 class SaveInvoiceService
 {
     /**
+     * Store last error message for non-Livewire usage
+     */
+    public ?string $lastError = null;
+
+    /**
      * Create a new SaveInvoiceService instance.
      *
      * @param  DetailValueCalculator  $detailValueCalculator  Calculator for detail_value with discounts/additions
@@ -33,6 +41,54 @@ class SaveInvoiceService
         private readonly DetailValueCalculator $detailValueCalculator,
         private readonly DetailValueValidator $detailValueValidator
     ) {}
+
+    /**
+     * Check if component is a Livewire component
+     */
+    private function isLivewireComponent(object $component): bool
+    {
+        return method_exists($component, 'dispatch') && method_exists($component, 'validate');
+    }
+
+    /**
+     * Dispatch error message (works for both Livewire and stdClass)
+     */
+    private function dispatchError(object $component, string $title, string $text, string $icon = 'error'): void
+    {
+        if ($this->isLivewireComponent($component)) {
+            $component->dispatch('error', title: $title, text: $text, icon: $icon);
+        } else {
+            $this->lastError = $text;
+        }
+    }
+
+    /**
+     * Dispatch success message (works for both Livewire and stdClass)
+     */
+    private function dispatchSuccess(object $component, string $title, string $text, string $icon = 'success'): void
+    {
+        if ($this->isLivewireComponent($component)) {
+            $component->dispatch('swal', title: $title, text: $text, icon: $icon);
+        }
+        // For non-Livewire, success is handled by the controller/API response
+    }
+
+    /**
+     * Validate component data (works for both Livewire and stdClass)
+     */
+    private function validateComponent(object $component, array $rules, array $messages = []): void
+    {
+        if ($this->isLivewireComponent($component)) {
+            $component->validate($rules, $messages);
+        } else {
+            // For stdClass, use Laravel Validator
+            $data = (array) $component;
+            $validator = Validator::make($data, $rules, $messages);
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            }
+        }
+    }
 
     /**
      * Save invoice with accurate detail_value calculation.
@@ -47,11 +103,11 @@ class SaveInvoiceService
     {
 
         if (empty($component->invoiceItems)) {
-            $component->dispatch('error', title: 'خطا!', text: 'لا يمكن حفظ الفاتورة بدون أصناف.', icon: 'error');
+            $this->dispatchError($component, 'خطا!', 'لا يمكن حفظ الفاتورة بدون أصناف.', 'error');
 
             return false;
         }
-        $component->validate([
+        $this->validateComponent($component, [
             'acc1_id' => 'required|exists:acc_head,id',
             'acc2_id' => 'required|exists:acc_head,id',
             'pro_date' => 'required|date',
@@ -79,11 +135,11 @@ class SaveInvoiceService
 
                     if ($expiryDate->isPast()) {
                         $itemName = Item::find($item['item_id'])->name;
-                        $component->dispatch(
-                            'error',
-                            title: 'تحذير!',
-                            text: "الصنف '{$itemName}' منتهي الصلاحية بتاريخ: {$expiryDate->format('Y-m-d')}",
-                            icon: 'warning'
+                        $this->dispatchError(
+                            $component,
+                            'تحذير!',
+                            "الصنف '{$itemName}' منتهي الصلاحية بتاريخ: {$expiryDate->format('Y-m-d')}",
+                            'warning'
                         );
 
                         return false;
@@ -111,15 +167,15 @@ class SaveInvoiceService
 
                 // التحقق من تجاوز الحد
                 if ($balanceAfterInvoice > $customer->debit_limit) {
-                    $component->dispatch(
-                        'error',
-                        title: 'تجاوز حد الائتمان!',
-                        text: sprintf(
+                    $this->dispatchError(
+                        $component,
+                        'تجاوز حد الائتمان!',
+                        sprintf(
                             'تجاوز العميل حد الائتمان المسموح (الحد: %s، الرصيد بعد الفاتورة: %s)',
                             number_format($customer->debit_limit, 3),
                             number_format($balanceAfterInvoice, 3)
                         ),
-                        icon: 'error'
+                        'error'
                     );
 
                     return false;
@@ -132,7 +188,7 @@ class SaveInvoiceService
         if ($isEdit) {
             $existingOperation = OperHead::find($component->operationId);
             if ($existingOperation && ($existingOperation->is_posted ?? false)) {
-                $component->dispatch('error', title: 'خطأ!', text: 'لا يمكن تعديل فاتورة مرحلة (posted).', icon: 'error');
+                $this->dispatchError($component, 'خطأ!', 'لا يمكن تعديل فاتورة مرحلة (posted).', 'error');
 
                 return false;
             }
@@ -141,7 +197,7 @@ class SaveInvoiceService
         // ✅ High: Validate currency_rate > 0
         $currencyRate = $component->currency_rate ?? 1;
         if ($currencyRate <= 0) {
-            $component->dispatch('error', title: 'خطأ!', text: 'سعر صرف العملة يجب أن يكون أكبر من صفر.', icon: 'error');
+            $this->dispatchError($component, 'خطأ!', 'سعر صرف العملة يجب أن يكون أكبر من صفر.', 'error');
 
             return false;
         }
@@ -180,11 +236,11 @@ class SaveInvoiceService
                 // ✅ 4. Compare base quantities
                 if (! $allowNegative && $availableQty < $quantityInBaseUnits) {
                     $itemName = Item::find($item['item_id'])->name;
-                    $component->dispatch(
-                        'error',
-                        title: 'خطا!',
-                        text: 'الكمية غير متوفرة للصنف: '.$itemName.' (المتاح: '.$availableQty.')',
-                        icon: 'error'
+                    $this->dispatchError(
+                        $component,
+                        'خطا!',
+                        'الكمية غير متوفرة للصنف: '.$itemName.' (المتاح: '.$availableQty.')',
+                        'error'
                     );
 
                     return false;
@@ -236,7 +292,8 @@ class SaveInvoiceService
                 'user' => Auth::id(),
                 'branch_id' => $component->branch_id,
                 'template_id' => $component->selectedTemplateId ?? null,
-                'currency_id' => $component->currency_id ?? null, // ✅ Save currency ID
+                'pro_pattern' => $component->pro_pattern ?? $component->selectedTemplateId ?? null, // ✅ Save pro_pattern (use template_id as fallback)
+                'currency_id' => $component->currency_id ?? 1, // ✅ Save currency ID (default to 1 if not set)
                 'currency_rate' => $currencyRate, // ✅ Save currency rate (validated)
             ];
 
@@ -409,13 +466,44 @@ class SaveInvoiceService
                 }
             }
 
+            // ✅ إنشاء سند دفع/قبض إذا كان هناك مدفوع
+            $receivedFromClient = $component->received_from_client ?? 0;
+            if ($receivedFromClient > 0 && $component->cash_box_id) {
+                // تحديد نوع السند حسب نوع الفاتورة
+                $isReceipt = in_array($component->type, [10, 22]); // مبيعات = سند قبض
+                $isPayment = in_array($component->type, [11, 12]); // مشتريات = سند دفع
+                
+                if ($isReceipt || $isPayment) {
+                    // حذف السند القديم إذا كان تعديل
+                    if ($isEdit) {
+                        $oldVoucher = OperHead::where('op2', $operation->id)
+                            ->where('is_journal', 1)
+                            ->where('is_stock', 0)
+                            ->first();
+                        
+                        if ($oldVoucher) {
+                            // حذف قيود السند القديم
+                            $oldVoucherJournalIds = JournalHead::where('op_id', $oldVoucher->id)->pluck('journal_id');
+                            if ($oldVoucherJournalIds->count() > 0) {
+                                JournalDetail::whereIn('journal_id', $oldVoucherJournalIds)->delete();
+                                JournalHead::where('op_id', $oldVoucher->id)->delete();
+                            }
+                            $oldVoucher->delete();
+                        }
+                    }
+                    
+                    // إنشاء السند الجديد
+                    $this->createVoucher($component, $operation, $isReceipt, $isPayment);
+                }
+            }
+
             DB::commit();
 
-            $component->dispatch(
-                'swal',
-                title: 'تم الحفظ!',
-                text: $isEdit ? 'تم تحديث الفاتورة بنجاح.' : 'تم حفظ الفاتورة بنجاح.',
-                icon: 'success'
+            $this->dispatchSuccess(
+                $component,
+                'تم الحفظ!',
+                $isEdit ? 'تم تحديث الفاتورة بنجاح.' : 'تم حفظ الفاتورة بنجاح.',
+                'success'
             );
 
             return $operation->id;
@@ -423,11 +511,11 @@ class SaveInvoiceService
             DB::rollBack();
             logger()->error('خطأ أثناء حفظ الفاتورة: '.$e->getMessage());
             logger()->error($e->getTraceAsString());
-            $component->dispatch(
-                'error',
-                title: 'خطأ!',
-                text: 'فشل في حفظ الفاتورة: '.$e->getMessage(),
-                icon: 'error'
+            $this->dispatchError(
+                $component,
+                'خطأ!',
+                'فشل في حفظ الفاتورة: '.$e->getMessage(),
+                'error'
             );
 
             return false;
@@ -684,6 +772,15 @@ class SaveInvoiceService
 
     private function createJournalEntries($component, $operation)
     {
+        // Log for debugging
+        Log::info('Creating journal entries', [
+            'operation_id' => $operation->id,
+            'type' => $component->type,
+            'acc1_id' => $component->acc1_id,
+            'acc2_id' => $component->acc2_id,
+            'total' => $component->total_after_additional,
+        ]);
+
         // ✅ High: Fix Race Condition in journal_id using lockForUpdate
         $journalId = DB::transaction(function () {
             // Use lockForUpdate to prevent concurrent access
@@ -735,18 +832,50 @@ class SaveInvoiceService
                 break; // فاتورة خدمه
         }
 
+        // Validate required values
+        if (!$debit || !$credit) {
+            Log::error('Cannot create journal entries: missing debit or credit account', [
+                'operation_id' => $operation->id,
+                'type' => $component->type,
+                'debit' => $debit,
+                'credit' => $credit,
+                'acc1_id' => $component->acc1_id,
+                'acc2_id' => $component->acc2_id,
+            ]);
+            return; // Exit early if accounts are missing
+        }
+
+        // Validate total amount
+        if (!$component->total_after_additional || $component->total_after_additional <= 0) {
+            Log::error('Cannot create journal entries: invalid total amount', [
+                'operation_id' => $operation->id,
+                'total' => $component->total_after_additional,
+            ]);
+            return; // Exit early if total is invalid
+        }
+
         // إنشاء رأس القيد
-        JournalHead::create([
-            'journal_id' => $journalId,
-            'total' => $component->total_after_additional,
-            'op2' => $operation->id,
-            'op_id' => $operation->id,
-            'pro_type' => $component->type,
-            'date' => $component->pro_date,
-            'details' => $component->notes,
-            'user' => Auth::id(),
-            'branch_id' => $component->branch_id,
-        ]);
+        try {
+            JournalHead::create([
+                'journal_id' => $journalId,
+                'total' => $component->total_after_additional,
+                'op2' => $operation->id,
+                'op_id' => $operation->id,
+                'pro_type' => $component->type,
+                'date' => $component->pro_date,
+                'details' => $component->notes ?? '',
+                'user' => Auth::id(),
+                'branch_id' => $component->branch_id,
+            ]);
+            Log::info('Journal head created successfully', ['journal_id' => $journalId, 'operation_id' => $operation->id]);
+        } catch (\Exception $e) {
+            Log::error('Failed to create journal head', [
+                'error' => $e->getMessage(),
+                'journal_id' => $journalId,
+                'operation_id' => $operation->id,
+            ]);
+            return; // Exit if journal head creation fails
+        }
 
         // الطرف المدين
         if ($debit) {
@@ -792,17 +921,27 @@ class SaveInvoiceService
                 }
             }
 
-            JournalDetail::create([
-                'journal_id' => $journalId,
-                'account_id' => $debit,
-                'debit' => $debitAmount,
-                'credit' => 0,
-                'type' => 1,
-                'info' => $component->notes,
-                'op_id' => $operation->id,
-                'isdeleted' => 0,
-                'branch_id' => $component->branch_id,
-            ]);
+            try {
+                JournalDetail::create([
+                    'journal_id' => $journalId,
+                    'account_id' => $debit,
+                    'debit' => $debitAmount,
+                    'credit' => 0,
+                    'type' => 1,
+                    'info' => $component->notes ?? '',
+                    'op_id' => $operation->id,
+                    'isdeleted' => 0,
+                    'branch_id' => $component->branch_id,
+                ]);
+                Log::info('Journal detail (debit) created', ['journal_id' => $journalId, 'account_id' => $debit, 'amount' => $debitAmount]);
+            } catch (\Exception $e) {
+                Log::error('Failed to create journal detail (debit)', [
+                    'error' => $e->getMessage(),
+                    'journal_id' => $journalId,
+                    'account_id' => $debit,
+                    'amount' => $debitAmount,
+                ]);
+            }
         }
 
         // الطرف الدائن
@@ -849,17 +988,27 @@ class SaveInvoiceService
                 }
             }
 
-            JournalDetail::create([
-                'journal_id' => $journalId,
-                'account_id' => $credit,
-                'debit' => 0,
-                'credit' => $creditAmount,
-                'type' => 1,
-                'info' => $component->notes,
-                'op_id' => $operation->id,
-                'isdeleted' => 0,
-                'branch_id' => $component->branch_id,
-            ]);
+            try {
+                JournalDetail::create([
+                    'journal_id' => $journalId,
+                    'account_id' => $credit,
+                    'debit' => 0,
+                    'credit' => $creditAmount,
+                    'type' => 1,
+                    'info' => $component->notes ?? '',
+                    'op_id' => $operation->id,
+                    'isdeleted' => 0,
+                    'branch_id' => $component->branch_id,
+                ]);
+                Log::info('Journal detail (credit) created', ['journal_id' => $journalId, 'account_id' => $credit, 'amount' => $creditAmount]);
+            } catch (\Exception $e) {
+                Log::error('Failed to create journal detail (credit)', [
+                    'error' => $e->getMessage(),
+                    'journal_id' => $journalId,
+                    'account_id' => $credit,
+                    'amount' => $creditAmount,
+                ]);
+            }
         }
 
         // قيد تكلفة البضاعة المباعة للمبيعات
@@ -1242,13 +1391,33 @@ class SaveInvoiceService
 
     private function createVoucher($component, $operation, $isReceipt, $isPayment)
     {
-        $voucherValue = $component->received_from_client ?? $component->total_after_additional;
+        $voucherValue = $component->received_from_client ?? 0;
         $cashBoxId = is_numeric($component->cash_box_id) && $component->cash_box_id > 0
             ? (int) $component->cash_box_id
             : null;
 
+        Log::info('Creating voucher', [
+            'operation_id' => $operation->id,
+            'voucher_value' => $voucherValue,
+            'cash_box_id' => $cashBoxId,
+            'is_receipt' => $isReceipt,
+            'is_payment' => $isPayment,
+        ]);
+
         if (! $cashBoxId) {
+            Log::warning('Cannot create voucher: cash_box_id is missing', [
+                'operation_id' => $operation->id,
+                'cash_box_id' => $component->cash_box_id,
+            ]);
             return; // لا يمكن إنشاء سند بدون صندوق
+        }
+
+        if ($voucherValue <= 0) {
+            Log::warning('Cannot create voucher: voucher value is zero or negative', [
+                'operation_id' => $operation->id,
+                'voucher_value' => $voucherValue,
+            ]);
+            return;
         }
 
         if ($isReceipt) {
@@ -1262,63 +1431,106 @@ class SaveInvoiceService
             $creditAccount = $cashBoxId;
             $voucherType = 'دفع';
         } else {
+            Log::warning('Cannot create voucher: neither receipt nor payment', [
+                'operation_id' => $operation->id,
+            ]);
             return;
         }
 
-        // إنشاء السند
-        $voucher = OperHead::create([
-            'pro_id' => $operation->pro_id,
-            'pro_type' => $proType,
-            'acc1' => $component->acc1_id,
-            'acc2' => $cashBoxId,
-            'pro_value' => $voucherValue,
-            'pro_date' => $component->pro_date,
-            'info' => 'سند '.$voucherType.' آلي مرتبط بعملية رقم '.$operation->id,
-            'op2' => $operation->id,
-            'is_journal' => 1,
-            'is_stock' => 0,
-            'user' => Auth::id(),
-            'branch_id' => $component->branch_id,
-        ]);
+        try {
+            // إنشاء السند
+            $voucher = OperHead::create([
+                'pro_id' => $operation->pro_id,
+                'pro_type' => $proType,
+                'acc1' => $component->acc1_id,
+                'acc2' => $cashBoxId,
+                'pro_value' => $voucherValue,
+                'pro_date' => $component->pro_date,
+                'info' => 'سند '.$voucherType.' آلي مرتبط بعملية رقم '.$operation->id,
+                'op2' => $operation->id,
+                'is_journal' => 1,
+                'is_stock' => 0,
+                'user' => Auth::id(),
+                'branch_id' => $component->branch_id,
+            ]);
 
-        // إنشاء قيد السند
-        $voucherJournalId = JournalHead::max('journal_id') + 1;
+            Log::info('Voucher created successfully', [
+                'voucher_id' => $voucher->id,
+                'operation_id' => $operation->id,
+                'voucher_type' => $voucherType,
+            ]);
 
-        JournalHead::create([
-            'journal_id' => $voucherJournalId,
-            'total' => $voucherValue,
-            'op_id' => $voucher->id,
-            'op2' => $operation->id,
-            'pro_type' => $proType,
-            'date' => $component->pro_date,
-            'details' => 'قيد سند '.$voucherType.' آلي',
-            'user' => Auth::id(),
-            'branch_id' => $component->branch_id,
-        ]);
+            // إنشاء قيد السند (مع lockForUpdate لتجنب race condition)
+            $voucherJournalId = DB::transaction(function () {
+                $maxJournal = JournalHead::lockForUpdate()->orderBy('journal_id', 'desc')->first();
+                $maxJournalId = $maxJournal ? $maxJournal->journal_id : 0;
+                return $maxJournalId + 1;
+            }, 5);
 
-        JournalDetail::create([
-            'journal_id' => $voucherJournalId,
-            'account_id' => $debitAccount,
-            'debit' => $voucherValue,
-            'credit' => 0,
-            'type' => 1,
-            'info' => 'سند '.$voucherType,
-            'op_id' => $voucher->id,
-            'isdeleted' => 0,
-            'branch_id' => $component->branch_id,
-        ]);
+            try {
+                JournalHead::create([
+                    'journal_id' => $voucherJournalId,
+                    'total' => $voucherValue,
+                    'op_id' => $voucher->id,
+                    'op2' => $operation->id,
+                    'pro_type' => $proType,
+                    'date' => $component->pro_date,
+                    'details' => 'قيد سند '.$voucherType.' آلي',
+                    'user' => Auth::id(),
+                    'branch_id' => $component->branch_id,
+                ]);
+                Log::info('Voucher journal head created', ['journal_id' => $voucherJournalId, 'voucher_id' => $voucher->id]);
 
-        JournalDetail::create([
-            'journal_id' => $voucherJournalId,
-            'account_id' => $creditAccount,
-            'debit' => 0,
-            'credit' => $voucherValue,
-            'type' => 1,
-            'info' => 'سند '.$voucherType,
-            'op_id' => $voucher->id,
-            'isdeleted' => 0,
-            'branch_id' => $component->branch_id,
-        ]);
+                JournalDetail::create([
+                    'journal_id' => $voucherJournalId,
+                    'account_id' => $debitAccount,
+                    'debit' => $voucherValue,
+                    'credit' => 0,
+                    'type' => 1,
+                    'info' => 'سند '.$voucherType,
+                    'op_id' => $voucher->id,
+                    'isdeleted' => 0,
+                    'branch_id' => $component->branch_id,
+                ]);
+                Log::info('Voucher journal detail (debit) created', [
+                    'journal_id' => $voucherJournalId,
+                    'account_id' => $debitAccount,
+                    'amount' => $voucherValue,
+                ]);
+
+                JournalDetail::create([
+                    'journal_id' => $voucherJournalId,
+                    'account_id' => $creditAccount,
+                    'debit' => 0,
+                    'credit' => $voucherValue,
+                    'type' => 1,
+                    'info' => 'سند '.$voucherType,
+                    'op_id' => $voucher->id,
+                    'isdeleted' => 0,
+                    'branch_id' => $component->branch_id,
+                ]);
+                Log::info('Voucher journal detail (credit) created', [
+                    'journal_id' => $voucherJournalId,
+                    'account_id' => $creditAccount,
+                    'amount' => $voucherValue,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to create voucher journal entries', [
+                    'error' => $e->getMessage(),
+                    'voucher_id' => $voucher->id,
+                    'operation_id' => $operation->id,
+                ]);
+                // Delete the voucher if journal creation fails
+                $voucher->delete();
+                throw $e;
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to create voucher', [
+                'error' => $e->getMessage(),
+                'operation_id' => $operation->id,
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -1546,15 +1758,21 @@ class SaveInvoiceService
      */
     private function syncJournalEntries($operation, $component)
     {
+        Log::info('Syncing journal entries', [
+            'operation_id' => $operation->id,
+            'type' => $component->type,
+        ]);
+
         $journalHead = JournalHead::where('op_id', $operation->id)->first();
 
         if ($journalHead) {
+            Log::info('Journal head exists, updating', ['journal_id' => $journalHead->journal_id]);
             $journalId = $journalHead->journal_id;
 
             $journalHead->update([
                 'total' => $component->total_after_additional,
                 'date' => $component->pro_date,
-                'details' => $component->notes,
+                'details' => $component->notes ?? '',
                 'branch_id' => $component->branch_id,
                 'user' => Auth::id(),
             ]);
@@ -1562,12 +1780,19 @@ class SaveInvoiceService
             JournalDetail::where('journal_id', $journalId)->delete();
             $this->generateJournalDetails($journalId, $operation, $component);
         } else {
+            Log::info('Journal head does not exist, creating new entries');
             $this->createJournalEntries($component, $operation);
         }
     }
 
     private function generateJournalDetails($journalId, $operation, $component)
     {
+        Log::info('Generating journal details', [
+            'journal_id' => $journalId,
+            'operation_id' => $operation->id,
+            'type' => $component->type,
+        ]);
+
         $debit = $credit = null;
 
         switch ($component->type) {
@@ -1609,6 +1834,20 @@ class SaveInvoiceService
                 break;
         }
 
+        // Validate accounts
+        if (!$debit || !$credit) {
+            Log::error('Cannot generate journal details: missing debit or credit account', [
+                'journal_id' => $journalId,
+                'operation_id' => $operation->id,
+                'type' => $component->type,
+                'debit' => $debit,
+                'credit' => $credit,
+                'acc1_id' => $component->acc1_id,
+                'acc2_id' => $component->acc2_id,
+            ]);
+            return;
+        }
+
         if ($debit) {
             $debitAmount = $component->total_after_additional;
             if (in_array($component->type, [11, 20])) {
@@ -1640,17 +1879,27 @@ class SaveInvoiceService
                 }
             }
 
-            JournalDetail::create([
-                'journal_id' => $journalId,
-                'account_id' => $debit,
-                'debit' => $debitAmount,
-                'credit' => 0,
-                'type' => 1,
-                'info' => $component->notes,
-                'op_id' => $operation->id,
-                'isdeleted' => 0,
-                'branch_id' => $component->branch_id,
-            ]);
+            try {
+                JournalDetail::create([
+                    'journal_id' => $journalId,
+                    'account_id' => $debit,
+                    'debit' => $debitAmount,
+                    'credit' => 0,
+                    'type' => 1,
+                    'info' => $component->notes ?? '',
+                    'op_id' => $operation->id,
+                    'isdeleted' => 0,
+                    'branch_id' => $component->branch_id,
+                ]);
+                Log::info('Journal detail (debit) generated', ['journal_id' => $journalId, 'account_id' => $debit, 'amount' => $debitAmount]);
+            } catch (\Exception $e) {
+                Log::error('Failed to generate journal detail (debit)', [
+                    'error' => $e->getMessage(),
+                    'journal_id' => $journalId,
+                    'account_id' => $debit,
+                    'amount' => $debitAmount,
+                ]);
+            }
         }
 
         if ($credit) {
@@ -1684,17 +1933,27 @@ class SaveInvoiceService
                 }
             }
 
-            JournalDetail::create([
-                'journal_id' => $journalId,
-                'account_id' => $credit,
-                'debit' => 0,
-                'credit' => $creditAmount,
-                'type' => 1,
-                'info' => $component->notes,
-                'op_id' => $operation->id,
-                'isdeleted' => 0,
-                'branch_id' => $component->branch_id,
-            ]);
+            try {
+                JournalDetail::create([
+                    'journal_id' => $journalId,
+                    'account_id' => $credit,
+                    'debit' => 0,
+                    'credit' => $creditAmount,
+                    'type' => 1,
+                    'info' => $component->notes ?? '',
+                    'op_id' => $operation->id,
+                    'isdeleted' => 0,
+                    'branch_id' => $component->branch_id,
+                ]);
+                Log::info('Journal detail (credit) generated', ['journal_id' => $journalId, 'account_id' => $credit, 'amount' => $creditAmount]);
+            } catch (\Exception $e) {
+                Log::error('Failed to generate journal detail (credit)', [
+                    'error' => $e->getMessage(),
+                    'journal_id' => $journalId,
+                    'account_id' => $credit,
+                    'amount' => $creditAmount,
+                ]);
+            }
         }
 
         if (in_array($component->type, [10, 12, 19])) {

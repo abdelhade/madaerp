@@ -35,5 +35,8 @@
     @endphp
 
 
-    <livewire:invoices.view-invoice :operationId="$operationId" />
+    {{-- TODO: Create view-invoice-ajax.blade.php or use regular view --}}
+    <div class="alert alert-warning">
+        {{ __('View invoice page is being migrated. Please use the invoice show page.') }}
+    </div>
 @endsection

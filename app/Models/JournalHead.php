@@ -22,6 +22,12 @@ class JournalHead extends Model
         return $this->hasMany(JournalDetail::class, 'journal_id', 'journal_id')->orderBy('type');
     }
 
+    // Alias for dets() - used in eager loading
+    public function journalDetails()
+    {
+        return $this->dets();
+    }
+
     public function oper()
     {
         return $this->hasOne(OperHead::class, 'id', 'op_id');

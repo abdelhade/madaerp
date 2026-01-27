@@ -237,7 +237,7 @@ enum OperationTypeEnum: int
             self::WITHDRAW_ORDER,
             self::ADD_ORDER,
             self::INVENTORY_TRANSFER,
-            self::RESERVATION_ORDER => 'invoice.view',
+            self::RESERVATION_ORDER => 'invoices.show',
 
             // For other types, fallback to edit route (which typically shows the form in view mode)
             default => $this->getEditRoute(),

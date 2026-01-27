@@ -459,7 +459,7 @@ class VoucherController extends Controller
     public function show($id)
     {
         $voucher = Voucher::with([
-            'journalHead.journalDetails.accountHead',
+            'journalHead.journalDetails.accHead',
             'acc1Head',
             'acc2Head',
             'employee',

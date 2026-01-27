@@ -100,15 +100,6 @@
             width: 40px;
         }
 
-        .items-table td:nth-child(2) {
-            width: 60px;
-        }
-
-        .items-table td:nth-child(3) {
-            text-align: right;
-            width: 200px;
-        }
-
         .totals-section {
             padding: 15px;
             border-top: 1px solid #000;
@@ -332,14 +323,14 @@
         <table class="items-table">
             <thead>
                 <tr>
-                    <th>#</th>
-                    <th>الصنف</th>
-                    <th>الباركود</th>
-                    <th>الوحدة</th>
-                    <th>الكمية</th>
-                    <th>السعر</th>
-                    <th>الخصم</th>
-                    <th>القيمة</th>
+                    <th style="width:10px;">#</th>
+                    <th style="width: {{ $columnWidths['item_name'] ?? 20 }}%;">الصنف</th>
+                    <th style="width: 10%;">الباركود</th>
+                    <th style="width: {{ $columnWidths['unit'] ?? 8 }}%;">الوحدة</th>
+                    <th style="width: {{ $columnWidths['quantity'] ?? 8 }}%;">الكمية</th>
+                    <th style="width: {{ $columnWidths['price'] ?? 10 }}%;">السعر</th>
+                    <th style="width: {{ $columnWidths['discount'] ?? 8 }}%;">الخصم</th>
+                    <th style="width: {{ $columnWidths['sub_value'] ?? 10 }}%;">القيمة</th>
                 </tr>
             </thead>
             <tbody>

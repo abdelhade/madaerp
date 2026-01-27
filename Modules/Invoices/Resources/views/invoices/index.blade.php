@@ -35,7 +35,7 @@
                         <h5 class="card-title mb-0">{{ __($invoiceTitle) }}</h5>
 
                         @can('create ' . $invoiceTitle)
-                            <a href="{{ url('/invoices/create?type=' . $invoiceType . '&q=' . md5($invoiceType)) }}"
+                            <a id="new-doc" href="{{ url('/invoices/create?type=' . $invoiceType . '&q=' . md5($invoiceType)) }}"
                                 class="btn btn-main">
                                 <i class="las la-plus me-1"></i>
                                 {{ __('Add') }} {{ __($invoiceTitle) }}
@@ -165,59 +165,86 @@
                                         </td>
 
                                         <td class="text-center">
-                                            <div class="d-flex justify-content-center flex-wrap gap-2">
-
-                                                @if ($invoice->pro_type == 11)
-                                                    <a class="btn btn-success d-inline-flex align-items-center"
-                                                        href="{{ route('edit.purchase.price.invoice.report', $invoice->id) }}">
-                                                        <i class="las la-eye me-1"></i>
-                                                        {{ __('Edit Selling Price') }}
-                                                    </a>
-                                                    <a class="btn btn-primary d-inline-flex align-items-center"
-                                                        href="{{ route('invoices.barcode-report', $invoice->id) }}">
-                                                        <i class="las la-barcode me-1"></i>
-                                                        {{ __('Print Barcode') }}
-                                                    </a>
-                                                @endif
-
-                                                @can('view ' . $titles[$invoice->pro_type])
-                                                    <a class="btn btn-info btn-icon-square-sm"
-                                                        href="{{ route('invoice.view', $invoice->id) }}"
-                                                        title="{{ __('View') }}">
-                                                        <i class="las la-eye"></i>
-                                                    </a>
-                                                @endcan
-
-                                                @can('edit ' . $titles[$invoice->pro_type])
-                                                    <a class="btn btn-warning btn-icon-square-sm"
-                                                        href="{{ route('invoices.edit', $invoice->id) }}"
-                                                        title="{{ __('Edit') }}">
-                                                        <i class="las la-edit"></i>
-                                                    </a>
-                                                @endcan
-
-                                                @if ($invoice->pro_type == 25)
-                                                    <button type="button" class="btn btn-info btn-icon-square-sm"
-                                                        title="{{ __('Manufacturing Details') }}"
-                                                        onclick='Livewire.dispatch("openManufacturingModal", { items: {{ json_encode($invoice->operationItems->map(fn($item) => ['id' => $item->item_id, 'name' => $item->item->name ?? 'Unknown', 'qty' => $item->qty_in ?? $item->qty])->values()) }} })'>
-                                                        <i class="fas fa-industry"></i>
-                                                    </button>
-                                                @endif
-
-                                                @can('delete ' . $titles[$invoice->pro_type])
-                                                    <form action="{{ route('invoices.destroy', $invoice->id) }}"
-                                                        method="POST"
-                                                        onsubmit="return confirm('{{ __('Are you sure you want to delete this invoice?') }}');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger btn-icon-square-sm">
-                                                            <i class="las la-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                @endcan
-
-                                            </div>
+                                            <button type="button" class="btn btn-primary btn-icon-square-sm"
+                                                data-bs-toggle="modal" data-bs-target="#operationsModal{{ $invoice->id }}"
+                                                title="{{ __('Operations') }}">
+                                                <i class="las la-cog"></i>
+                                            </button>
                                         </td>
+                                        
+                                        {{-- Operations Modal --}}
+                                        <div class="modal fade" id="operationsModal{{ $invoice->id }}" tabindex="-1"
+                                            aria-labelledby="operationsModalLabel{{ $invoice->id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="operationsModalLabel{{ $invoice->id }}">
+                                                            {{ __('Operations') }} - {{ $invoice->type->ptext ?? '' }}
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="d-grid gap-2">
+                                                            @if ($invoice->pro_type == 11)
+                                                                <a class="btn btn-success"
+                                                                    href="{{ route('edit.purchase.price.invoice.report', $invoice->id) }}">
+                                                                    <i class="las la-dollar-sign me-2"></i>
+                                                                    {{ __('Edit Selling Price') }}
+                                                                </a>
+                                                                <a class="btn btn-primary"
+                                                                    href="{{ route('invoices.barcode-report', $invoice->id) }}">
+                                                                    <i class="las la-barcode me-2"></i>
+                                                                    {{ __('Print Barcode') }}
+                                                                </a>
+                                                            @endif
+
+                                                            @can('view ' . $titles[$invoice->pro_type])
+                                                                <a class="btn btn-info"
+                                                                    href="{{ route('invoices.show', $invoice->id) }}">
+                                                                    <i class="las la-eye me-2"></i>
+                                                                    {{ __('View') }}
+                                                                </a>
+                                                            @endcan
+
+                                                            @can('edit ' . $titles[$invoice->pro_type])
+                                                                <a class="btn btn-warning"
+                                                                    href="{{ route('invoices.edit', $invoice->id) }}">
+                                                                    <i class="las la-edit me-2"></i>
+                                                                    {{ __('Edit') }}
+                                                                </a>
+                                                            @endcan
+
+                                                            @if ($invoice->pro_type == 25)
+                                                                <button type="button" class="btn btn-info"
+                                                                    onclick='Livewire.dispatch("openManufacturingModal", { items: {{ json_encode($invoice->operationItems->map(fn($item) => ['id' => $item->item_id, 'name' => $item->item->name ?? 'Unknown', 'qty' => $item->qty_in ?? $item->qty])->values()) }} }); bootstrap.Modal.getInstance(document.getElementById("operationsModal{{ $invoice->id }}")).hide();'>
+                                                                    <i class="fas fa-industry me-2"></i>
+                                                                    {{ __('Manufacturing Details') }}
+                                                                </button>
+                                                            @endif
+
+                                                            @can('delete ' . $titles[$invoice->pro_type])
+                                                                <form action="{{ route('invoices.destroy', $invoice->id) }}"
+                                                                    method="POST"
+                                                                    onsubmit="return confirm('{{ __('Are you sure you want to delete this invoice?') }}');"
+                                                                    class="d-inline">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit" class="btn btn-danger w-100">
+                                                                        <i class="las la-trash me-2"></i>
+                                                                        {{ __('Delete') }}
+                                                                    </button>
+                                                                </form>
+                                                            @endcan
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">{{ __('Close') }}</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </tr>
                                 @empty
                                     <tr>

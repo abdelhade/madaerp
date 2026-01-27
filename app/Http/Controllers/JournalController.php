@@ -160,7 +160,7 @@ class JournalController extends Controller
 
     public function show($id)
     {
-        $journal = OperHead::with(['journalHead.journalDetails.accountHead', 'acc1Head', 'acc2Head', 'employee'])
+        $journal = OperHead::with(['journalHead.journalDetails.accHead', 'acc1Head', 'acc2Head', 'employee'])
             ->whereIn('pro_type', [7, 8])
             ->findOrFail($id);
 

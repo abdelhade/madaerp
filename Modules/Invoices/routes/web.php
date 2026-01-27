@@ -24,7 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/inventory/statistics', [InvoiceController::class, 'inventoryStatistics'])->name('inventory.statistics');
 
     // 📁 Invoice Print Route
-    Route::get('/invoice/print/{operation_id}', [InvoiceController::class, 'print'])->name('invoice.print');
+    Route::get('/invoice/print/{operation_id}', [InvoiceController::class, 'print'])->name('invoices.print');
     // 📁 Invoice View Route
     Route::get('invoice/view/{operationId}', [InvoiceController::class, 'view'])->name('invoice.view');
 

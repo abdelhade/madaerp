@@ -188,6 +188,29 @@
                     }
                 }
 
+                // F3 key - Navigate to add/create button (any element with id="new-doc" or similar)
+                if (e.key === "F3") {
+                    e.preventDefault();
+                    // Try common IDs for add/create buttons
+                    const addButton = document.getElementById('new-doc') || 
+                                    document.getElementById('add-invoice-btn') ||
+                                    document.querySelector('[id*="add"][id*="invoice"]') ||
+                                    document.querySelector('[id*="create"][id*="invoice"]') ||
+                                    document.querySelector('a[href*="/create"], a[href*="/add"]');
+                    
+                    if (addButton) {
+                        if (addButton.tagName === 'A' && addButton.href) {
+                            window.location.href = addButton.href;
+                        } else if (addButton.tagName === 'BUTTON' && addButton.onclick) {
+                            addButton.click();
+                        } else if (addButton.tagName === 'BUTTON' && addButton.form) {
+                            addButton.form.submit();
+                        } else {
+                            addButton.click();
+                        }
+                    }
+                }
+
                 // Enter key - Navigate between fields
                 if (e.key === 'Enter' && !e.shiftKey) {
                     // Skip if we are in a textarea or on a button or special components that handle Enter

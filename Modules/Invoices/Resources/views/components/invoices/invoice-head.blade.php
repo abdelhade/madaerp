@@ -117,7 +117,7 @@
                         {{-- ✅ Label فوق الحقل --}}
                         <label class="form-label">{{ $acc1Role }}</label>
 
-                        {{-- ✅ Async Select مع الزر ملزوق (استخدام options بدلاً من endpoint) --}}
+                     
                         <div class="input-group">
                             <div class="flex-grow-1">
                                 <livewire:async-select name="acc1_id" wire:model.live="acc1_id" :options="$acc1Options"
